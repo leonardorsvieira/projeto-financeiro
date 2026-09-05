@@ -1,7 +1,7 @@
 ---
 phase: 01
 slug: funda-o-e-acesso
-status: draft
+status: in_progress
 nyquist_compliant: false
 wave_0_complete: false
 created: 2026-09-05
@@ -38,8 +38,8 @@ created: 2026-09-05
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 01-01-01 | 01 | 1 | PLAT-02 | T-01-01 / — | App Flutter orchestrado p/ Android, iOS, Web | build | `flutter build web --release` | ❌ W0 | ⬜ pending |
-| 01-01-02 | 01 | 2 | PLAT-02 | T-01-02 / — | tema PT-BR + home placeholder | widget | `flutter test` | ❌ W0 | ⬜ pending |
+| 01-01-01 | 01 | 1 | PLAT-02 | T-01-01 / — | App Flutter orchestrado p/ Android, iOS, Web | build | `flutter build web --release` | ✅ W0 | ✅ green |
+| 01-01-02 | 01 | 2 | PLAT-02 | T-01-02 / — | tema PT-BR + home placeholder | widget | `flutter test` | ✅ W0 | ✅ green |
 | 01-02-01 | 02 | 2 | PLAT-05 | T-02-01 | segredos fora do git; `.env*` ignorado | config | `git check-ignore .env` | ❌ W0 | ⬜ pending |
 | 01-02-02 | 02 | 2 | PLAT-01 | T-02-02 | Supabase inicializado p/ auth | unit | `flutter test` (init smoke) | ❌ W0 | ⬜ pending |
 | 01-03-01 | 03 | 3 | PLAT-01 | T-03-01 | login/cadastro chamam Supabase e só navegam com sucesso | widget | `flutter test` | ❌ W0 | ⬜ pending |

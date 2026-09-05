@@ -2,6 +2,7 @@
 
 **Phase:** 1
 **Generated:** 2026-09-05
+**Verified:** 2026-09-05 — skeleton web OK (Flutter 3.47.2, `flutter analyze` limpo, `flutter test` verde, `flutter build web --release` OK)
 
 ## Capability Proven End-to-End
 
@@ -11,7 +12,7 @@
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| Framework | Flutter 3.47 (stable, Dart 3.11) | Código único Android + iOS + Web; 4 releases estáveis/ano; web é alvo first-class |
+| Framework | Flutter 3.47.2 (stable, Dart 3.13) | Código único Android + iOS + Web; 4 releases estáveis/ano; web é alvo first-class |
 | App layout (monorepo) | `app/` no repo raiz | Repo único com .planning/ + código; backend é Supabase (sem código server próprio) |
 | State management | flutter_riverpod | Padrão de facto em projetos Flutter; providers simples p/ auth e dados futuros |
 | Navigation | go_router | Rotas nomeadas + redirect condicional por auth (estado de sessão) |

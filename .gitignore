@@ -1,0 +1,21 @@
+# Dados financeiros pessoais — nunca versionar (repo publico)
+.env
+.env.*
+dados/
+planilhas/
+data/
+extratos/
+backups/
+node_modules/
+*.csv
+*.xlsx
+*.xls
+*.ods
+*.bak
+*.db
+*.sqlite
+*.sqlite3
+*.zip
+*.rar
+Thumbs.db
+.DS_Store

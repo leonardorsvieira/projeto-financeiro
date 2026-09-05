@@ -79,43 +79,43 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLAT-01 | TBD | Pending |
-| PLAT-02 | TBD | Pending |
-| PLAT-03 | TBD | Pending |
-| PLAT-04 | TBD | Pending |
-| PLAT-05 | TBD | Pending |
-| VOZ-01 | TBD | Pending |
-| VOZ-02 | TBD | Pending |
-| VOZ-03 | TBD | Pending |
-| VOZ-04 | TBD | Pending |
-| VOZ-05 | TBD | Pending |
-| VOZ-06 | TBD | Pending |
-| DSP-01 | TBD | Pending |
-| DSP-02 | TBD | Pending |
-| DSP-03 | TBD | Pending |
-| DSP-04 | TBD | Pending |
-| DSP-05 | TBD | Pending |
-| RECT-01 | TBD | Pending |
-| RECT-02 | TBD | Pending |
-| RECT-03 | TBD | Pending |
-| RECT-04 | TBD | Pending |
-| DASH-01 | TBD | Pending |
-| DASH-02 | TBD | Pending |
-| DASH-03 | TBD | Pending |
-| DASH-04 | TBD | Pending |
-| INV-01 | TBD | Pending |
-| INV-02 | TBD | Pending |
-| INV-03 | TBD | Pending |
-| INV-04 | TBD | Pending |
-| INV-05 | TBD | Pending |
-| INV-06 | TBD | Pending |
-| INV-07 | TBD | Pending |
+| PLAT-01 | 1 | Pending |
+| PLAT-02 | 1 | Pending |
+| PLAT-03 | 1 | Pending |
+| PLAT-04 | 2 | Pending |
+| PLAT-05 | 1 | Pending |
+| VOZ-01 | 3 | Pending |
+| VOZ-02 | 7 | Pending |
+| VOZ-03 | 8 | Pending |
+| VOZ-04 | 4 | Pending |
+| VOZ-05 | 4 | Pending |
+| VOZ-06 | 3 | Pending |
+| DSP-01 | 2 | Pending |
+| DSP-02 | 2 | Pending |
+| DSP-03 | 2 | Pending |
+| DSP-04 | 4 | Pending |
+| DSP-05 | 4 | Pending |
+| RECT-01 | 4 | Pending |
+| RECT-02 | 5 | Pending |
+| RECT-03 | 5 | Pending |
+| RECT-04 | 5 | Pending |
+| DASH-01 | 6 | Pending |
+| DASH-02 | 6 | Pending |
+| DASH-03 | 6 | Pending |
+| DASH-04 | 6 | Pending |
+| INV-01 | 8 | Pending |
+| INV-02 | 8 | Pending |
+| INV-03 | 8 | Pending |
+| INV-04 | 8 | Pending |
+| INV-05 | 8 | Pending |
+| INV-06 | 8 | Pending |
+| INV-07 | 8 | Pending |
 
 **Coverage:**
 - v1 requirements: 31 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 31
+- Mapped to phases: 31
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-09-05*
-*Last updated: 2026-09-05 after initial definition*
+*Last updated: 2026-09-05 — traceability mapped to 8-phase MVP roadmap*

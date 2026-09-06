@@ -2,7 +2,7 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
-status: Awaiting next milestone
+status: In progress
 stopped_at: Discussão Fase 4 concluída; próximo passo = plan-phase Fase 4
 last_updated: "2026-09-06T21:00:00Z"
 last_activity: 2026-09-06 — Discussão Fase 4 concluída (todas as 4 áreas resolvidas)
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 ## Current Position
 
 Phase: 4 — Vencimentos, Itens e Recorrências
-Plan: — (awaiting plan-phase)
-Status: Context gathered, ready for planning
-Last activity: 2026-09-06 — Discussão Fase 4 concluída (4 áreas: itens, recorrência, ditado, escopo)
+Plan: 04-01, 04-02, 04-03 (planned)
+Status: Planning complete, ready for execution
+Last activity: 2026-09-06 — Planos da Fase 4 criados (3 plans)
 
 ## Performance Metrics
 
@@ -41,7 +41,7 @@ Last activity: 2026-09-06 — Discussão Fase 4 concluída (4 áreas: itens, rec
 | 1 (Fundação e Acesso) | 3 | 3 | 1.0 |
 | 2 (Lançamentos Manuais) | 3 | 3 | 1.0 |
 | 3 (Ditado por Voz — Core) | 3 | 3 | 1.0 |
-| 4 (Vencimentos, Itens e Recorrências) | 0 | 3 | 0.0 |
+| 4 (Vencimentos, Itens e Recorrências) | 3 | 3 | 1.0 |
 
 **Recent Trend:** N/A
 
@@ -62,6 +62,7 @@ Last activity: 2026-09-06 — Discussão Fase 4 concluída (4 áreas: itens, rec
 - [Phase 4]: Itens = JSONB na tabela lancamentos; soma automática; editáveis no S6 e detalhe
 - [Phase 4]: Fixa mensal = gera cópias independentes dos próximos meses (lazy, no app); serie_id uuid; só mensal
 - [Phase 4]: Ditado itens = lista natural; soma confirmada; vencimento "dia 15" = próxima data com esse dia
+- [Phase 4]: 3 plans planejados (04-01 modelo/UI, 04-02 recorrência lazy, 04-03 ditado itens/vencimento)
 
 ### Pending Todos
 
@@ -83,10 +84,10 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-09-06
-Stopped at: Discussão Fase 4 concluída; próximo passo = plan-phase Fase 4
+Stopped at: Planos da Fase 4 criados; próximo passo = execute-phase Fase 4 (04-01, 04-02, 04-03)
 Resume file: None
 
 ## Operator Next Steps
 
-- **Rodar plan-phase da Fase 4** — /gsd:plan-phase 4 (criar os 3 plans: 04-01, 04-02, 04-03)
+- **Rodar execute-phase da Fase 4** — /gsd:execute-phase 4 (executar 04-01, 04-02, 04-03)
 - (Opcional) Instalar toolchain Android para validar device de verdade

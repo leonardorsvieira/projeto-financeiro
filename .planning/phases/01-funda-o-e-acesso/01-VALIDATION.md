@@ -1,4 +1,4 @@
----
+﻿---
 phase: 01
 slug: funda-o-e-acesso
 status: in_progress
@@ -39,12 +39,12 @@ created: 2026-09-05
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | 01-01-01 | 01 | 1 | PLAT-02 | T-01-01 / — | App Flutter orchestrado p/ Android, iOS, Web | build | `flutter build web --release` | ✅ W0 | ✅ green |
-| 01-01-02 | 01 | 2 | PLAT-02 | T-01-02 / — | tema PT-BR + home placeholder | widget | `flutter test` | ✅ W0 | ✅ green |
-| 01-02-01 | 02 | 2 | PLAT-05 | T-02-01 | segredos fora do git; `.env*` ignorado | config | `git check-ignore .env` | ❌ W0 | ⬜ pending |
-| 01-02-02 | 02 | 2 | PLAT-01 | T-02-02 | Supabase inicializado p/ auth | unit | `flutter test` (init smoke) | ❌ W0 | ⬜ pending |
-| 01-03-01 | 03 | 3 | PLAT-01 | T-03-01 | login/cadastro chamam Supabase e só navegam com sucesso | widget | `flutter test` | ❌ W0 | ⬜ pending |
-| 01-03-02 | 03 | 3 | PLAT-01 | T-03-02 | sessão persiste entre aberturas | widget + manual | `flutter test` + checkpoint | ❌ W0 | ⬜ pending |
-| 01-03-03 | 03 | 3 | PLAT-03 | T-03-03 | build web deployado no GH Pages | deploy | `gh pages` URL 200 | ❌ W0 | ⬜ pending |
+| 01-01-02 | 01 | 1 | PLAT-02 | T-01-02 / — | tema PT-BR + home placeholder | widget | `flutter test` | ✅ W0 | ✅ green |
+| 01-02-01 | 02 | 1 | PLAT-05 | T-02-01 | segredos fora do git; `.env*` ignorado | config | `git check-ignore .env` | ✅ W1 | ✅ green |
+| 01-02-02 | 02 | 1 | PLAT-01 | T-02-02 | Supabase inicializado p/ auth | unit | `flutter test` (init smoke no plan 01-03) | ✅ W1 | ⬜ pending (runtime no 01-03) |
+| 01-03-01 | 03 | 2 | PLAT-01 | T-03-01 | login/cadastro chamam Supabase e só navegam com sucesso | widget | `flutter test` | ❌ W0 | ⬜ pending |
+| 01-03-02 | 03 | 2 | PLAT-01 | T-03-02 | sessão persiste entre aberturas | widget + manual | `flutter test` + checkpoint | ❌ W0 | ⬜ pending |
+| 01-03-03 | 03 | 2 | PLAT-03 | T-03-03 | build web deployado no GH Pages | deploy | `gh pages` URL 200 | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

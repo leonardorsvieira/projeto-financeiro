@@ -32,7 +32,8 @@ jobs:
           flutter pub get
           flutter build web --release --base-href=/projeto-financeiro/ \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+            --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+            --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
       - name: SPA fallback (404.html)
         run: cp app/build/web/index.html app/build/web/404.html
       - run: touch app/build/web/.nojekyll

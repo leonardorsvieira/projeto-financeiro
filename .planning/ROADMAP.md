@@ -65,10 +65,14 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
+**Wave 1**
 
-- [ ] 02-01: Modelo de dados + schema Supabase (despesas, categorias, formas de pagamento)
-- [ ] 02-02: Tela de listagem e lançamento de despesa (PT-BR, BRL)
-- [ ] 02-03: Edição/exclusão + sincronização entre dispositivos
+- [ ] 02-01: Schema Supabase + RLS + realtime (despesas isoladas por usuário)
+- [ ] 02-02: Camada de dados Dart (model centavos/BRL, repository stream+CRUD, providers)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 02-03: Telas lista/form (S5/S6), edição/exclusão + sync realtime + deploy web
 
 ### Phase 3: Ditado por Voz (Core)
 

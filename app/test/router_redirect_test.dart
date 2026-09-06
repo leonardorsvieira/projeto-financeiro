@@ -4,7 +4,7 @@ import 'package:meubolso/features/auth/presentation/login_screen.dart';
 import 'package:meubolso/features/auth/presentation/splash_screen.dart';
 import 'package:meubolso/main.dart';
 
-import 'support/fake_auth.dart';
+import 'support/fake_wrappers.dart';
 
 void main() {
   testWidgets('sem sessão: rota inicial cai em /login (não /home)',
@@ -13,22 +13,32 @@ void main() {
       const AuthState(AuthStatus.unauthenticated),
     );
 
-    await tester.pumpWidget(wrapWithFake(fake, const MeuBolsoApp()));
+    await tester.pumpWidget(
+      wrapWithFakes(fakeAuth: fake, child: const MeuBolsoApp()),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(LoginScreen), findsOneWidget);
     expect(find.byType(SplashScreen), findsNothing);
   });
 
-  testWidgets('com sessão: rota inicial navega para /home', (tester) async {
+  testWidgets('com sessão: rota inicial navega para /home e mostra lista',
+      (tester) async {
     final fake = FakeAuthRepository(
       const AuthState(AuthStatus.authenticated, email: 'leo@meubolso.com'),
     );
+    final fakeLancamentos = FakeLancamentosRepository();
 
-    await tester.pumpWidget(wrapWithFake(fake, const MeuBolsoApp()));
+    await tester.pumpWidget(
+      wrapWithFakes(
+        fakeAuth: fake,
+        fakeLancamentos: fakeLancamentos,
+        child: const MeuBolsoApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('Você está logado como'), findsOneWidget);
+    expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
     expect(find.byType(SplashScreen), findsNothing);
   });
 
@@ -36,10 +46,17 @@ void main() {
     final fake = FakeAuthRepository(
       const AuthState(AuthStatus.authenticated, email: 'leo@meubolso.com'),
     );
+    final fakeLancamentos = FakeLancamentosRepository();
 
-    await tester.pumpWidget(wrapWithFake(fake, const MeuBolsoApp()));
+    await tester.pumpWidget(
+      wrapWithFakes(
+        fakeAuth: fake,
+        fakeLancamentos: fakeLancamentos,
+        child: const MeuBolsoApp(),
+      ),
+    );
     await tester.pumpAndSettle();
-    expect(find.text('Você está logado como'), findsOneWidget);
+    expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
 
     fake.emit(const AuthState(AuthStatus.unauthenticated));
     await tester.pumpAndSettle();
@@ -52,7 +69,9 @@ void main() {
       const AuthState(AuthStatus.unauthenticated),
     );
 
-    await tester.pumpWidget(wrapWithFake(fake, const MeuBolsoApp()));
+    await tester.pumpWidget(
+      wrapWithFakes(fakeAuth: fake, child: const MeuBolsoApp()),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(LoginScreen), findsOneWidget);
   });

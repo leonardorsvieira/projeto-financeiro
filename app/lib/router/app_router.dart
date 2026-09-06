@@ -8,7 +8,8 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/signup_screen.dart';
 import '../features/auth/presentation/splash_screen.dart';
 import '../features/home/domain/app_routes.dart';
-import '../features/home/presentation/home_screen.dart';
+import '../features/lancamentos/presentation/lancamento_form_screen.dart';
+import '../features/lancamentos/presentation/lancamentos_list_screen.dart';
 
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(Ref ref) {
@@ -37,7 +38,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
       GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
       GoRoute(path: AppRoutes.signup, builder: (_, _) => const SignupScreen()),
-      GoRoute(path: AppRoutes.home, builder: (_, _) => const HomeScreen()),
+      GoRoute(
+        path: AppRoutes.home,
+        builder: (_, _) => const LancamentosListScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.lancamentoNovo,
+        builder: (_, _) => const LancamentoFormScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.lancamentosDetalhe,
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          return LancamentoFormScreen(lancamentoId: id);
+        },
+      ),
     ],
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);

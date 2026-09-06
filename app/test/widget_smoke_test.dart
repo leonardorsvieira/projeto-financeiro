@@ -1,24 +1,27 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meubolso/features/auth/domain/auth_state.dart';
-import 'package:meubolso/features/home/presentation/home_screen.dart';
+import 'package:meubolso/features/lancamentos/presentation/lancamentos_list_screen.dart';
 import 'package:meubolso/main.dart';
 
-import 'support/fake_auth.dart';
+import 'support/fake_wrappers.dart';
 
 void main() {
-  testWidgets('home renders Meu Bolso title and placeholder when logged in',
+  testWidgets('home mostra a lista de lançamentos (empty state) logado',
       (tester) async {
-    final fake = FakeAuthRepository(
-      const AuthState(AuthStatus.authenticated, email: 'leo@meubolso.com'),
+    await tester.pumpWidget(
+      wrapWithFakes(
+        fakeAuth: FakeAuthRepository(
+          const AuthState(AuthStatus.authenticated, email: 'leo@meubolso.com'),
+        ),
+        fakeLancamentos: FakeLancamentosRepository(),
+        child: const MeuBolsoApp(),
+      ),
     );
-
-    await tester.pumpWidget(wrapWithFake(fake, const MeuBolsoApp()));
     await tester.pumpAndSettle();
 
-    expect(find.byType(HomeScreen), findsOneWidget);
-
-    // AppBar + body title.
-    expect(find.text('Meu Bolso'), findsWidgets);
-    expect(find.text('Você está logado como'), findsOneWidget);
+    expect(find.byType(LancamentosListScreen), findsOneWidget);
+    expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsOneWidget);
   });
 }

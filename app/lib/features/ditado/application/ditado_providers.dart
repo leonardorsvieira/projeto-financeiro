@@ -1,0 +1,87 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../data/audio_recorder_service.dart';
+import '../data/gemini_ditado_repository.dart';
+import '../domain/ditado_repository.dart';
+import '../domain/rascunho_lancamento.dart';
+
+sealed class DitadoState {
+  const DitadoState();
+}
+
+class DitadoIdle extends DitadoState {
+  const DitadoIdle();
+}
+
+class DitadoGravando extends DitadoState {
+  const DitadoGravando();
+}
+
+class DitadoProcessando extends DitadoState {
+  const DitadoProcessando();
+}
+
+class DitadoSucesso extends DitadoState {
+  const DitadoSucesso(this.rascunho);
+
+  final RascunhoLancamento rascunho;
+}
+
+class DitadoErro extends DitadoState {
+  const DitadoErro(this.mensagem);
+
+  final String mensagem;
+}
+
+final ditadoRepositoryProvider =
+    Provider<DitadoRepository>((ref) => GeminiDitadoRepository());
+
+final audioRecorderServiceProvider =
+    Provider<AudioRecorderService>((ref) => RecordAudioRecorderService());
+
+final ditadoControllerProvider =
+    NotifierProvider<DitadoController, DitadoState>(DitadoController.new);
+
+class DitadoController extends Notifier<DitadoState> {
+  @override
+  DitadoState build() => const DitadoIdle();
+
+  AudioRecorderService get _gravador => ref.read(audioRecorderServiceProvider);
+
+  DitadoRepository get _repositorio => ref.read(ditadoRepositoryProvider);
+
+  Future<void> gravar() async {
+    if (state is DitadoGravando) return;
+    try {
+      final permitido = await _gravador.temPermissao();
+      if (!permitido) {
+        state = const DitadoErro('Permita o acesso ao microfone para ditar.');
+        return;
+      }
+      await _gravador.iniciar();
+      state = const DitadoGravando();
+    } on Object {
+      state = const DitadoErro('Não consegui acessar o microfone.');
+    }
+  }
+
+  Future<void> parar() async {
+    if (state is! DitadoGravando) return;
+    state = const DitadoProcessando();
+    try {
+      final audio = await _gravador.parar();
+      if (audio == null) {
+        state = const DitadoErro('Gravação muito curta. Tente de novo.');
+        return;
+      }
+      final rascunho = await _repositorio.reconhecer(audio);
+      state = DitadoSucesso(rascunho);
+    } on DitadoException catch (e) {
+      state = DitadoErro(e.mensagem);
+    } on Object {
+      state = const DitadoErro('Não consegui entender. Tente de novo.');
+    }
+  }
+
+  void reiniciar() => state = const DitadoIdle();
+}

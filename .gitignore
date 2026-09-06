@@ -1,11 +1,12 @@
-# Dados financeiros pessoais — nunca versionar (repo publico)
+# Dados financeiros pessoais — nunca versionar (repo publico). Padrões com "/"
+# na raiz só aplicam na raiz; espelhos de código (ex.: app/lib/.../data/) ficam livres.
 .env
 .env.*
-dados/
-planilhas/
-data/
-extratos/
-backups/
+/dados/
+/planilhas/
+/data/
+/extratos/
+/backups/
 node_modules/
 *.csv
 *.xlsx

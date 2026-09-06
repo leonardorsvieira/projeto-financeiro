@@ -7,7 +7,7 @@ import '../domain/rascunho_lancamento.dart';
 class GeminiPrompt {
   GeminiPrompt._();
 
-  static const String modelo = 'gemini-3.5-flash';
+  static const String modelo = 'gemini-3.5-flash-lite';
 
   static final String _instrucaoReconhecer =
       'Você é o assistente financeiro do aplicativo "Meu Bolso". '

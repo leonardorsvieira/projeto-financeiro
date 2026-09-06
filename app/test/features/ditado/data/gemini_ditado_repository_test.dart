@@ -54,7 +54,7 @@ void main() {
 
       final rascunho = await repo.reconhecer(audio);
 
-      expect(uriEnviada!.path, contains('gemini-3.5-flash:generateContent'));
+      expect(uriEnviada!.path, contains('gemini-3.5-flash-lite:generateContent'));
       expect(uriEnviada!.queryParameters['key'], 'chave-teste');
       expect(corpoEnviado, contains('audio/webm'));
       expect(rascunho.descricao, 'Almoço');

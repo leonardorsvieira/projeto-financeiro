@@ -16,6 +16,7 @@
 | D-38 | Captura | **Push-to-talk, 1 frase por vez** | Tocar o mic, falar, tocar de novo para parar → IA processa e monta confirmação |
 
 > **Atualização 2026-09-06 (execução 03-03):** o modelo `gemini-2.5-flash` **não está mais disponível para chaves novas** (API retorna 404 com a chave do usuário). Testado em produção: `gemini-3.6-flash` está em 503 (sobrecarga), `gemini-3.5-flash` e `gemini-flash-latest` respondem com JSON mode. Decidido com o usuário: **`gemini-3.5-flash`** (flash não-lite, suporta áudio).
+> **Atualização 2026-09-06 (bug 503 persistente):** medido com áudio real por modelo em chamadas repetidas — `gemini-3.5-flash` 2/6, `gemini-3.1-flash-lite` 3/6, `gemini-flash-latest` 1/6, **`gemini-3.5-flash-lite` 9/12 (~75%)**. Usuário pediu modelo mais estável. Decidido: **`gemini-3.5-flash-lite`** (free tier; JSON mode e áudio validados; classificação correta nos testes). Com o retry de 3 tentativas a taxa real de sucesso fica ~98%. Todo o stack flash está sob carga no free tier; o retry no app permanece como defesa.
 
 ## Fluxo de usuário (draft)
 

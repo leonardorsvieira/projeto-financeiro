@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Fase 2 completa (validada 2026-09-06); Fase 3 definida via discussão (D-31..D-38 + transporte Gemini REST); planejamento commitado
-last_updated: "2026-09-06T05:30:00.000Z"
-last_activity: 2026-09-06 -- Phase 3 planned
+status: executing
+stopped_at: Fase 1 completa (approval 2026-09-06); próximo passo = discuss/plan da Fase 2
+last_updated: "2026-09-06T11:43:38.892Z"
+last_activity: 2026-09-06 -- Phase 3 execution started
 progress:
   total_phases: 8
   completed_phases: 1
-  total_plans: 6
+  total_plans: 9
   completed_plans: 5
   percent: 13
 ---
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-05)
 
 **Core value:** O usuário dicta um gasto, recebimento ou investimento pela voz e ele é registrado corretamente, no lugar certo, pronto para acompanhar.
-**Current focus:** Phase 2 — Lançamentos Manuais
+**Current focus:** Phase 3 — Ditado por Voz (Core)
 
 ## Current Position
 
-Phase: 3 of 8 — Ditado por Voz (Core)
+Phase: 3 (Ditado por Voz (Core)) — EXECUTING
 Plan: 1 of 3
-Status: Ready to execute
+Status: Executing Phase 3
 
-Last activity: 2026-09-06 -- Phase 3 planned
+Last activity: 2026-09-06 -- Phase 3 execution started
 
 Progress: [■□□□□□□□□□] 12%
 

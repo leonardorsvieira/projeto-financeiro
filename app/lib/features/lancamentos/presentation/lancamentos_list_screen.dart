@@ -39,10 +39,24 @@ class LancamentosListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Novo lançamento',
-        onPressed: () => context.push(AppRoutes.lancamentoNovo),
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'ditar',
+            onPressed: () => context.push(AppRoutes.lancamentoDitado),
+            icon: const Icon(Icons.mic),
+            label: const Text('Ditar'),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton(
+            heroTag: 'novo',
+            tooltip: 'Novo lançamento',
+            onPressed: () => context.push(AppRoutes.lancamentoNovo),
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
       body: lancamentos.when(
         loading: () => const Center(child: CircularProgressIndicator()),

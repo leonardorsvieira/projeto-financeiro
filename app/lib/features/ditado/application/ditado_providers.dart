@@ -39,6 +39,10 @@ final ditadoRepositoryProvider =
 final audioRecorderServiceProvider =
     Provider<AudioRecorderService>((ref) => RecordAudioRecorderService());
 
+final ditadoRelogioProvider = Provider<DateTime Function()>(
+  (ref) => DateTime.now,
+);
+
 final ditadoControllerProvider =
     NotifierProvider<DitadoController, DitadoState>(DitadoController.new);
 
@@ -50,6 +54,10 @@ class DitadoController extends Notifier<DitadoState> {
 
   DitadoRepository get _repositorio => ref.read(ditadoRepositoryProvider);
 
+  DateTime Function() get _agora => ref.read(ditadoRelogioProvider);
+
+  DateTime? _inicioGravacao;
+
   Future<void> gravar() async {
     if (state is DitadoGravando) return;
     try {
@@ -59,6 +67,7 @@ class DitadoController extends Notifier<DitadoState> {
         return;
       }
       await _gravador.iniciar();
+      _inicioGravacao = _agora();
       state = const DitadoGravando();
     } on Object {
       state = const DitadoErro('Não consegui acessar o microfone.');
@@ -67,13 +76,21 @@ class DitadoController extends Notifier<DitadoState> {
 
   Future<void> parar() async {
     if (state is! DitadoGravando) return;
+    final inicio = _inicioGravacao;
+    _inicioGravacao = null;
+    final audio = await _gravador.parar();
+    if (audio == null) {
+      state = const DitadoIdle();
+      return;
+    }
+    final duracao =
+        inicio == null ? Duration.zero : _agora().difference(inicio);
+    if (duracao < const Duration(milliseconds: 500)) {
+      state = const DitadoIdle();
+      return;
+    }
     state = const DitadoProcessando();
     try {
-      final audio = await _gravador.parar();
-      if (audio == null) {
-        state = const DitadoErro('Gravação muito curta. Tente de novo.');
-        return;
-      }
       final rascunho = await _repositorio.reconhecer(audio);
       state = DitadoSucesso(rascunho);
     } on DitadoException catch (e) {

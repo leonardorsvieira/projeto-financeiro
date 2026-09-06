@@ -8,6 +8,9 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/signup_screen.dart';
 import '../features/auth/presentation/splash_screen.dart';
 import '../features/home/domain/app_routes.dart';
+import '../features/ditado/domain/rascunho_lancamento.dart';
+import '../features/ditado/presentation/confirmacao_ditado_screen.dart';
+import '../features/ditado/presentation/lancamento_ditado_screen.dart';
 import '../features/lancamentos/presentation/lancamento_form_screen.dart';
 import '../features/lancamentos/presentation/lancamentos_list_screen.dart';
 
@@ -45,6 +48,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.lancamentoNovo,
         builder: (_, _) => const LancamentoFormScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.lancamentoDitado,
+        builder: (_, _) => const LancamentoDitadoScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.confirmacaoDitado,
+        builder: (_, state) {
+          final rascunho = state.extra as RascunhoLancamento;
+          return ConfirmacaoDitadoScreen(rascunho: rascunho);
+        },
       ),
       GoRoute(
         path: AppRoutes.lancamentosDetalhe,

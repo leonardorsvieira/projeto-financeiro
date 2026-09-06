@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meubolso/features/auth/domain/auth_state.dart';
 import 'package:meubolso/features/lancamentos/presentation/lancamentos_list_screen.dart';
@@ -22,6 +21,7 @@ void main() {
 
     expect(find.byType(LancamentosListScreen), findsOneWidget);
     expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.byTooltip('Novo lançamento'), findsOneWidget);
+    expect(find.text('Ditar'), findsOneWidget);
   });
 }

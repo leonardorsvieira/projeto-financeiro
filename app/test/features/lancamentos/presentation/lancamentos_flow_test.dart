@@ -59,7 +59,7 @@ void main() {
       (tester) async {
     final fake = await pumpApp(tester);
 
-    await tester.tap(find.byType(FloatingActionButton));
+    await tester.tap(find.widgetWithIcon(FloatingActionButton, Icons.add));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField).at(0), 'Mercado');
@@ -77,7 +77,7 @@ void main() {
   testWidgets('T4: validação bloqueia submit sem criar', (tester) async {
     final fake = await pumpApp(tester);
 
-    await tester.tap(find.byType(FloatingActionButton));
+    await tester.tap(find.widgetWithIcon(FloatingActionButton, Icons.add));
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.widgetWithText(FilledButton, 'Salvar'));

@@ -4,9 +4,10 @@ import 'package:meubolso/features/lancamentos/domain/lancamento.dart';
 import 'package:meubolso/features/lancamentos/domain/lancamentos_repository.dart';
 
 class FakeLancamentosRepository implements LancamentosRepository {
-  FakeLancamentosRepository([List<Lancamento>? seed])
+  FakeLancamentosRepository([List<Lancamento>? seed, this.createDelay])
       : _items = List.of(seed ?? const []);
 
+  final Duration? createDelay;
   final List<Lancamento> _items;
   final _controller = StreamController<List<Lancamento>>.broadcast();
   int createCount = 0;
@@ -35,6 +36,9 @@ class FakeLancamentosRepository implements LancamentosRepository {
     DateTime? vencimento,
     String? obs,
   }) async {
+    if (createDelay != null) {
+      await Future<void>.delayed(createDelay!);
+    }
     createCount++;
     final now = DateTime.now().toUtc();
     final lancamento = Lancamento(

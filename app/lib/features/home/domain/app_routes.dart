@@ -7,6 +7,8 @@ class AppRoutes {
   static const String signup = '/signup';
 
   static const String lancamentoNovo = '/lancamentos/novo';
+  static const String lancamentoDitado = '/lancamentos/ditar';
+  static const String confirmacaoDitado = '/lancamentos/ditar/confirmacao';
   static const String lancamentosDetalhe = '/lancamentos/:id';
 
   static String lancamentoEditar(String id) => '/lancamentos/$id';

@@ -18,8 +18,13 @@ void main() {
   late ProviderContainer container;
   late FakeAudioRecorderService gravador;
   late FakeDitadoRepository repositorio;
+  late DateTime agora;
+
+  void passarTempo(int segundos) =>
+      agora = agora.add(Duration(seconds: segundos));
 
   setUp(() {
+    agora = DateTime(2026, 1, 1);
     gravador = FakeAudioRecorderService();
     repositorio = FakeDitadoRepository(
       rascunho: const RascunhoLancamento(
@@ -32,6 +37,7 @@ void main() {
       overrides: [
         audioRecorderServiceProvider.overrideWithValue(gravador),
         ditadoRepositoryProvider.overrideWithValue(repositorio),
+        ditadoRelogioProvider.overrideWithValue(() => agora),
       ],
     );
   });
@@ -48,6 +54,7 @@ void main() {
 
     await controller.gravar();
     expect(estado(), isA<DitadoGravando>());
+    passarTempo(2);
 
     await controller.parar();
     expect(estado(), isA<DitadoSucesso>());
@@ -73,16 +80,16 @@ void main() {
     expect(gravador.iniciarCount, 0);
   });
 
-  test('gravação nula vira erro', () async {
+  test('gravação nula volta a idle sem chamar a IA', () async {
     gravador.audio = null;
     final controller = container.read(ditadoControllerProvider.notifier);
 
     await controller.gravar();
+    expect(estado(), isA<DitadoGravando>());
+
     await controller.parar();
 
-    final erro = estado();
-    expect(erro, isA<DitadoErro>());
-    expect((erro as DitadoErro).mensagem, contains('curta'));
+    expect(estado(), isA<DitadoIdle>());
     expect(repositorio.reconhecerCount, 0);
   });
 
@@ -93,6 +100,7 @@ void main() {
     final controller = container.read(ditadoControllerProvider.notifier);
 
     await controller.gravar();
+    passarTempo(2);
     await controller.parar();
 
     final erro = estado();
@@ -106,6 +114,7 @@ void main() {
     final controller = container.read(ditadoControllerProvider.notifier);
 
     await controller.gravar();
+    passarTempo(2);
     await controller.parar();
 
     final erro = estado();
@@ -118,10 +127,24 @@ void main() {
     final controller = container.read(ditadoControllerProvider.notifier);
 
     await controller.gravar();
+    passarTempo(2);
     await controller.parar();
     expect(estado(), isA<DitadoSucesso>());
 
     controller.reiniciar();
     expect(estado(), isA<DitadoIdle>());
+  });
+
+  test('gravação < 0,5s ignora e volta a idle sem chamar a IA', () async {
+    gravador.audio = audio;
+    final controller = container.read(ditadoControllerProvider.notifier);
+
+    await controller.gravar();
+    expect(estado(), isA<DitadoGravando>());
+
+    await controller.parar();
+
+    expect(estado(), isA<DitadoIdle>());
+    expect(repositorio.reconhecerCount, 0);
   });
 }

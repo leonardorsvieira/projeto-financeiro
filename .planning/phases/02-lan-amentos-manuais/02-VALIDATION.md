@@ -32,7 +32,7 @@
 | 02-03-01 | S5 Lista: renderiza lançamentos, FAB, empty state, excluir c/ confirmação | `flutter test test/features/lancamentos/presentation/lancamentos_flow_test.dart` | ✅ Verdes (fake repo); empty state; confirmação aparece; cancelar mantém (T1, T2, T6) |
 | 02-03-02 | S6 Formulário: validação descricao/valor/categoria/forma/data | `flutter test ...lancamentos_flow_test.dart` | ✅ Verdes; erros inline; salvar c/ dados válidos não cria com inválidos (T3, T4) |
 | 02-03-03 | Editar fluxo (abrir item → preencher → salvar) | `flutter test ...lancamentos_flow_test.dart` | ✅ Verdes; update no fake (T5) |
-| 02-03-04 | Deploy GH Pages com base-href e dart-defines | workflow run | ⏳ GET https://leonardorsvieira.github.io/projeto-financeiro/ → 200 |
+| 02-03-04 | Deploy GH Pages com base-href e dart-defines | workflow run | ✅ GET https://leonardorsvieira.github.io/projeto-financeiro/ → 200 |
 | Checkpoint | UAT manual (verdade) | usuário revisa | ⏳ S6.1 criar→aparece; S6.2 2ª aba sync; S6.3 editar sync; S6.4 excluir c/ confirmação; S6.5 deslogado não vê; S6.6 reload mantém |
 
 ## Cross-phase threats (ASVS L1 relevante)

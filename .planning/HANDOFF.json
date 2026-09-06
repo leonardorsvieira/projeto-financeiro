@@ -1,0 +1,33 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-09-06T05:32:51.188Z",
+  "phase": 3,
+  "phase_name": "Ditado por Voz (Core)",
+  "phase_dir": ".planning/phases/03-ditado-por-voz",
+  "plan": 1,
+  "task": 0,
+  "total_tasks": 5,
+  "status": "paused",
+  "completed_tasks": [],
+  "remaining_tasks": [
+    {"id": 1, "name": "03-01: record + dominio RascunhoLancamento + GeminiDitadoRepository (REST gemini-2.5-flash) + AudioRecorderService (webm) + providers + testes", "status": "not_started"},
+    {"id": 2, "name": "03-02: S7 tela ditado + S8 confirmacao com correcao por voz campo-a-campo + FAB 'Ditar' + rotas + testes widget", "status": "not_started"},
+    {"id": 3, "name": "03-03: fluxo fim-a-fim + deploy com GEMINI_API_KEY + checkpoint manual + fechamento da fase", "status": "not_started"}
+  ],
+  "blockers": [
+    {"description": "GEMINI_API_KEY do Google AI Studio pendente - necessaria so no deploy (03-03)", "type": "human_action", "workaround": "Codificar e testar com fakes enquanto nao chega a key; deploy exige key real"}
+  ],
+  "human_actions_pending": [
+    {"action": "Fornecer GEMINI_API_KEY (aistudio.google.com/apikey, free tier)", "context": "Necessaria para o plan 03-03 (deploy GH Pages com --dart-define) e teste manual real V10-V14", "blocking": true}
+  ],
+  "decisions": [
+    {"decision": "D-31..D-38: fluxo hibrido voz+botao, servico unico Gemini, confirmacao editavel, MVP gasto simples, correcao campo-a-campo, valor ausente fica vazio, Gemini com key do usuario, push-to-talk 1 frase", "rationale": "Respostas do usuario na discussao da Fase 3", "phase": "3"},
+    {"decision": "Transporte: Gemini REST com inline_data de audio (nao Live websocket)", "rationale": "Escolha do usuario; mais simples e robusto no Flutter web", "phase": "3"},
+    {"decision": "Modelo: gemini-2.5-flash (NAO gemini-2.0-flash, descontinuado 01/06/2026)", "rationale": "Pesquisa 03-RESEARCH.md", "phase": "3"},
+    {"decision": "Gravador: package record (web via MediaRecorder, webm/opus)", "rationale": "Suporta web, devolve bytes", "phase": "3"},
+    {"decision": "Um unico usuario (Leonardo) deve ser consultado antes de decisoes relevantes", "rationale": "Diretiva explicita do usuario: 'volte a perguntar o que prefiro'", "phase": "all"}
+  ],
+  "uncommitted_files": [],
+  "next_action": "Iniciar implementacao do plan 03-01 (wave 1): flutter pub add record; criar domain/data da feature ditado; testes unitarios com MockClient para o GeminiDitadoRepository",
+  "context_notes": "Fase 2 completa e validada (32 testes verdes, deploy 200, checkpoint usuario OK, commits ateh 62cb104). Planejamento da Fase 3 commitado em ee08d08 (03-CONTEXT/RESEARCH/VALIDATION/UI-SPEC/SKELETON, plans 03-01/02/03, ROADMAP/STATE atualizados: Phase 3 of 8, Plan 1 of 3, Ready to execute). NENHUMA implementacao da Fase 3 comecou. Fase 3 usa infra da Fase 2 (Lancamento, parseValorBRLParaCentavos, listas categoria/forma, repositório, LancamentoFormScreen/validators)."
+}

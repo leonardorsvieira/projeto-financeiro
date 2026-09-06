@@ -63,16 +63,45 @@ void main() {
       expect(rascunho.formaPagamento, 'Pix');
     });
 
-    test('lança DitadoException em HTTP diferente de 200', () {
+    test('lança DitadoException em HTTP diferente de 200 após retries', () {
       final cliente = MockClient(
         (_) async => http.Response('erro', 500),
       );
-      final repo = GeminiDitadoRepository(cliente: cliente, apiKey: 'x');
+      final repo = GeminiDitadoRepository(
+        cliente: cliente,
+        apiKey: 'x',
+        esperasRetry: const [],
+      );
 
       expect(
         () => repo.reconhecer(audio),
         throwsA(isA<DitadoException>()),
       );
+    });
+
+    test('reconhecer tenta de novo em 503 e aceita na segunda tentativa',
+        () async {
+      var chamadas = 0;
+      final cliente = MockClient((_) async {
+        chamadas++;
+        if (chamadas == 1) return http.Response('erro', 503);
+        return corpoResposta({
+          'descricao': 'Almoço',
+          'valor_reais': '42,90',
+          'categoria': 'Alimentação',
+        });
+      });
+      final repo = GeminiDitadoRepository(
+        cliente: cliente,
+        apiKey: 'x',
+        esperasRetry: const [],
+      );
+
+      final rascunho = await repo.reconhecer(audio);
+
+      expect(chamadas, 2);
+      expect(rascunho.descricao, 'Almoço');
+      expect(rascunho.valorTexto, '42,90');
     });
 
     test('lança DitadoException sem chave configurada', () {

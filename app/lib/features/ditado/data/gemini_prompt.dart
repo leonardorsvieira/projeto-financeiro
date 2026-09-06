@@ -24,10 +24,21 @@ class GeminiPrompt {
       '- categoria deve ser escolhida APENAS entre: ${categorias.join(', ')}.\n'
       '- forma_pagamento deve ser escolhida APENAS entre: '
       '${formasPagamento.join(', ')}.\n'
+      '- categoria e forma_pagamento DEVEM ser exatamente uma das opções '
+      'listadas (mesmo texto). Se houver dúvida ou nenhuma opção encaixar, '
+      'use "Outros" para categoria e "Outro" para forma de pagamento. Nunca '
+      'invente ou adapte os nomes.\n'
+      '- Exemplos de mapeamento: restaurante/almoço/lanche/iFood = '
+      'Alimentação; uber/táxi/gasolina/ônibus = Transporte; aluguel/condomínio/'
+      'conta de luz, água ou gás/IPTU = Moradia; supermercado/feira/padaria = '
+      'Mercado; academia/plano de saúde/farmácia = Saúde; streaming/plano de '
+      'celular/internet = Assinaturas; cinema/bares/viagem = Lazer; curso/'
+      'livros/faculdade = Educação.\n'
       '- Se o usuário não citar um campo, deixe null. NÃO invente '
       'valores, categorias ou formas.\n'
       '- data: apenas se o usuário citar o dia; senão null (o app usa hoje '
-      'como padrão). Hoje é {hoje}.\n'
+      'como padrão). Não preencha data só porque conhece o dia de hoje. '
+      'Hoje é {hoje}.\n'
       '- vencimento: apenas se citado; senão null.';
 
   static final String _instrucaoCorrecao =
@@ -40,11 +51,12 @@ class GeminiPrompt {
       '- valor: string numérica com vírgula decimal (ex.: {"valor": "39,90"});'
       ' resolva números por extenso.\n'
       '- categoria: escolha APENAS entre '
-      '${categorias.join(', ')} (ex.: {"categoria": "Alimentação"}).\n'
+      '${categorias.join(', ')}; em dúvida, use "Outros". Nunca invente '
+      '(ex.: {"categoria": "Alimentação"}).\n'
       '- forma_pagamento: escolha APENAS entre '
-      '${formasPagamento.join(', ')}.\n'
-      '- data e vencimento: "AAAA-MM-DD" (ex.: {"data": "2026-09-06"}).\n'
-      'Se a correção não trouxer valor para o campo, use null. Hoje é {hoje}.';
+      '${formasPagamento.join(', ')}; em dúvida, use "Outro".\n'
+      '- data e vencimento: "AAAA-MM-DD" apenas se citada a data; senão null '
+      '(não use hoje se não foi falado). Hoje é {hoje}.';
 
   static String _instrucao(String base, {required String campo}) {
     return base

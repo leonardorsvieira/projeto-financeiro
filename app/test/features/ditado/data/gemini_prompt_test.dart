@@ -61,6 +61,15 @@ void main() {
         contains('Hoje é ${hoje.year}-'),
       );
     });
+
+    test('instrução reforça lista fixa com fallback e mapeamentos', () {
+      final payload = GeminiPrompt.payloadReconhecer(audio);
+      final sistema = payload['system_instruction'] as Map<String, dynamic>;
+      final instrucao = (sistema['parts'] as List).first['text'].toString();
+      expect(instrucao, contains('use "Outros" para categoria e "Outro" para forma de pagamento'));
+      expect(instrucao, contains('gás/IPTU = Moradia'));
+      expect(instrucao, contains('Não preencha data só porque conhece o dia'));
+    });
   });
 
   group('payloadCorrigir', () {

@@ -14,7 +14,7 @@ De uma ideia a um app de finanças pessoais falado: primeiro uma fundação sól
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Fundação e Acesso** - App rodando em Android/iOS/Web com login único seguro
-- [ ] **Phase 2: Lançamentos Manuais** - Registrar, editar e excluir despesas, sincronizadas entre dispositivos
+- [x] **Phase 2: Lançamentos Manuais** - Registrar, editar e excluir despesas, sincronizadas entre dispositivos
 - [ ] **Phase 3: Ditado por Voz (Core)** - Ditar um gasto e a IA preenche; confirma com um toque
 - [ ] **Phase 4: Vencimentos, Itens e Recorrências** - Agendar pagamento, detalhar produtos, contas fixas mensais
 - [ ] **Phase 5: Lembretes Push** - Avisos "X dias antes" e no dia, na hora escolhida

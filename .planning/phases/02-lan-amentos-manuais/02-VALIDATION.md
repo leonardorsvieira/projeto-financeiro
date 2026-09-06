@@ -25,8 +25,8 @@
 
 | Task | What | How to Verify | Pass If |
 |------|------|---------------|---------|
-| 02-01-01 | Create migration `create_lancamentos` (schema, índices, RLS, publicação realtime) | `supabase db push` / Management API query | Query confirma tabela `lancamentos`, `rls_enabled=true`, policies SELECT/INSERT/UPDATE/DELETE presentes, índice `lancamentos_user_data_idx` |
-| 02-01-02 | RLS bloqueia anon | SQL/API: `select * from lancamentos` com role anon | Sem linhas (política exige `auth.uid()`); nenhum leak |
+| 02-01-01 | Create migration `create_lancamentos` (schema, índices, RLS, publicação realtime) | `supabase db push` / Management API query | ✅ Query confirma tabela `lancamentos`, `rls_enabled=true`, policies SELECT/INSERT/UPDATE/DELETE presentes, índice `lancamentos_user_data_idx` |
+| 02-01-02 | RLS bloqueia anon | SQL/API: `select * from lancamentos` com role anon | ✅ `200 []` (0 linhas; nenhum leak) |
 | 02-02-01 | Model `Lancamento` + parse/format centavos↔BRL | `flutter test test/features/lancamentos/domain/lancamento_test.dart` | Verdes; `valorCents=123456` → `R$ 1.234,56`; entrada `"12,34"` → `1234` |
 | 02-02-02 | Repository + StreamProvider (stream realtime, RLS) e CRUD | `flutter test` fake repo + widget smoke | Verdes; stream emite itens; create/update/delete chamam Supabase |
 | 02-03-01 | S5 Lista: renderiza lançamentos, FAB, empty state, excluir c/ confirmação | `flutter test test/features/lancamentos/presentation/lancamentos_list_test.dart` | Verdes (fake repo); empty state; confirmação aparece; cancelar mantém |

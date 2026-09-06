@@ -15,6 +15,8 @@
 | D-37 | Serviço de voz | **Gemini Live (API key do usuário)** | Key do Google AI Studio (free tier) via dart-define/secret no deploy; sem fallback no MVP |
 | D-38 | Captura | **Push-to-talk, 1 frase por vez** | Tocar o mic, falar, tocar de novo para parar → IA processa e monta confirmação |
 
+> **Atualização 2026-09-06 (execução 03-03):** o modelo `gemini-2.5-flash` **não está mais disponível para chaves novas** (API retorna 404 com a chave do usuário). Testado em produção: `gemini-3.6-flash` está em 503 (sobrecarga), `gemini-3.5-flash` e `gemini-flash-latest` respondem com JSON mode. Decidido com o usuário: **`gemini-3.5-flash`** (flash não-lite, suporta áudio).
+
 ## Fluxo de usuário (draft)
 
 1. Na lista de lançamentos, tocar no botão de **microfone** (FAB "+" expande → "Ditar").

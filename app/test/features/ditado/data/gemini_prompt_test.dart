@@ -12,8 +12,8 @@ void main() {
   );
 
   group('GeminiPrompt.modelo', () {
-    test('é o gemini-2.5-flash (nunca o 2.0 descontinuado)', () {
-      expect(GeminiPrompt.modelo, 'gemini-2.5-flash');
+    test('é o gemini-3.5-flash (nunca o 2.0 descontinuado)', () {
+      expect(GeminiPrompt.modelo, 'gemini-3.5-flash');
       expect(GeminiPrompt.modelo, isNot(contains('2.0')));
     });
   });

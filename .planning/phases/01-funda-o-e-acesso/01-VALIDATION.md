@@ -44,7 +44,7 @@ created: 2026-09-05
 | 01-02-02 | 02 | 1 | PLAT-01 | T-02-02 | Supabase inicializado p/ auth | unit | `flutter test` (init smoke no plan 01-03) | ✅ W1 | ⬜ pending (runtime no 01-03) |
 | 01-03-01 | 03 | 2 | PLAT-01 | T-03-01 | login/cadastro chamam Supabase e só navegam com sucesso | widget | `flutter test` | ✅ W2 | ✅ green |
 | 01-03-02 | 03 | 2 | PLAT-01 | T-03-02 | sessão persiste entre aberturas | widget + manual | `flutter test` + checkpoint | ✅ W2 | ⬜ pending (checkpoint humano) |
-| 01-03-03 | 03 | 2 | PLAT-03 | T-03-03 | build web deployado no GH Pages | deploy | `gh pages` URL 200 | ✅ W2 | ⬜ pending (aguardando workflow) |
+| 01-03-03 | 03 | 2 | PLAT-03 | T-03-03 | build web deployado no GH Pages | deploy | `gh pages` URL 200 | ✅ W2 | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

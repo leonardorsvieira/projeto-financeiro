@@ -91,9 +91,9 @@ Plans:
 
 Plans:
 
-- [ ] 03-01: Captura de voz + transcrição (Groq whisper, PT-BR)
-- [ ] 03-02: Extração estruturada (Gemini free tier) valor/categoria/pagamento → JSON
-- [ ] 03-03: Tela de confirmação pós-ditado (regra: só salva após confirmar)
+- [ ] 03-01: Captura de voz push-to-talk (record/webm) + cliente Gemini REST (gemini-2.5-flash) áudio→JSON + mapper rascunho
+- [ ] 03-02: Tela de ditado (S7) + confirmação pré-preenchida (S8) com correção por voz campo-a-campo
+- [ ] 03-03: Fluxo fim-a-fim + deploy com GEMINI_API_KEY + checkpoint manual
 
 ### Phase 4: Vencimentos, Itens e Recorrências
 

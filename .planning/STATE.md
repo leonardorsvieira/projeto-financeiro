@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Fase 2 completa (Lançamentos Manuais, validada pelo usuário 2026-09-06); próximo passo = discutir Fase 3 (Ditado por Voz)
-last_updated: "2026-09-06T05:14:58.363Z"
-last_activity: 2026-09-06 -- Phase 2 marked complete
+status: planning
+stopped_at: Fase 2 completa (validada 2026-09-06); Fase 3 definida via discussão (D-31..D-38 + transporte Gemini REST); planejamento commitado
+last_updated: "2026-09-06T05:30:00.000Z"
+last_activity: 2026-09-06 -- Phase 3 planned
 progress:
   total_phases: 8
   completed_phases: 1
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-09-05)
 
 ## Current Position
 
-Phase: 2 — COMPLETE
-Plan: 3 of 3
-Status: Phase 2 complete
+Phase: 3 of 8 — Ditado por Voz (Core)
+Plan: 1 of 3
+Status: Ready to execute
 
-Last activity: 2026-09-06 -- Phase 2 marked complete
+Last activity: 2026-09-06 -- Phase 3 planned
 
 Progress: [■□□□□□□□□□] 12%
 

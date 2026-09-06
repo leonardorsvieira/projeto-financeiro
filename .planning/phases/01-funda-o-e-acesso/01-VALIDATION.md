@@ -42,9 +42,9 @@ created: 2026-09-05
 | 01-01-02 | 01 | 1 | PLAT-02 | T-01-02 / — | tema PT-BR + home placeholder | widget | `flutter test` | ✅ W0 | ✅ green |
 | 01-02-01 | 02 | 1 | PLAT-05 | T-02-01 | segredos fora do git; `.env*` ignorado | config | `git check-ignore .env` | ✅ W1 | ✅ green |
 | 01-02-02 | 02 | 1 | PLAT-01 | T-02-02 | Supabase inicializado p/ auth | unit | `flutter test` (init smoke no plan 01-03) | ✅ W1 | ⬜ pending (runtime no 01-03) |
-| 01-03-01 | 03 | 2 | PLAT-01 | T-03-01 | login/cadastro chamam Supabase e só navegam com sucesso | widget | `flutter test` | ❌ W0 | ⬜ pending |
-| 01-03-02 | 03 | 2 | PLAT-01 | T-03-02 | sessão persiste entre aberturas | widget + manual | `flutter test` + checkpoint | ❌ W0 | ⬜ pending |
-| 01-03-03 | 03 | 2 | PLAT-03 | T-03-03 | build web deployado no GH Pages | deploy | `gh pages` URL 200 | ❌ W0 | ⬜ pending |
+| 01-03-01 | 03 | 2 | PLAT-01 | T-03-01 | login/cadastro chamam Supabase e só navegam com sucesso | widget | `flutter test` | ✅ W2 | ✅ green |
+| 01-03-02 | 03 | 2 | PLAT-01 | T-03-02 | sessão persiste entre aberturas | widget + manual | `flutter test` + checkpoint | ✅ W2 | ⬜ pending (checkpoint humano) |
+| 01-03-03 | 03 | 2 | PLAT-03 | T-03-03 | build web deployado no GH Pages | deploy | `gh pages` URL 200 | ✅ W2 | ⬜ pending (aguardando workflow) |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

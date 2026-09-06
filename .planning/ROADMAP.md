@@ -13,7 +13,7 @@ De uma ideia a um app de finanças pessoais falado: primeiro uma fundação sól
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Fundação e Acesso** - App rodando em Android/iOS/Web com login único seguro
+- [x] **Phase 1: Fundação e Acesso** - App rodando em Android/iOS/Web com login único seguro
 - [ ] **Phase 2: Lançamentos Manuais** - Registrar, editar e excluir despesas, sincronizadas entre dispositivos
 - [ ] **Phase 3: Ditado por Voz (Core)** - Ditar um gasto e a IA preenche; confirma com um toque
 - [ ] **Phase 4: Vencimentos, Itens e Recorrências** - Agendar pagamento, detalhar produtos, contas fixas mensais
@@ -42,12 +42,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 **Wave 1**
 
-- [ ] 01-01: Scaffold do app Flutter (estrutura, tema PT-BR, navegação)
-- [ ] 01-02: Backend Supabase (projeto, auth, variáveis de ambiente/segredos fora do git)
+- [x] 01-01: Scaffold do app Flutter (estrutura, tema PT-BR, navegação)
+- [x] 01-02: Backend Supabase (projeto, auth, variáveis de ambiente/segredos fora do git)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-03: Tela de login/criação de conta + sessão persistente (Android/iOS/Web)
+- [x] 01-03: Tela de login/criação de conta + sessão persistente (Android/iOS/Web)
 
 ### Phase 2: Lançamentos Manuais
 

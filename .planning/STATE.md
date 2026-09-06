@@ -1,17 +1,17 @@
-﻿---
+---
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Fase 1 planejada Ã¢â‚¬â€ 3 planos, 2 waves, PRONTO para executar (/gsd:execute-phase 1)"
-last_updated: "2026-09-06T02:51:55.542Z"
-last_activity: 2026-09-06
+stopped_at: "Fase 1 completa — auth Supabase + deploy GH Pages aprovados; próxima = Fase 2 (Lançamentos Manuais)"
+last_updated: "2026-09-06T03:22:30.000Z"
+last_activity: 2026-09-06 -- Phase 1 marked complete
 progress:
   total_phases: 8
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 1
-  percent: 0
+  completed_plans: 3
+  percent: 12
 ---
 
 # Project State
@@ -20,17 +20,18 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-09-05)
 
-**Core value:** O usuÃƒÂ¡rio dicta um gasto, recebimento ou investimento pela voz e ele ÃƒÂ© registrado corretamente, no lugar certo, pronto para acompanhar.
-**Current focus:** Phase 1 Ã¢â‚¬â€ FundaÃƒÂ§ÃƒÂ£o e Acesso
+**Core value:** O usuário dicta um gasto, recebimento ou investimento pela voz e ele é registrado corretamente, no lugar certo, pronto para acompanhar.
+**Current focus:** Phase 2 — Lançamentos Manuais
 
 ## Current Position
 
-Phase: 1 of 8 (FundaÃƒÂ§ÃƒÂ£o e Acesso)
-Plan: 3 of 3 (01-01 walking skeleton Ã¢â‚¬â€ concluÃƒÂ­do)
-Status: Ready to execute
-Last activity: 2026-09-06
+Phase: 2 of 8 (Lançamentos Manuais)
+Plan: none executed yet
+Status: Phase 1 complete — ready for phase 2 planning
 
-Progress: [Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“â€˜] 0%
+Last activity: 2026-09-06 -- Phase 1 marked complete
+
+Progress: [■□□□□□□□□□] 12%
 
 ## Performance Metrics
 
@@ -40,7 +41,7 @@ Progress: [Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 1 (Fundação e Acesso) | 3 | 3 | 1.0 |
 
 **Recent Trend:** N/A
 
@@ -48,14 +49,18 @@ Progress: [Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“â€˜Ã¢â€“
 
 ### Decisions
 
-- [Boot]: Stack recomendada Ã¢â‚¬â€ Flutter + Supabase + Groq STT + Gemini (free tiers) Ã¢â‚¬â€ ver .planning/research/SUMMARY.md
-- [Boot]: ExecuÃƒÂ§ÃƒÂ£o paralela + git auto-commit a cada plano (config.json)
-- [Boot]: Estrutura MVP vertical (cada fase entrega fatia utilizÃƒÂ¡vel)
+- [Boot]: Stack recomendada — Flutter + Supabase + Groq STT + Gemini (free tiers) — ver .planning/research/SUMMARY.md
+- [Boot]: Execução paralela + git auto-commit a cada plano (config.json)
+- [Boot]: Estrutura MVP vertical (cada fase entrega fatia utilizável)
 - [Boot]: Dados financeiros nunca versionados (.gitignore cobre .env, planilhas, extratos, DBS)
+- [Phase 1]: Supabase projeto `meubolso` sa-east-1 (ref tkfhthotspehsgvmpsjm); auth email sem confirmação (usuário único); `.env` fora do git com URL + anon/publishable key
+- [Phase 1]: Deploy web no GitHub Pages (workflow deploy-pages, base-href /projeto-financeiro/); URLs hash-based (go_router default)
+- [Phase 1]: Android toolchain ainda não instalada — alvo Android validação pendente até Fase 2 (web já público)
+- [Phase 1]: Hardening futuro — flutter_secure_storage para sessão antes de Fase 2 (dados sensíveis)
 
 ### Pending Todos
 
-None yet.
+- Android toolchain / Android Studio para rodar app em dispositivo/emulador Android
 
 ### Blockers/Concerns
 
@@ -71,6 +76,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-09-05 22:35
-Stopped at: Fase 1 planejada Ã¢â‚¬â€ 3 planos, 2 waves, PRONTO para executar (/gsd:execute-phase 1)
+Last session: 2026-09-06 03:22
+Stopped at: Fase 1 completa (approval 2026-09-06); próximo passo = discuss/plan da Fase 2
 Resume file: None

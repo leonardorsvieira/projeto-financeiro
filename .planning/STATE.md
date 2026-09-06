@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
+status: Awaiting next milestone
 stopped_at: Fase 1 completa (approval 2026-09-06); próximo passo = discuss/plan da Fase 2
-last_updated: "2026-09-06T19:40:23.369Z"
-last_activity: 2026-09-06
+last_updated: "2026-09-06T19:49:35.704Z"
+last_activity: 2026-09-06 — Milestone v1.0 completed and archived
 progress:
   total_phases: 8
   completed_phases: 2
@@ -25,13 +25,10 @@ See: .planning/PROJECT.md (updated 2026-09-05)
 
 ## Current Position
 
-Phase: 3 — COMPLETE
-Plan: 3 of 3
-Status: Phase complete — ready for verification
-
-Last activity: 2026-09-06
-
-Progress: [■□□□□□□□□□] 12%
+Phase: Milestone v1.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-09-06 — Milestone v1.0 completed and archived
 
 ## Performance Metrics
 
@@ -79,3 +76,7 @@ Items acknowledged and carried forward from previous milestone close:
 Last session: 2026-09-06 03:22
 Stopped at: Fase 1 completa (approval 2026-09-06); próximo passo = discuss/plan da Fase 2
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd:new-milestone

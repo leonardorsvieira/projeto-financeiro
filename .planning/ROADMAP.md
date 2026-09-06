@@ -4,96 +4,40 @@
 
 De uma ideia a um app de finanças pessoais falado: primeiro uma fundação sólida (app multi-plataforma + login), depois a capacidade essencial de registrar gastos — manualmente e por voz —, depois vencimentos, lembretes, dashboard/metas e, por fim, investimentos. Cada fase entrega uma fatia vertical utilizável pelo Leonardo ("MVP por fatia").
 
+## Milestones
+
+- ✅ **v1.0 MVP** — Fases 1-3 (shipped 2026-09-06) → ver `.planning/milestones/v1.0-ROADMAP.md`
+- 🚧 **v1.1** — Fases 4-8 (em planejamento, começando pela Fase 4)
+
 ## Phases
 
 **Phase Numbering:**
 
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+- Integer phases (4, 5, 6): Planned milestone work
+- Decimal phases (4.1, 5.2): Urgent insertions (marked with INSERTED)
 
 Decimal phases appear between their surrounding integers in numeric order.
+
+<details>
+<summary>✅ v1.0 MVP (Fases 1-3) — SHIPPED 2026-09-06</summary>
 
 - [x] **Phase 1: Fundação e Acesso** - App rodando em Android/iOS/Web com login único seguro
 - [x] **Phase 2: Lançamentos Manuais** - Registrar, editar e excluir despesas, sincronizadas entre dispositivos
 - [x] **Phase 3: Ditado por Voz (Core)** - Ditar um gasto e a IA preenche; confirma com um toque
+
+[Dados completos do milestone arquivados em `.planning/milestones/v1.0-ROADMAP.md`]
+
+</details>
+
+### 🚧 v1.1 (Em planejamento)
+
 - [ ] **Phase 4: Vencimentos, Itens e Recorrências** - Agendar pagamento, detalhar produtos, contas fixas mensais
 - [ ] **Phase 5: Lembretes Push** - Avisos "X dias antes" e no dia, na hora escolhida
 - [ ] **Phase 6: Dashboard e Metas** - Saldo do mês, gráfico por categoria, vencimentos e metas
 - [ ] **Phase 7: Recebimentos por Voz** - Ditar receitas e ver no saldo do mês
 - [ ] **Phase 8: Investimentos** - Acompanhar patrimônio, dividendos, compras/vendas e ditar aportes
 
-## Phase Details
-
-### Phase 1: Fundação e Acesso
-
-**Goal:** Aplicativo "Meu Bolso" inicializado em Flutter para Android, iPhone e Web, com login de usuário único.
-**Mode:** mvp
-**Depends on:** Nothing (first phase)
-**Requirements**: PLAT-01, PLAT-02, PLAT-03, PLAT-05
-**Success Criteria** (what must be TRUE):
-
-  1. Usuário cria conta com e-mail/senha e faz login no app
-  2. App abre no Android, no iPhone e no navegador (web) a partir da mesma base
-  3. Sessão persiste ao fechar e reabrir o app
-  4. Nenhum dado sensível aparece no repositório público (.env/secrets fora do git)
-
-**Plans**: 3 plans
-
-Plans:
-**Wave 1**
-
-- [x] 01-01: Scaffold do app Flutter (estrutura, tema PT-BR, navegação)
-- [x] 01-02: Backend Supabase (projeto, auth, variáveis de ambiente/segredos fora do git)
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [x] 01-03: Tela de login/criação de conta + sessão persistente (Android/iOS/Web)
-
-### Phase 2: Lançamentos Manuais
-
-**Goal:** Registrar despesas manualmente, com todos os campos, sinconizados na nuvem.
-**Mode:** mvp
-**Depends on**: Phase 1
-**Requirements**: DSP-01, DSP-02, DSP-03, PLAT-04
-**Success Criteria** (what must be TRUE):
-
-  1. Usuário lança despesa com valor, categoria, forma de pagamento e data
-  2. Usuário edita e exclui lançamentos existentes
-  3. Lançamento feito no celular aparece no navegador (e vice-versa), via nuvem
-  4. Formas de pagamento: crédito, débito, Pix, dinheiro, outros
-
-**Plans**: 3 plans
-
-Plans:
-**Wave 1**
-
-- [ ] 02-01: Schema Supabase + RLS + realtime (despesas isoladas por usuário)
-- [ ] 02-02: Camada de dados Dart (model centavos/BRL, repository stream+CRUD, providers)
-
-**Wave 2** *(blocked on Wave 1 completion)*
-
-- [ ] 02-03: Telas lista/form (S5/S6), edição/exclusão + sync realtime + deploy web
-
-### Phase 3: Ditado por Voz (Core)
-
-**Goal:** Ditar um gasto (PT-BR, "paguei 50 no mercado") e ver o lançamento pré-preenchido para confirmar com um toque.
-**Mode:** mvp
-**Depends on**: Phase 2
-**Requirements**: VOZ-01, VOZ-06
-**Success Criteria** (what must be TRUE):
-
-  1. Usuário grava voz e o app transcreve em português
-  2. IA extrai valor, categoria e forma de pagamento e pré-preenche o lançamento
-  3. Lançamento só é salvo após confirmação/ajuste do usuário
-  4. Captura usa tier gratuito (sem custo mensal)
-
-**Plans**: 3 plans
-
-Plans:
-
-- [x] 03-01: Captura de voz push-to-talk (record/webm) + cliente Gemini REST (gemini-3.5-flash-lite) áudio→JSON + mapper rascunho
-- [x] 03-02: Tela de ditado (S7) + confirmação pré-preenchida (S8) com correção por voz campo-a-campo
-- [x] 03-03: Fluxo fim-a-fim + deploy com GEMINI_API_KEY + checkpoint manual
+## Phase Details (v1.1)
 
 ### Phase 4: Vencimentos, Itens e Recorrências
 
@@ -202,15 +146,15 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+Phases execute in numeric order: 4 → 5 → 6 → 7 → 8 (v1.1)
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Fundação e Acesso | 0/3 | Not started | - |
-| 2. Lançamentos Manuais | 0/3 | Not started | - |
-| 3. Ditado por Voz (Core) | 0/3 | Not started | - |
-| 4. Vencimentos, Itens e Recorrências | 0/3 | Not started | - |
-| 5. Lembretes Push | 0/3 | Not started | - |
-| 6. Dashboard e Metas | 0/3 | Not started | - |
-| 7. Recebimentos por Voz | 0/2 | Not started | - |
-| 8. Investimentos | 0/5 | Not started | - |
+| Phase             | Milestone | Plans Complete | Status      | Completed  |
+| ----------------- | --------- | -------------- | ----------- | ---------- |
+| 1. Fundação e Acesso | v1.0 | 3/3 | Complete | 2026-09-06 |
+| 2. Lançamentos Manuais | v1.0 | 3/3 | Complete | 2026-09-06 |
+| 3. Ditado por Voz (Core) | v1.0 | 3/3 | Complete | 2026-09-06 |
+| 4. Vencimentos, Itens e Recorrências | v1.1 | 0/3 | Not started | - |
+| 5. Lembretes Push | v1.1 | 0/3 | Not started | - |
+| 6. Dashboard e Metas | v1.1 | 0/3 | Not started | - |
+| 7. Recebimentos por Voz | v1.1 | 0/2 | Not started | - |
+| 8. Investimentos | v1.1 | 0/5 | Not started | - |

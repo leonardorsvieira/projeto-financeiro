@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Fundação e Acesso** - App rodando em Android/iOS/Web com login único seguro
 - [x] **Phase 2: Lançamentos Manuais** - Registrar, editar e excluir despesas, sincronizadas entre dispositivos
-- [ ] **Phase 3: Ditado por Voz (Core)** - Ditar um gasto e a IA preenche; confirma com um toque
+- [x] **Phase 3: Ditado por Voz (Core)** - Ditar um gasto e a IA preenche; confirma com um toque
 - [ ] **Phase 4: Vencimentos, Itens e Recorrências** - Agendar pagamento, detalhar produtos, contas fixas mensais
 - [ ] **Phase 5: Lembretes Push** - Avisos "X dias antes" e no dia, na hora escolhida
 - [ ] **Phase 6: Dashboard e Metas** - Saldo do mês, gráfico por categoria, vencimentos e metas
@@ -91,9 +91,9 @@ Plans:
 
 Plans:
 
-- [ ] 03-01: Captura de voz push-to-talk (record/webm) + cliente Gemini REST (gemini-2.5-flash) áudio→JSON + mapper rascunho
-- [ ] 03-02: Tela de ditado (S7) + confirmação pré-preenchida (S8) com correção por voz campo-a-campo
-- [ ] 03-03: Fluxo fim-a-fim + deploy com GEMINI_API_KEY + checkpoint manual
+- [x] 03-01: Captura de voz push-to-talk (record/webm) + cliente Gemini REST (gemini-3.5-flash-lite) áudio→JSON + mapper rascunho
+- [x] 03-02: Tela de ditado (S7) + confirmação pré-preenchida (S8) com correção por voz campo-a-campo
+- [x] 03-03: Fluxo fim-a-fim + deploy com GEMINI_API_KEY + checkpoint manual
 
 ### Phase 4: Vencimentos, Itens e Recorrências
 

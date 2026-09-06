@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: Awaiting next milestone
-stopped_at: Milestone v1.0 arquivado (Fases 1-3, 9 plans); próximo passo = discutir/planejar Fase 4 (v1.1)
-last_updated: "2026-09-06T19:53:35.382Z"
-last_activity: 2026-09-06 — Milestone v1.0 completed and archived
+stopped_at: Discussão Fase 4 concluída; próximo passo = plan-phase Fase 4
+last_updated: "2026-09-06T21:00:00Z"
+last_activity: 2026-09-06 — Discussão Fase 4 concluída (todas as 4 áreas resolvidas)
 progress:
   total_phases: 8
   completed_phases: 3
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 
 ## Current Position
 
-Phase: Milestone v1.0 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-09-06 — Milestone v1.0 completed and archived
+Phase: 4 — Vencimentos, Itens e Recorrências
+Plan: — (awaiting plan-phase)
+Status: Context gathered, ready for planning
+Last activity: 2026-09-06 — Discussão Fase 4 concluída (4 áreas: itens, recorrência, ditado, escopo)
 
 ## Performance Metrics
 
@@ -41,6 +41,7 @@ Last activity: 2026-09-06 — Milestone v1.0 completed and archived
 | 1 (Fundação e Acesso) | 3 | 3 | 1.0 |
 | 2 (Lançamentos Manuais) | 3 | 3 | 1.0 |
 | 3 (Ditado por Voz — Core) | 3 | 3 | 1.0 |
+| 4 (Vencimentos, Itens e Recorrências) | 0 | 3 | 0.0 |
 
 **Recent Trend:** N/A
 
@@ -58,6 +59,9 @@ Last activity: 2026-09-06 — Milestone v1.0 completed and archived
 - [Phase 2]: Lançamentos em centavos inteiros; categorias/formas de pagamento fixas PT-BR
 - [Phase 3]: Captura por voz via Gemini `gemini-3.5-flash-lite` (free tier) com retry 3x (429/500/502/503); prompt com lista fixa e fallback
 - [Milestone]: v1.0 arquivado e publicado (GH Pages); variante v1.1 inicia na Fase 4
+- [Phase 4]: Itens = JSONB na tabela lancamentos; soma automática; editáveis no S6 e detalhe
+- [Phase 4]: Fixa mensal = gera cópias independentes dos próximos meses (lazy, no app); serie_id uuid; só mensal
+- [Phase 4]: Ditado itens = lista natural; soma confirmada; vencimento "dia 15" = próxima data com esse dia
 
 ### Pending Todos
 
@@ -79,10 +83,10 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-09-06
-Stopped at: Milestone v1.0 arquivado; próximo passo = discutir/planejar Fase 4 (v1.1)
+Stopped at: Discussão Fase 4 concluída; próximo passo = plan-phase Fase 4
 Resume file: None
 
 ## Operator Next Steps
 
-- Discutir a Fase 4 (Vencimentos, Itens e Recorrências) — /gsd:discuss-phase
+- **Rodar plan-phase da Fase 4** — /gsd:plan-phase 4 (criar os 3 plans: 04-01, 04-02, 04-03)
 - (Opcional) Instalar toolchain Android para validar device de verdade

@@ -64,6 +64,11 @@ class LancamentosListScreen extends ConsumerWidget {
               onPressed: () => _abrirHorarioLembretes(context, ref),
               icon: const Icon(Icons.notifications_outlined),
             ),
+          IconButton(
+            tooltip: 'Próximos vencimentos',
+            onPressed: () => context.push(AppRoutes.proximosVencimentos),
+            icon: const Icon(Icons.event_outlined),
+          ),
           PopupMenuButton<String>(
             tooltip: 'Opções',
             onSelected: (value) {

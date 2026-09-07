@@ -78,7 +78,7 @@ Plans:
 
 Plans:
 
-- [ ] 05-01: Tela "próximos vencimentos" (lista ordenada)
+- [x] 05-01: Tela "próximos vencimentos" (lista ordenada)
 - [ ] 05-02: Agendamento de push (FCM/APNs + notificação local como fallback) — *opcional, post v1.1*
 - [ ] 05-03: Configuração de período (dias antes) e horário
 
@@ -154,8 +154,8 @@ Phases execute in numeric order: 4 → 5 → 6 → 7 → 8 (v1.1)
 | 1. Fundação e Acesso | v1.0 | 3/3 | Complete | 2026-09-06 |
 | 2. Lançamentos Manuais | v1.0 | 3/3 | Complete | 2026-09-06 |
 | 3. Ditado por Voz (Core) | v1.0 | 3/3 | Complete | 2026-09-06 |
-| 4. Vencimentos, Itens e Recorrências | v1.1 | 4/4 | **Complete** | 2026-09-07 |
-| 5. Lembretes Push | v1.1 | 0/3 | **In progress** | - |
+| 4. Vencimentos, Itens e Recorrências | v1.1 | 4/4 | Complete | 2026-09-07 |
+| 5. Lembretes Push | v1.1 | 1/3 | **In progress** | - |
 | 6. Dashboard e Metas | v1.1 | 0/3 | Not started | - |
 | 7. Recebimentos por Voz | v1.1 | 0/2 | Not started | - |
 | 8. Investimentos | v1.1 | 0/5 | Not started | - |

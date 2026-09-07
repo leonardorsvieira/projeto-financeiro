@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: In progress
-stopped_at: Fase 4 completa; Fase 5 iniciada — 05-01 (tela vencimentos) concluída; 05-03 (config X dias) pendente
-last_updated: "2026-09-07T23:59:00Z"
-last_activity: 2026-09-07 — 05-01 implementado (provider, tela S7, rota, botão S5, testes); 96 testes passam; build web + APK OK
+stopped_at: Fase 5 completa (05-01 + 05-03); próxima = Fase 6 (Dashboard e Metas)
+last_updated: "2026-09-07T05:10:00Z"
+last_activity: 2026-09-07 — 05-03 implementado (diasAntes configurável 0-30, diálogo unificado horário+stepper, reagendamento); 103 testes passam; build web + APK OK
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 28
-  completed_plans: 13
-  percent: 46
+  completed_plans: 14
+  percent: 50
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 
 ## Current Position
 
-Phase: 5 — Lembretes Push
-Plan: 05-01 ✅, 05-03 🔄
-Status: **Fase 4 completa**; **05-01 concluído** — tela "próximos vencimentos" (S7) com lista filtrada/ordenada, navegação S5→S7, pull-to-refresh; pronto para 05-03 (config X dias antes)
-Last activity: 2026-09-07 — 05-01 implementado e commitado; 96 testes; build web + APK validados
+Phase: 5 — Lembretes Push (completa)
+Plan: 05-01 ✅, 05-03 ✅
+Status: **Fase 5 completa** — 05-03 concluído: `diasAntes` configurável (0-30, padrão 3), diálogo unificado horário + stepper na S5, reagendamento automático, testes de borda
+Last activity: 2026-09-07 — 05-03 implementado e commitado; 103 testes; build web + APK validados
 
 ## Performance Metrics
 
@@ -42,7 +42,7 @@ Last activity: 2026-09-07 — 05-01 implementado e commitado; 96 testes; build w
 | 2 (Lançamentos Manuais) | 3 | 3 | 1.0 |
 | 3 (Ditado por Voz — Core) | 3 | 3 | 1.0 |
 | 4 (Vencimentos, Itens e Recorrências) | 4 | 4 | 1.0 |
-| 5 (Lembretes Push) | 1 | 3 | 1.0 |
+| 5 (Lembretes Push) | 2 | 2 | 1.0 |
 
 **Recent Trend:** N/A
 
@@ -67,7 +67,8 @@ Last activity: 2026-09-07 — 05-01 implementado e commitado; 96 testes; build w
 - [Phase 4]: 04-01/04-02/04-03/04-04 implementados; migration SQL aplicada no Supabase remoto
 - [Phase 4]: build_apk.ps1 criado (lê .env e injeta SUPABASE/GEMINI via --dart-define); APK debug corrigido (desugaring + defines)
 - [04-04]: Notificações locais (flutter_local_notifications 22.3.0) T-3/T-0 horário configurável; gradle desugaring + multiDex + compileSdk 36
-- [Phase 5]: 05-01 tela "próximos vencimentos" (lista filtrada/ordenada, pull-to-refresh, badges) — concluído; 05-03 config X dias antes (padrão 3) unificado com horário — pendente; 05-02 push FCM/APNs adiado (pós v1.1)
+- [Phase 5]: 05-01 tela "próximos vencimentos" (lista filtrada/ordenada, pull-to-refresh, badges) e 05-03 config "X dias antes" (diasAntes 0-30, padrão 3) unificada com horário no diálogo S5 — concluídos; 05-02 push FCM/APNs adiado (pós v1.1)
+- [05-03]: `PreferenciasLembretes.diasAntes` (0-30, normalizado); chave `lembretes_dias_antes`; `datasDeAgendamento(venc, hora, minuto, diasAntes)` ordena T-X cronológico antes de T-0; tipo da notificação `xd` (migrou de `3d`, cancelamento ajustado); `alterarPreferencias` substitui `alterarHorario`
 
 ### Pending Todos
 
@@ -87,11 +88,11 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-09-06
-Stopped at: Fase 4 (04-01, 04-02, 04-03) implementada e commitada; próxima = aplicar migration ao Supabase + validação final (build web/test) + discutir instalação do APK no celular
+Last session: 2026-09-07
+Stopped at: Fase 5 (05-01 + 05-03) implementada e commitada; próxima = Fase 6 (Dashboard e Metas)
 Resume file: None
 
 ## Operator Next Steps
 
-- **Implementar 05-03** — config X dias antes unificada com horário no diálogo S5 (estender PreferenciasLembretes, NotificacoesService, LembretesController, UI)
-- **Depois**: Fase 6 (Dashboard e Metas)
+- **Iniciar Fase 6 (Dashboard e Metas)** — planejar 06-01 (card de saldo do mês), 06-02 (gráfico por categoria), 06-03 (metas por categoria com progresso)
+- **_Nota segurança:_** revogar o PAT do Supabase exposto no chat (Account Settings → Access Tokens)

@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ### 🚧 v1.1 (Em planejamento)
 
 - [x] **Phase 4: Vencimentos, Itens e Recorrências** - Agendar pagamento, detalhar produtos, contas fixas mensais
-- [ ] **Phase 5: Lembretes Push** - Avisos "X dias antes" e no dia, na hora escolhida
+- [x] **Phase 5: Lembretes Push** - Avisos "X dias antes" e no dia, na hora escolhida
 - [ ] **Phase 6: Dashboard e Metas** - Saldo do mês, gráfico por categoria, vencimentos e metas
 - [ ] **Phase 7: Recebimentos por Voz** - Ditar receitas e ver no saldo do mês
 - [ ] **Phase 8: Investimentos** - Acompanhar patrimônio, dividendos, compras/vendas e ditar aportes
@@ -74,13 +74,13 @@ Plans:
   3. Tela de próximos vencimentos lista as contas a vencer
   4. Notificações funcionam mesmo com free tier (fallback local) no iOS
 
-**Plans**: 3 plans (05-01 + 05-03 em andamento; 05-02 opcional futuro)
+**Plans**: 2 plans (completed; 05-02 opcional post v1.1)
 
 Plans:
 
 - [x] 05-01: Tela "próximos vencimentos" (lista ordenada)
 - [ ] 05-02: Agendamento de push (FCM/APNs + notificação local como fallback) — *opcional, post v1.1*
-- [ ] 05-03: Configuração de período (dias antes) e horário
+- [x] 05-03: Configuração de período (dias antes) e horário
 
 ### Phase 6: Dashboard e Metas
 
@@ -155,7 +155,7 @@ Phases execute in numeric order: 4 → 5 → 6 → 7 → 8 (v1.1)
 | 2. Lançamentos Manuais | v1.0 | 3/3 | Complete | 2026-09-06 |
 | 3. Ditado por Voz (Core) | v1.0 | 3/3 | Complete | 2026-09-06 |
 | 4. Vencimentos, Itens e Recorrências | v1.1 | 4/4 | Complete | 2026-09-07 |
-| 5. Lembretes Push | v1.1 | 1/3 | **In progress** | - |
+| 5. Lembretes Push | v1.1 | 2/2 | Complete | 2026-09-07 |
 | 6. Dashboard e Metas | v1.1 | 0/3 | Not started | - |
 | 7. Recebimentos por Voz | v1.1 | 0/2 | Not started | - |
 | 8. Investimentos | v1.1 | 0/5 | Not started | - |

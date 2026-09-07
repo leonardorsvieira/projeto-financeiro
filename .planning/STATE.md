@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: In progress
-stopped_at: Fase 5 completa; Fase 6 (Dashboard e Metas) planejada — 06-01/06-02/06-03 criados
-last_updated: "2026-09-07T06:00:00Z"
-last_activity: 2026-09-07 — 05-03 implementado (diasAntes configurável 0-30, diálogo unificado horário+stepper, reagendamento); 103 testes passam; build web + APK OK
+stopped_at: 06-01 completo (HomeScreen tabs + card gastos do mês + vencimentos na home); próximos 06-02 (donut fl_chart), 06-03 (metas)
+last_updated: "2026-09-07T07:30:00Z"
+last_activity: 2026-09-07 — 06-01 implementado: /home vira HomeScreen (tabs Resumo|Lançamentos), card gastos do mês (real+previsto) + próximos vencimentos na home; build_apk.ps1 corrigido; 108 testes passam; analyze 0 issues; web + APK OK
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 28
-  completed_plans: 14
-  percent: 50
+  completed_plans: 15
+  percent: 54
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 
 ## Current Position
 
-Phase: 6 — Dashboard e Metas (planejada)
-Plan: 06-01 🔄, 06-02 ⏳, 06-03 ⏳
-Status: **Fase 5 completa**; **Fase 6 planejada** — 06-01 (Home com tabs + card gastos do mês/cards vencimentos), 06-02 (donut fl_chart), 06-03 (metas recorrentes no Supabase). Execução começa em 06-01.
-Last activity: 2026-09-07 — Fase 6 planejada; decisões confirmadas (gastos mês sem receitas, fl_chart, tab Resumo|Lançamentos, metas editáveis)
+Phase: 6 — Dashboard e Metas (06-01 concluído)
+Plan: 06-01 ✅, 06-02 ⏳, 06-03 ⏳
+Status: **06-01 concluído** — `/home` agora é HomeScreen com tabs **Resumo | Lançamentos**; Resumo mostra card "Gastos do mês" (real + previsto) e seção "Próximos vencimentos"; AppBar actions e FABs migraram para a HomeScreen. Próximo: 06-02 (donut fl_chart).
+Last activity: 2026-09-07 — 06-01 implementado; 108 testes passam; build web + APK OK
 
 ## Performance Metrics
 
@@ -43,7 +43,7 @@ Last activity: 2026-09-07 — Fase 6 planejada; decisões confirmadas (gastos m�
 | 3 (Ditado por Voz — Core) | 3 | 3 | 1.0 |
 | 4 (Vencimentos, Itens e Recorrências) | 4 | 4 | 1.0 |
 | 5 (Lembretes Push) | 2 | 2 | 1.0 |
-| 6 (Dashboard e Metas) | 0 | 3 | - |
+| 6 (Dashboard e Metas) | 1 | 3 | 1.0 |
 
 **Recent Trend:** N/A
 
@@ -71,6 +71,7 @@ Last activity: 2026-09-07 — Fase 6 planejada; decisões confirmadas (gastos m�
 - [Phase 5]: 05-01 tela "próximos vencimentos" (lista filtrada/ordenada, pull-to-refresh, badges) e 05-03 config "X dias antes" (diasAntes 0-30, padrão 3) unificada com horário no diálogo S5 — concluídos; 05-02 push FCM/APNs adiado (pós v1.1)
 - [05-03]: `PreferenciasLembretes.diasAntes` (0-30, normalizado); chave `lembretes_dias_antes`; `datasDeAgendamento(venc, hora, minuto, diasAntes)` ordena T-X cronológico antes de T-0; tipo da notificação `xd` (migrou de `3d`, cancelamento ajustado); `alterarPreferencias` substitui `alterarHorario`
 - [Fase 6]: Decisões confirmadas pelo usuário: (1) saldo = gastos do mês (real+previsto), receitas só na F7; (2) donut com `fl_chart`; (3) `/home` ganha tabs Resumo|Lançamentos (HomeScreen), lista vira aba; (4) metas = limite mensal recorrente por categoria (editável/excluível) em tabela nova `metas` no Supabase
+- [06-01]: `/home` → `HomeScreen` (ConsumerStatefulWidget, TabBar Resumo|Lançamentos com TabBarView); `DashboardScreen` = aba Resumo (card gastos real/previsto via `resumoMesProvider`, próximos vencimentos top5 + "Ver todos", RefreshIndicator); `LancamentosListScreen` virou corpo puro; `lembretes_preferencias_dialog.dart` expõe `abrirPreferenciasLembretes`; `resumoMesProvider` (real = data no mês, previsto = vencimento no mês com data fora); testes: +4 (resumo x2, dashboard x2), ajustados flow/ditado/router/smoke/vencimentos/lembretes; build_apk.ps1 corrigido (cmd /c + 2>&1 para stderr do Gradle não abortar com $ErrorActionPreference=Stop)
 
 ### Pending Todos
 
@@ -91,11 +92,11 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-09-07
-Stopped at: Fase 5 completa e commitada; Fase 6 planejada (06-01/06-02/06-03). Próximo: executar 06-01.
+Stopped at: 06-01 completo e commitado (HomeScreen tabs + card gastos do mês + vencimentos na home). Próximo: 06-02.
 Resume file: None
 
 ## Operator Next Steps
 
-- **Executar 06-01** — HomeScreen (tabs Resumo|Lançamentos) + card gastos do mês + vencimentos na home.
-- **Depois**: 06-02 (donut fl_chart), 06-03 (metas + migration no Supabase).
+- **Executar 06-02** — donut fl_chart por categoria (DASH-02).
+- **Depois**: 06-03 (metas + migration no Supabase).
 - **_Nota segurança:_** revogar o PAT do Supabase exposto no chat (Account Settings → Access Tokens)

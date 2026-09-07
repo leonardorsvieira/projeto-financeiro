@@ -1,7 +1,10 @@
-import 'package:http/http.dart' as http;
+import 'dart:typed_data';
+
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../domain/ditado_repository.dart';
+import 'audio_arquivo_leitor.dart';
 
 abstract class AudioRecorderService {
   Future<bool> temPermissao();
@@ -20,22 +23,31 @@ class RecordAudioRecorderService implements AudioRecorderService {
   Future<bool> temPermissao() => _gravador.hasPermission();
 
   @override
-  Future<void> iniciar() {
+  Future<void> iniciar() async {
+    final diretorio = await getTemporaryDirectory();
     return _gravador.start(
-      const RecordConfig(encoder: AudioEncoder.opus, numChannels: 1),
-      path: 'ditado.webm',
+      const RecordConfig(
+        encoder: AudioEncoder.wav,
+        numChannels: 1,
+        sampleRate: 16000,
+      ),
+      path: '${diretorio.path}/ditado.wav',
     );
   }
 
   @override
   Future<LancamentoAudio?> parar() async {
-    final url = await _gravador.stop();
-    if (url == null || url.isEmpty) return null;
-    final resposta = await http.get(Uri.parse(url));
-    if (resposta.statusCode != 200) return null;
+    final caminho = await _gravador.stop();
+    if (caminho == null || caminho.isEmpty) return null;
+    final Uint8List bytes;
+    try {
+      bytes = await lerArquivoAudio(caminho);
+    } on Object {
+      return null;
+    }
     return LancamentoAudio(
-      bytes: resposta.bodyBytes,
-      mimeType: 'audio/webm',
+      bytes: bytes,
+      mimeType: 'audio/wav',
     );
   }
 

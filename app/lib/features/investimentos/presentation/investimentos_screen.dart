@@ -111,7 +111,16 @@ class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
     final custoTotal = ref.watch(custoTotalProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Investimentos')),
+      appBar: AppBar(
+        title: const Text('Investimentos'),
+        actions: [
+          IconButton(
+            tooltip: 'Rendimentos por mês',
+            icon: const Icon(Icons.card_giftcard),
+            onPressed: () => context.push(AppRoutes.rendimentos),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _abrirDialog(),
         icon: const Icon(Icons.add),

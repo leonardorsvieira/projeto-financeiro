@@ -11,7 +11,7 @@ class FakeAudioRecorderService implements AudioRecorderService {
   int pararCount = 0;
 
   @override
-  Future<bool> temPermissao() async => permitido;
+  Future<bool> temPermissao({bool request = true}) async => permitido;
 
   @override
   Future<void> iniciar() async {

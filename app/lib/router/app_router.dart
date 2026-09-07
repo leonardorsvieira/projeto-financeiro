@@ -17,6 +17,9 @@ import '../features/lancamentos/presentation/proximos_vencimentos_screen.dart';
 import '../features/metas/presentation/metas_screen.dart';
 import '../features/investimentos/presentation/investimentos_screen.dart';
 import '../features/investimentos/presentation/investimento_detalhe_screen.dart';
+import '../features/investimentos/presentation/rendimento_form_screen.dart';
+import '../features/investimentos/presentation/rendimentos_screen.dart';
+import '../features/investimentos/domain/rendimento_investimento.dart';
 
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(Ref ref) {
@@ -88,6 +91,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final id = state.pathParameters['id']!;
           return InvestimentoDetalheScreen(investimentoId: id);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.rendimentos,
+        builder: (_, _) => const RendimentosScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.rendimentoForm,
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          final rendimento = state.extra as RendimentoInvestimento?;
+          return RendimentoFormScreen(
+            investimentoId: id,
+            rendimento: rendimento,
+          );
         },
       ),
     ],

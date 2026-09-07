@@ -5,22 +5,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meubolso/features/investimentos/application/investimentos_providers.dart';
 import 'package:meubolso/features/investimentos/domain/investimento.dart';
 import 'package:meubolso/features/investimentos/domain/movimento_investimento.dart';
+import 'package:meubolso/features/investimentos/domain/rendimento_investimento.dart';
 import 'package:meubolso/features/investimentos/presentation/investimento_detalhe_screen.dart';
 
 import '../../../support/fake_investimentos_repository.dart';
 import '../../../support/fake_movimentos_investimento_repository.dart';
+import '../../../support/fake_rendimentos_investimento_repository.dart';
 
 Future<void> _pump(
   WidgetTester tester, {
   required FakeInvestimentosRepository investimentos,
   required FakeMovimentosInvestimentoRepository movimentos,
+  required FakeRendimentosInvestimentoRepository rendimentos,
   required String id,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         investimentosRepositoryProvider.overrideWithValue(investimentos),
-        movimentosInvestimentoRepositoryProvider.overrideWithValue(movimentos),
+        movimentosInvestimentoRepositoryProvider
+            .overrideWithValue(movimentos),
+        rendimentosInvestimentoRepositoryProvider
+            .overrideWithValue(rendimentos),
       ],
       child: MaterialApp(
         home: InvestimentoDetalheScreen(investimentoId: id),
@@ -54,11 +60,13 @@ void main() {
         data: DateTime(2026, 9, 1),
       ),
     ]);
+    final rendimentos = FakeRendimentosInvestimentoRepository();
 
     await _pump(
       tester,
       investimentos: investimentos,
       movimentos: movimentos,
+      rendimentos: rendimentos,
       id: invId,
     );
 
@@ -81,11 +89,13 @@ void main() {
       ),
     ]);
     final movimentos = FakeMovimentosInvestimentoRepository();
+    final rendimentos = FakeRendimentosInvestimentoRepository();
 
     await _pump(
       tester,
       investimentos: investimentos,
       movimentos: movimentos,
+      rendimentos: rendimentos,
       id: invId,
     );
 
@@ -121,11 +131,13 @@ void main() {
       ),
     ]);
     final movimentos = FakeMovimentosInvestimentoRepository();
+    final rendimentos = FakeRendimentosInvestimentoRepository();
 
     await _pump(
       tester,
       investimentos: investimentos,
       movimentos: movimentos,
+      rendimentos: rendimentos,
       id: invId,
     );
 
@@ -156,11 +168,13 @@ void main() {
       ),
     ]);
     final movimentos = FakeMovimentosInvestimentoRepository();
+    final rendimentos = FakeRendimentosInvestimentoRepository();
 
     await _pump(
       tester,
       investimentos: investimentos,
       movimentos: movimentos,
+      rendimentos: rendimentos,
       id: invId,
     );
 
@@ -200,11 +214,13 @@ void main() {
         data: DateTime(2026, 9, 1),
       ),
     ]);
+    final rendimentos = FakeRendimentosInvestimentoRepository();
 
     await _pump(
       tester,
       investimentos: investimentos,
       movimentos: movimentos,
+      rendimentos: rendimentos,
       id: invId,
     );
 
@@ -220,5 +236,75 @@ void main() {
     expect(movimentos.deleteCount, 1);
     expect(movimentos.items, isEmpty);
     expect(find.text('Nenhum movimento registrado.'), findsOneWidget);
+  });
+
+  testWidgets('seção Rendimentos mostra lista e botão Registrar',
+      (tester) async {
+    final investimentos = FakeInvestimentosRepository([
+      const Investimento(
+        id: invId,
+        classe: TipoClasseInvestimento.acao,
+        nome: 'PETR4',
+        quantidade: 10,
+        precoAtualCents: 3000,
+      ),
+    ]);
+    final movimentos = FakeMovimentosInvestimentoRepository();
+    final rendimentos = FakeRendimentosInvestimentoRepository([
+      RendimentoInvestimento(
+        id: 'r1',
+        investimentoId: invId,
+        tipo: TipoRendimentoInvestimento.dividendo,
+        valorCents: 5000,
+        data: DateTime(2026, 8, 15),
+      ),
+      RendimentoInvestimento(
+        id: 'r2',
+        investimentoId: invId,
+        tipo: TipoRendimentoInvestimento.juros,
+        valorCents: 3000,
+        data: DateTime(2026, 7, 10),
+      ),
+    ]);
+
+    await _pump(
+      tester,
+      investimentos: investimentos,
+      movimentos: movimentos,
+      rendimentos: rendimentos,
+      id: invId,
+    );
+
+    expect(find.text('Rendimentos'), findsOneWidget);
+    expect(find.text('Registrar'), findsOneWidget);
+    expect(find.text('Dividendo'), findsOneWidget);
+    expect(find.text('Juros'), findsOneWidget);
+    expect(find.text('+R\$ 50,00'), findsOneWidget);
+    expect(find.text('+R\$ 30,00'), findsOneWidget);
+  });
+
+  testWidgets('seção Rendimentos vazia mostra mensagem', (tester) async {
+    final investimentos = FakeInvestimentosRepository([
+      const Investimento(
+        id: invId,
+        classe: TipoClasseInvestimento.acao,
+        nome: 'PETR4',
+        quantidade: 10,
+        precoAtualCents: 3000,
+      ),
+    ]);
+    final movimentos = FakeMovimentosInvestimentoRepository();
+    final rendimentos = FakeRendimentosInvestimentoRepository();
+
+    await _pump(
+      tester,
+      investimentos: investimentos,
+      movimentos: movimentos,
+      rendimentos: rendimentos,
+      id: invId,
+    );
+
+    expect(find.text('Rendimentos'), findsOneWidget);
+    expect(find.text('Nenhum rendimento registrado.'), findsOneWidget);
   });
 }

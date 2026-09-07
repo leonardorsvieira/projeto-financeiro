@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../home/domain/app_routes.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../application/investimentos_providers.dart';
 import '../domain/investimento.dart';
 import '../domain/movimento_investimento.dart';
+import '../domain/rendimento_investimento.dart';
 
 /// Detalhe de um ativo: posição resumida, lista de movimentos e registro de
 /// novas compras/vendas (que atualizam a posição).
@@ -139,6 +142,41 @@ class _InvestimentoDetalheScreenState
     }
   }
 
+  Future<void> _excluirRendimento(
+    RendimentoInvestimento rendimento,
+  ) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir rendimento?'),
+        content: const Text(
+          'O rendimento será removido do histórico. Essa ação não pode ser desfeita.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true || !mounted) return;
+    try {
+      await ref
+          .read(rendimentosInvestimentoRepositoryProvider)
+          .delete(rendimento.id);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao excluir o rendimento.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
@@ -146,6 +184,8 @@ class _InvestimentoDetalheScreenState
     final movimentos =
         ref.watch(movimentosPorInvestimentoProvider(widget.investimentoId)).value ??
             [];
+    final rendimentos =
+        ref.watch(rendimentosPorAtivoProvider(widget.investimentoId));
 
     return Scaffold(
       appBar: AppBar(
@@ -183,6 +223,44 @@ class _InvestimentoDetalheScreenState
                       movimento: mov,
                       ePorQuantidade: investimento.ePorQuantidade,
                       onExcluir: () => _excluirComConfirmacao(mov),
+                    ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Rendimentos',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => context.push(
+                        AppRoutes.rendimentoFormDe(widget.investimentoId),
+                      ),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Registrar'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (rendimentos.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text('Nenhum rendimento registrado.'),
+                    ),
+                  )
+                else
+                  for (final rendimento in rendimentos)
+                    _RendimentoTile(
+                      rendimento: rendimento,
+                      onEditar: () => context.push(
+                        AppRoutes.rendimentoFormDe(widget.investimentoId),
+                        extra: rendimento,
+                      ),
+                      onExcluir: () =>
+                          _excluirRendimento(rendimento),
                     ),
               ],
             ),
@@ -281,6 +359,59 @@ class _MovimentoTile extends StatelessWidget {
                 if (value == 'excluir') onExcluir();
               },
               itemBuilder: (context) => const [
+                PopupMenuItem(value: 'excluir', child: Text('Excluir')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RendimentoTile extends StatelessWidget {
+  const _RendimentoTile({
+    required this.rendimento,
+    required this.onEditar,
+    required this.onExcluir,
+  });
+
+  final RendimentoInvestimento rendimento;
+  final VoidCallback onEditar;
+  final VoidCallback onExcluir;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cor = Colors.blue.shade700;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: cor.withValues(alpha: 0.12),
+          child: const Icon(Icons.card_giftcard, color: Colors.blue),
+        ),
+        title: Text(rendimento.tipo.rotulo),
+        subtitle: Text(formatoData(rendimento.data)),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '+${formatoBRL(rendimento.valorCents)}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: Colors.green.shade700,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            PopupMenuButton<String>(
+              tooltip: 'Ações',
+              onSelected: (value) {
+                if (value == 'editar') onEditar();
+                if (value == 'excluir') onExcluir();
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'editar', child: Text('Editar')),
                 PopupMenuItem(value: 'excluir', child: Text('Excluir')),
               ],
             ),

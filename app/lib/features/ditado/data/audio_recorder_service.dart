@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
@@ -20,7 +21,12 @@ class RecordAudioRecorderService implements AudioRecorderService {
   final AudioRecorder _gravador = AudioRecorder();
 
   @override
-  Future<bool> temPermissao() => _gravador.hasPermission();
+  Future<bool> temPermissao() async {
+    // On web, don't auto-request via hasPermission() (which doesn't support request param);
+    // let start() handle the prompt to avoid double getUserMedia calls.
+    if (kIsWeb) return false;
+    return _gravador.hasPermission();
+  }
 
   @override
   Future<void> iniciar() async {

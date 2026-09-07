@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/audio_recorder_service.dart';
@@ -69,8 +70,18 @@ class DitadoController extends Notifier<DitadoState> {
       await _gravador.iniciar();
       _inicioGravacao = _agora();
       state = const DitadoGravando();
-    } on Object {
-      state = const DitadoErro('Não consegui acessar o microfone.');
+    } on Object catch (e) {
+      String mensagem;
+      if (kIsWeb) {
+        mensagem = 'Não consegui acessar o microfone. '
+            'Verifique se o site usa HTTPS (localhost funciona) e '
+            'se o navegador permitiu o microfone nas configurações.';
+      } else {
+        mensagem = 'Não consegui acessar o microfone. '
+            'Verifique as permissões do app nas configurações do sistema.';
+      }
+      debugPrint('Erro ao iniciar gravação: $e');
+      state = DitadoErro(mensagem);
     }
   }
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -183,8 +184,18 @@ class _ConfirmacaoDitadoScreenState
       }
       await gravador.iniciar();
       if (mounted) setState(() => _gravandoCampo = campo);
-    } on Object {
-      _mostrarMensagem('Não consegui acessar o microfone.');
+    } on Object catch (e) {
+      String mensagem;
+      if (kIsWeb) {
+        mensagem = 'Não consegui acessar o microfone. '
+            'Verifique se o site usa HTTPS (localhost funciona) e '
+            'se o navegador permitiu o microfone nas configurações.';
+      } else {
+        mensagem = 'Não consegui acessar o microfone. '
+            'Verifique as permissões do app nas configurações do sistema.';
+      }
+      debugPrint('Erro ao iniciar gravação: $e');
+      _mostrarMensagem(mensagem);
     }
   }
 

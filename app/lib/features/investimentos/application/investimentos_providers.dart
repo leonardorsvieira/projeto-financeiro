@@ -2,10 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/supabase_investimentos_repository.dart';
 import '../data/supabase_movimentos_investimento_repository.dart';
+import '../data/supabase_rendimentos_investimento_repository.dart';
 import '../domain/investimento.dart';
 import '../domain/investimentos_repository.dart';
 import '../domain/movimento_investimento.dart';
 import '../domain/movimentos_investimento_repository.dart';
+import '../domain/rendimento_investimento.dart';
+import '../domain/rendimentos_investimento_repository.dart';
 
 final investimentosRepositoryProvider = Provider<InvestimentosRepository>(
   (ref) => SupabaseInvestimentosRepository(),
@@ -24,6 +27,22 @@ final movimentosPorInvestimentoProvider =
     StreamProvider.family<List<MovimentoInvestimento>, String>((ref, id) {
   return ref.watch(movimentosInvestimentoRepositoryProvider)
       .watchPorInvestimento(id);
+});
+
+final rendimentosInvestimentoRepositoryProvider =
+    Provider<RendimentosInvestimentoRepository>(
+  (ref) => SupabaseRendimentosInvestimentoRepository(),
+);
+
+final rendimentosStreamProvider =
+    StreamProvider<List<RendimentoInvestimento>>((ref) {
+  return ref.watch(rendimentosInvestimentoRepositoryProvider).watchTodos();
+});
+
+final rendimentosPorAtivoProvider =
+    Provider.family<List<RendimentoInvestimento>, String>((ref, id) {
+  final todos = ref.watch(rendimentosStreamProvider).value ?? [];
+  return todos.where((r) => r.investimentoId == id).toList();
 });
 
 /// Patrimônio total somando todos os ativos (qtd×preço ou saldo).
@@ -103,4 +122,45 @@ final investimentosPorClasseProvider =
     grupos.add(GrupoInvestimento(classe: classe, investimentos: doGrupo));
   }
   return InvestimentosPorClasse(grupos);
+});
+
+/// Rendimentos de um mês (chave 'ano-mes'), agregados.
+class MesRendimentos {
+  const MesRendimentos({
+    required this.ano,
+    required this.mes,
+    required this.rendimentos,
+  });
+
+  final int ano;
+  final int mes;
+  final List<RendimentoInvestimento> rendimentos;
+
+  int get totalCents =>
+      rendimentos.fold(0, (soma, r) => soma + r.valorCents);
+}
+
+/// Rendimentos agregados por mês, do mais recente para o mais antigo.
+final rendimentosPorMesProvider = Provider<List<MesRendimentos>>((ref) {
+  final todos = ref.watch(rendimentosStreamProvider).value ?? [];
+  final porMes = <String, List<RendimentoInvestimento>>{};
+  for (final r in todos) {
+    final chave =
+        '${r.data.year}-${r.data.month.toString().padLeft(2, '0')}';
+    porMes.putIfAbsent(chave, () => []).add(r);
+  }
+
+  final meses = porMes.entries.map((e) {
+    final partes = e.key.split('-');
+    return MesRendimentos(
+      ano: int.parse(partes[0]),
+      mes: int.parse(partes[1]),
+      rendimentos: e.value,
+    );
+  }).toList()
+    ..sort((a, b) {
+      final porAno = a.ano.compareTo(b.ano);
+      return porAno != 0 ? porAno : a.mes.compareTo(b.mes);
+    });
+  return meses.reversed.toList();
 });

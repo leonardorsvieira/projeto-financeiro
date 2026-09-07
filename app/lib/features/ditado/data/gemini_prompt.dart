@@ -16,7 +16,8 @@ class GeminiPrompt {
       'do JSON — no formato exato:\n'
       '{"descricao": string|null, "valor_reais": string|null, '
       '"categoria": string|null, "forma_pagamento": string|null, '
-      '"data": "AAAA-MM-DD"|null, "vencimento": "AAAA-MM-DD"|null}\n\n'
+      '"data": "AAAA-MM-DD"|null, "vencimento": "AAAA-MM-DD"|null, '
+      '"itens": [{"descricao": string, "valor_reais": string|null}]|null}\n\n'
       'Regras:\n'
       '- valor_reais deve ser uma string numérica com vírgula como separador '
       'decimal e sem cifrão (ex.: "42,90"). Resolva números falados por '
@@ -39,7 +40,13 @@ class GeminiPrompt {
       '- data: apenas se o usuário citar o dia; senão null (o app usa hoje '
       'como padrão). Não preencha data só porque conhece o dia de hoje. '
       'Hoje é {hoje}.\n'
-      '- vencimento: apenas se citado; senão null.';
+      '- vencimento: apenas se citado; senão null. Se o usuário ditar apenas '
+      'o dia (ex.: "vence dia 15"), interprete como o próximo mês com esse dia. '
+      'Ex.: hoje {hoje} -> "vence dia 15" = próximo dia 15.\n'
+      '- itens: opcional. Se o usuário ditar uma lista (ex.: "comprei arroz 20, '
+      'feijão 12, carne 45"), extraia cada item com descricao e valor_reais. '
+      'valor_reais do item pode ser null se não citado. O valor total do '
+      'lançamento será a soma dos itens (se houver itens) ou o valor_reais raiz.';
 
   static final String _instrucaoCorrecao =
       'Você receberá um áudio (ou texto) com a correção de UM campo de um '
@@ -56,7 +63,11 @@ class GeminiPrompt {
       '- forma_pagamento: escolha APENAS entre '
       '${formasPagamento.join(', ')}; em dúvida, use "Outro".\n'
       '- data e vencimento: "AAAA-MM-DD" apenas se citada a data; senão null '
-      '(não use hoje se não foi falado). Hoje é {hoje}.';
+      '(não use hoje se não foi falado). Hoje é {hoje}.\n'
+      '- itens: array completo de itens no formato '
+      '[{"descricao": string, "valor_reais": string|null}] (ex.: '
+      '{"itens": [{"descricao": "Arroz", "valor_reais": "20,00"}, '
+      '{"descricao": "Feijão", "valor_reais": "12,00"}]}).';
 
   static String _instrucao(String base, {required String campo}) {
     return base

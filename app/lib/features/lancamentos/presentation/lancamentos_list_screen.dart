@@ -13,6 +13,11 @@ class LancamentosListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Garantir cópias vigentes ao carregar a lista
+    ref.listenManual(lancamentosStreamProvider, (_, _) async {
+      await ref.read(lancamentosRepositoryProvider).ensureVigenteCopies();
+    });
+
     final lancamentos = ref.watch(lancamentosStreamProvider);
 
     return Scaffold(
@@ -154,35 +159,59 @@ class _Lista extends ConsumerWidget {
     WidgetRef ref,
     Lancamento lancamento,
   ) async {
-    final confirmado = await showDialog<bool>(
+    final isFixa = lancamento.fixoMensal && lancamento.serieId != null;
+    
+    final acao = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir lançamento?'),
+        title: Text(isFixa ? 'Excluir lançamento fixo?' : 'Excluir lançamento?'),
         content: Text(
-          'Você está prestes a excluir "${lancamento.descricao}". '
-          'Essa ação não pode ser desfeita.',
+          isFixa
+              ? 'Este lançamento faz parte de uma série fixa mensal.\n'
+                  'O que deseja fazer?'
+              : 'Você está prestes a excluir "${lancamento.descricao}". '
+                  'Essa ação não pode ser desfeita.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(context).pop('cancel'),
             child: const Text('Cancelar'),
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Excluir'),
-          ),
+          if (isFixa) ...[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop('delete_one'),
+              child: const Text('Apenas este mês'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop('delete_series'),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Excluir série toda'),
+            ),
+          ] else ...[
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop('delete_one'),
+              child: const Text('Excluir'),
+            ),
+          ],
         ],
       ),
     );
 
-    if (confirmado != true) return;
-    if (!context.mounted) return;
+    if (acao == null || acao == 'cancel' || !context.mounted) return;
+    
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await ref.read(lancamentosRepositoryProvider).delete(lancamento.id);
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Lançamento excluído.')),
-      );
+      if (acao == 'delete_series') {
+        await ref.read(lancamentosRepositoryProvider).excluirSerie(lancamento.serieId!);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Série toda excluída.')),
+        );
+      } else {
+        await ref.read(lancamentosRepositoryProvider).delete(lancamento.id);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Lançamento excluído.')),
+        );
+      }
     } catch (_) {
       messenger.showSnackBar(
         const SnackBar(content: Text('Não foi possível excluir.')),
@@ -201,6 +230,9 @@ class _Lista extends ConsumerWidget {
         itemBuilder: (context, index) {
           final item = items[index];
           final valor = formatoBRL(item.valorCents);
+          final hasVencimento = item.vencimento != null;
+          final isFixa = item.fixoMensal;
+          
           return ListTile(
             onTap: () => context.push(AppRoutes.lancamentoEditar(item.id)),
             leading: CircleAvatar(
@@ -210,8 +242,34 @@ class _Lista extends ConsumerWidget {
               ),
             ),
             title: Text(item.descricao),
-            subtitle: Text(
-              '${formatoData(item.data)} · ${item.categoria}',
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${formatoData(item.data)} · ${item.categoria}',
+                ),
+                if (hasVencimento || isFixa) ...[
+                  const SizedBox(height: 2),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 2,
+                    children: [
+                      if (hasVencimento)
+                        _Badge(
+                          label: 'Vence ${formatoData(item.vencimento!)}',
+                          icon: Icons.schedule_outlined,
+                          color: theme.colorScheme.tertiary,
+                        ),
+                      if (isFixa)
+                        _Badge(
+                          label: 'Fixa mensal',
+                          icon: Icons.repeat_outlined,
+                          color: theme.colorScheme.primary,
+                        ),
+                    ],
+                  ),
+                ],
+              ],
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -230,8 +288,8 @@ class _Lista extends ConsumerWidget {
                       _confirmarExclusao(context, ref, item);
                     }
                   },
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
                       value: 'delete',
                       child: ListTile(
                         leading: Icon(Icons.delete_outline),
@@ -245,6 +303,45 @@ class _Lista extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge({
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

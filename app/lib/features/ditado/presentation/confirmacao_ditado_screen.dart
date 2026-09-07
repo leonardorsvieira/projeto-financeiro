@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,11 +7,28 @@ import 'package:go_router/go_router.dart';
 
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
-import '../../lancamentos/domain/lancamento_converter.dart';
-import '../../lancamentos/presentation/lancamento_form_validators.dart';
+import '../../lancamentos/domain/lancamento.dart';
+import '../../lancamentos/domain/lancamento_converter.dart'
+    show parseValorBRLParaCentavos, formatoBRL, categorias, formasPagamento, formatoData;
+import '../../lancamentos/presentation/lancamento_form_validators.dart'
+    show validateDescricao, validateValor;
 import '../application/ditado_providers.dart';
 import '../domain/ditado_repository.dart';
 import '../domain/rascunho_lancamento.dart';
+
+class _ItemForm {
+  _ItemForm({this.descricao = '', this.valorReais});
+  String descricao;
+  String? valorReais;
+
+  int? get valorCents {
+    if (valorReais == null) return null;
+    final v = valorReais!.replaceAll(',', '.');
+    final d = double.tryParse(v);
+    if (d == null) return null;
+    return (d * 100).round();
+  }
+}
 
 class ConfirmacaoDitadoScreen extends ConsumerStatefulWidget {
   const ConfirmacaoDitadoScreen({super.key, required this.rascunho});
@@ -34,6 +53,7 @@ class _ConfirmacaoDitadoScreenState
   bool _isSaving = false;
   CampoDitado? _gravandoCampo;
   CampoDitado? _processandoCampo;
+  final List<_ItemForm> _itens = [];
 
   @override
   void initState() {
@@ -53,6 +73,12 @@ class _ConfirmacaoDitadoScreenState
         : 'Pix';
     _data = DateTime.tryParse(rascunho.dataIso ?? '') ?? DateTime.now();
     _vencimento = DateTime.tryParse(rascunho.vencimentoIso ?? '');
+    if (rascunho.itens != null) {
+      _itens.addAll(rascunho.itens!.map((i) => _ItemForm(
+        descricao: i.descricao,
+        valorReais: i.valorReais,
+      )));
+    }
     final valorVazio = (rascunho.valorTexto ?? '').trim().isEmpty;
     if (valorVazio) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -81,6 +107,13 @@ class _ConfirmacaoDitadoScreenState
         dataIso: _data.toIso8601String().substring(0, 10),
         vencimentoIso:
             _vencimento?.toIso8601String().substring(0, 10),
+        itens: _itens
+            .where((i) => i.descricao.trim().isNotEmpty)
+            .map((i) => RascunhoItem(
+                  descricao: i.descricao.trim(),
+                  valorReais: i.valorReais?.trim().isEmpty ?? true ? null : i.valorReais,
+                ))
+            .toList(),
       );
 
   void _aplicarCorrecao(CampoDitado campo, String? valor) {
@@ -100,6 +133,19 @@ class _ConfirmacaoDitadoScreenState
           if (data != null) _data = data;
         case CampoDitado.vencimento:
           _vencimento = DateTime.tryParse(valor);
+        case CampoDitado.itens:
+          try {
+            final List<dynamic> jsonList = json.decode(valor);
+            _itens.clear();
+            _itens.addAll(jsonList
+                .whereType<Map<String, dynamic>>()
+                .map((e) => _ItemForm(
+                      descricao: e['descricao'] as String? ?? '',
+                      valorReais: e['valor_reais'] as String?,
+                    )));
+          } catch (_) {
+            // ignora erro de parse
+          }
       }
     });
   }
@@ -208,17 +254,56 @@ class _ConfirmacaoDitadoScreenState
 
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
-    final centavos = parseValorBRLParaCentavos(_valorController.text.trim())!;
+
+    // Validar itens se houver
+    if (_itens.isNotEmpty) {
+      for (int i = 0; i < _itens.length; i++) {
+        final item = _itens[i];
+        if (item.descricao.trim().isEmpty) {
+          _mostrarMensagem('Item ${i + 1}: descrição obrigatória');
+          return;
+        }
+        if (item.valorReais == null || item.valorReais!.trim().isEmpty) {
+          _mostrarMensagem('Item ${i + 1}: valor obrigatório');
+          return;
+        }
+      }
+    }
+
+    int valorFinal;
+    if (_itens.isNotEmpty) {
+      valorFinal = _itens.fold<int>(0, (s, i) => s + (i.valorCents ?? 0));
+    } else {
+      final centavos = parseValorBRLParaCentavos(_valorController.text.trim());
+      if (centavos == null) {
+        _mostrarMensagem('Valor inválido');
+        return;
+      }
+      valorFinal = centavos;
+    }
+
     setState(() => _isSaving = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
+      final itensParaSalvar = _itens.isNotEmpty
+          ? _itens
+              .where((i) =>
+                  i.descricao.trim().isNotEmpty && i.valorReais != null)
+              .map((i) => LancamentoItem(
+                    descricao: i.descricao.trim(),
+                    valorCents: i.valorCents!,
+                  ))
+              .toList()
+          : null;
+
       await ref.read(lancamentosRepositoryProvider).create(
             descricao: _descricaoController.text.trim(),
-            valorCents: centavos,
+            valorCents: valorFinal,
             categoria: _categoria,
             formaPagamento: _formaPagamento,
             data: _data,
             vencimento: _vencimento,
+            itens: itensParaSalvar,
           );
       if (mounted) context.go(AppRoutes.home);
     } catch (_) {
@@ -385,6 +470,73 @@ class _ConfirmacaoDitadoScreenState
                         ),
                         icon: const Icon(Icons.stop),
                         label: const Text('Toque para parar'),
+                      ),
+                    ],
+                    // Seção de Itens (se houver)
+                    if (_itens.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Itens',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      ),
+                      const SizedBox(height: 8),
+                      ..._itens.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final item = entry.value;
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    initialValue: item.descricao,
+                                    textCapitalization: TextCapitalization.sentences,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Item',
+                                      prefixIcon: Icon(Icons.shopping_basket_outlined),
+                                    ),
+                                    onChanged: (v) => item.descricao = v,
+                                    validator: (v) =>
+                                        v?.trim().isEmpty ?? true ? 'Obrigatório' : null,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextFormField(
+                                    initialValue: item.valorReais ?? '',
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Valor (R\$)',
+                                      prefixIcon: Icon(Icons.attach_money),
+                                    ),
+                                    onChanged: (v) => item.valorReais = v.trim().isEmpty ? null : v,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon:
+                                      const Icon(Icons.delete_outline, color: Colors.red),
+                                  onPressed: () => setState(() => _itens.removeAt(idx)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Total: ${formatoBRL(_itens.fold<int>(0, (s, i) => s + (i.valorCents ?? 0)))}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 16),
+                          ),
+                        ],
                       ),
                     ],
                     const SizedBox(height: 24),

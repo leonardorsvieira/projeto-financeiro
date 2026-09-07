@@ -1,14 +1,47 @@
+import 'dart:convert';
+
 enum CampoDitado {
   descricao('descricao'),
   valor('valor'),
   categoria('categoria'),
   formaPagamento('forma_pagamento'),
   data('data'),
-  vencimento('vencimento');
+  vencimento('vencimento'),
+  itens('itens');
 
   const CampoDitado(this.chaveJson);
 
   final String chaveJson;
+}
+
+class RascunhoItem {
+  const RascunhoItem({
+    required this.descricao,
+    this.valorReais,
+  });
+
+  final String descricao;
+  final String? valorReais;
+
+  int? get valorCents {
+    if (valorReais == null) return null;
+    final v = valorReais!.replaceAll(',', '.');
+    final d = double.tryParse(v);
+    if (d == null) return null;
+    return (d * 100).round();
+  }
+
+  factory RascunhoItem.fromJson(Map<String, dynamic> json) {
+    return RascunhoItem(
+      descricao: json['descricao'] as String,
+      valorReais: json['valor_reais'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'descricao': descricao,
+        'valor_reais': valorReais,
+      };
 }
 
 class RascunhoLancamento {
@@ -19,6 +52,7 @@ class RascunhoLancamento {
     this.formaPagamento,
     this.dataIso,
     this.vencimentoIso,
+    this.itens,
   });
 
   final String? descricao;
@@ -27,11 +61,22 @@ class RascunhoLancamento {
   final String? formaPagamento;
   final String? dataIso;
   final String? vencimentoIso;
+  final List<RascunhoItem>? itens;
 
   factory RascunhoLancamento.fromJson(Map<String, dynamic> json) {
     String? texto(String chave) {
       final v = json[chave];
       if (v is String && v.trim().isNotEmpty) return v.trim();
+      return null;
+    }
+
+    List<RascunhoItem>? parseItens(dynamic v) {
+      if (v is List) {
+        return v
+            .whereType<Map<String, dynamic>>()
+            .map(RascunhoItem.fromJson)
+            .toList();
+      }
       return null;
     }
 
@@ -42,6 +87,7 @@ class RascunhoLancamento {
       formaPagamento: texto('forma_pagamento'),
       dataIso: texto('data'),
       vencimentoIso: texto('vencimento'),
+      itens: parseItens(json['itens']),
     );
   }
 
@@ -52,6 +98,8 @@ class RascunhoLancamento {
         'forma_pagamento': formaPagamento,
         'data': dataIso,
         'vencimento': vencimentoIso,
+        if (itens != null && itens!.isNotEmpty)
+          'itens': itens!.map((e) => e.toJson()).toList(),
       };
 
   RascunhoLancamento corrigir(CampoDitado campo, String? valor) {
@@ -64,6 +112,7 @@ class RascunhoLancamento {
           formaPagamento: formaPagamento,
           dataIso: dataIso,
           vencimentoIso: vencimentoIso,
+          itens: itens,
         );
       case CampoDitado.valor:
         return RascunhoLancamento(
@@ -73,6 +122,7 @@ class RascunhoLancamento {
           formaPagamento: formaPagamento,
           dataIso: dataIso,
           vencimentoIso: vencimentoIso,
+          itens: itens,
         );
       case CampoDitado.categoria:
         return RascunhoLancamento(
@@ -82,6 +132,7 @@ class RascunhoLancamento {
           formaPagamento: formaPagamento,
           dataIso: dataIso,
           vencimentoIso: vencimentoIso,
+          itens: itens,
         );
       case CampoDitado.formaPagamento:
         return RascunhoLancamento(
@@ -91,6 +142,7 @@ class RascunhoLancamento {
           formaPagamento: valor,
           dataIso: dataIso,
           vencimentoIso: vencimentoIso,
+          itens: itens,
         );
       case CampoDitado.data:
         return RascunhoLancamento(
@@ -100,6 +152,7 @@ class RascunhoLancamento {
           formaPagamento: formaPagamento,
           dataIso: valor,
           vencimentoIso: vencimentoIso,
+          itens: itens,
         );
       case CampoDitado.vencimento:
         return RascunhoLancamento(
@@ -109,6 +162,21 @@ class RascunhoLancamento {
           formaPagamento: formaPagamento,
           dataIso: dataIso,
           vencimentoIso: valor,
+          itens: itens,
+        );
+      case CampoDitado.itens:
+        return RascunhoLancamento(
+          descricao: descricao,
+          valorTexto: valorTexto,
+          categoria: categoria,
+          formaPagamento: formaPagamento,
+          dataIso: dataIso,
+          vencimentoIso: vencimentoIso,
+          itens: valor != null
+              ? (json.decode(valor) as List)
+                  .map((e) => RascunhoItem.fromJson(e as Map<String, dynamic>))
+                  .toList()
+              : null,
         );
     }
   }

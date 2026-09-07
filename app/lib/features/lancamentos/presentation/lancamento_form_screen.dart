@@ -24,18 +24,22 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
   final _descricaoController = TextEditingController();
   final _valorController = TextEditingController();
   final _obsController = TextEditingController();
+  final _diaVencimentoController = TextEditingController();
   String _categoria = 'Outros';
   String _formaPagamento = 'Pix';
   DateTime _data = DateTime.now();
   DateTime? _vencimento;
   bool _isSaving = false;
   bool _loaded = false;
+  bool _fixoMensal = false;
+  final List<_ItemForm> _itens = [];
 
   @override
   void dispose() {
     _descricaoController.dispose();
     _valorController.dispose();
     _obsController.dispose();
+    _diaVencimentoController.dispose();
     super.dispose();
   }
 
@@ -50,6 +54,19 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
     _formaPagamento = lancamento.formaPagamento;
     _data = lancamento.data;
     _vencimento = lancamento.vencimento;
+    _fixoMensal = lancamento.fixoMensal;
+    if (lancamento.serieId != null) {
+      // manter serieId se editando (não re-gerar)
+    }
+    if (lancamento.itens != null) {
+      _itens.addAll(lancamento.itens!.map((i) => _ItemForm(
+        descricao: i.descricao,
+        valorCents: i.valorCents,
+      )));
+    }
+    if (_fixoMensal && _vencimento != null) {
+      _diaVencimentoController.text = _vencimento!.day.toString();
+    }
   }
 
   Future<void> _pickData() async {
@@ -74,14 +91,93 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
     if (picked != null) setState(() => _vencimento = picked);
   }
 
+  void _addItem() {
+    setState(() => _itens.add(_ItemForm()));
+  }
+
+  void _removeItem(int index) {
+    setState(() => _itens.removeAt(index));
+  }
+
+  int get _somaItens => _itens.fold(0, (s, i) => s + (i.valorCents ?? 0));
+
+  bool get _temItensValidos => _itens.any((i) => i.descricao.isNotEmpty || i.valorCents != null);
+
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final lucro = parseValorBRLParaCentavos(_valorController.text)!;
+    // Validação de itens
+    if (_temItensValidos) {
+      for (int i = 0; i < _itens.length; i++) {
+        final item = _itens[i];
+        if (item.descricao.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Item ${i + 1}: descrição obrigatória')),
+          );
+          return;
+        }
+        if (item.valorCents == null || item.valorCents! <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Item ${i + 1}: valor obrigatório')),
+          );
+          return;
+        }
+      }
+    }
+
+    int valorFinal;
+    if (_temItensValidos) {
+      valorFinal = _somaItens;
+    } else {
+      final parsed = parseValorBRLParaCentavos(_valorController.text);
+      if (parsed == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Valor inválido')),
+        );
+        return;
+      }
+      valorFinal = parsed;
+    }
+
     final descricao = _descricaoController.text.trim();
     final obs = _obsController.text.trim().isEmpty
         ? null
         : _obsController.text.trim();
+
+    DateTime? vencimentoFinal = _vencimento;
+    if (_fixoMensal) {
+      final dia = int.tryParse(_diaVencimentoController.text);
+      if (dia == null || dia < 1 || dia > 31) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dia do vencimento inválido (1-31)')),
+        );
+        return;
+      }
+      final agora = DateTime.now();
+      int mes = agora.month;
+      int ano = agora.year;
+      if (_data.isAfter(DateTime(ano, mes, dia))) {
+        mes++;
+        if (mes > 12) {
+          mes = 1;
+          ano++;
+        }
+      }
+      int diaFinal = dia;
+      final ultimoDia = DateTime(ano, mes + 1, 0).day;
+      if (diaFinal > ultimoDia) diaFinal = ultimoDia;
+      vencimentoFinal = DateTime(ano, mes, diaFinal);
+    }
+
+    final itensParaSalvar = _temItensValidos
+        ? _itens
+            .where((i) => i.descricao.trim().isNotEmpty && i.valorCents != null)
+            .map((i) => LancamentoItem(
+                  descricao: i.descricao.trim(),
+                  valorCents: i.valorCents!,
+                ))
+            .toList()
+        : null;
 
     setState(() => _isSaving = true);
     final messenger = ScaffoldMessenger.of(context);
@@ -95,23 +191,30 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
         await repo.update(
           atual,
           descricao: descricao,
-          valorCents: lucro,
+          valorCents: valorFinal,
           categoria: _categoria,
           formaPagamento: _formaPagamento,
           data: _data,
-          vencimento: _vencimento,
+          vencimento: vencimentoFinal,
           obs: obs,
+          itens: itensParaSalvar,
+          fixoMensal: _fixoMensal,
+          serieId: atual.serieId,
         );
       } else {
         await repo.create(
           descricao: descricao,
-          valorCents: lucro,
+          valorCents: valorFinal,
           categoria: _categoria,
           formaPagamento: _formaPagamento,
           data: _data,
-          vencimento: _vencimento,
+          vencimento: vencimentoFinal,
           obs: obs,
+          itens: itensParaSalvar,
+          fixoMensal: _fixoMensal,
+          serieId: _fixoMensal ? null : null, // será definido no create se fixo
         );
+        // Se era fixa, o create já gerou a cópia e definiu serieId
       }
       if (mounted) context.pop();
     } catch (_) {
@@ -164,18 +267,106 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                       validator: validateDescricao,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _valorController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                    if (!_temItensValidos) ...[
+                      TextFormField(
+                        controller: _valorController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: const InputDecoration(
+                          labelText: 'Valor (R\$)',
+                          prefixIcon: Icon(Icons.attach_money),
+                        ),
+                        validator: validateValor,
                       ),
-                      decoration: const InputDecoration(
-                        labelText: 'Valor (R\$)',
-                        prefixIcon: Icon(Icons.attach_money),
+                      const SizedBox(height: 16),
+                    ],
+                    // Seção de Itens
+                    if (_temItensValidos || _itens.isNotEmpty) ...[
+                      const Text(
+                        'Itens',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                       ),
-                      validator: validateValor,
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 8),
+                      ..._itens.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final item = entry.value;
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextFormField(
+                                        initialValue: item.descricao,
+                                        textCapitalization: TextCapitalization.sentences,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Descrição do item',
+                                          prefixIcon: Icon(Icons.shopping_basket_outlined),
+                                        ),
+                                        onChanged: (v) => item.descricao = v,
+                                        validator: (v) => v?.trim().isEmpty ?? true
+                                            ? 'Obrigatório'
+                                            : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: TextFormField(
+                                        initialValue: item.valorCents != null
+                                            ? (item.valorCents! / 100).toStringAsFixed(2).replaceAll('.', ',')
+                                            : '',
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        decoration: const InputDecoration(
+                                          labelText: 'Valor (R\$)',
+                                          prefixIcon: Icon(Icons.attach_money),
+                                        ),
+                                        onChanged: (v) {
+                                          final parsed = parseValorBRLParaCentavos(v);
+                                          item.valorCents = parsed;
+                                          setState(() {}); // atualiza soma
+                                        },
+                                        validator: (v) {
+                                          if (v == null || v.trim().isEmpty) return null; // opcional se tem outros itens
+                                          final p = parseValorBRLParaCentavos(v);
+                                          return p == null || p <= 0 ? 'Inválido' : null;
+                                        },
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                      onPressed: () => _removeItem(idx),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                      if (_itens.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              'Total: ${formatoBRL(_somaItens)}',
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _addItem,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Adicionar item'),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     DropdownButtonFormField<String>(
                       initialValue: _categoria,
                       decoration: const InputDecoration(
@@ -208,32 +399,61 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                               () => _formaPagamento = value ?? 'Pix'),
                     ),
                     const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: _isSaving ? null : _pickData,
-                      icon: const Icon(Icons.event_outlined),
-                      label: Text('Data: ${formatoData(_data)}'),
+                    // Checkbox "Despesa fixa mensal"
+                    CheckboxListTile(
+                      value: _fixoMensal,
+                      onChanged: _isSaving
+                          ? null
+                          : (v) => setState(() => _fixoMensal = v ?? false),
+                      title: const Text('Despesa fixa mensal'),
+                      subtitle: const Text('Gera cópias automáticas nos próximos meses'),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: _isSaving ? null : _pickVencimento,
-                      icon: const Icon(Icons.schedule_outlined),
-                      label: Text(
-                        _vencimento == null
-                            ? 'Vencimento (opcional)'
-                            : 'Vencimento: ${formatoData(_vencimento!)}',
+                    if (_fixoMensal) ...[
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _diaVencimentoController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Dia do vencimento (1-31)',
+                          prefixIcon: Icon(Icons.schedule_outlined),
+                        ),
+                        validator: (v) {
+                          if (!_fixoMensal) return null;
+                          final d = int.tryParse(v ?? '');
+                          return (d == null || d < 1 || d > 31) ? '1-31' : null;
+                        },
                       ),
-                    ),
-                    if (_vencimento != null) ...[
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _isSaving
-                              ? null
-                              : () => setState(() => _vencimento = null),
-                          child: const Text('Remover vencimento'),
+                    ] else ...[
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: _isSaving ? null : _pickData,
+                        icon: const Icon(Icons.event_outlined),
+                        label: Text('Data: ${formatoData(_data)}'),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _isSaving ? null : _pickVencimento,
+                        icon: const Icon(Icons.schedule_outlined),
+                        label: Text(
+                          _vencimento == null
+                              ? 'Vencimento (opcional)'
+                              : 'Vencimento: ${formatoData(_vencimento!)}',
                         ),
                       ),
+                      if (_vencimento != null) ...[
+                        const SizedBox(height: 4),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _isSaving
+                                ? null
+                                : () => setState(() => _vencimento = null),
+                            child: const Text('Remover vencimento'),
+                          ),
+                        ),
+                      ],
                     ],
                     const SizedBox(height: 8),
                     TextFormField(
@@ -283,4 +503,10 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
       ),
     );
   }
+}
+
+class _ItemForm {
+  _ItemForm({this.descricao = '', this.valorCents});
+  String descricao;
+  int? valorCents;
 }

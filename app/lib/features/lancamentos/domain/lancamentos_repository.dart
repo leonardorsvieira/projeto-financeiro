@@ -11,6 +11,9 @@ abstract class LancamentosRepository {
     required DateTime data,
     DateTime? vencimento,
     String? obs,
+    List<LancamentoItem>? itens,
+    bool fixoMensal = false,
+    String? serieId,
   });
 
   Future<Lancamento> update(
@@ -22,9 +25,17 @@ abstract class LancamentosRepository {
     required DateTime data,
     DateTime? vencimento,
     String? obs,
+    List<LancamentoItem>? itens,
+    bool? fixoMensal,
+    String? serieId,
   });
 
   Future<void> delete(String id);
 
   Future<Lancamento?> findById(String id);
+
+  // Recorrência
+  Future<Lancamento?> gerarProximaCopiaSeFixa(Lancamento lancamento);
+  Future<void> ensureVigenteCopies();
+  Future<void> excluirSerie(String serieId);
 }

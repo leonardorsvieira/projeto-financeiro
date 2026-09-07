@@ -35,6 +35,9 @@ class FakeLancamentosRepository implements LancamentosRepository {
     required DateTime data,
     DateTime? vencimento,
     String? obs,
+    List<LancamentoItem>? itens,
+    bool fixoMensal = false,
+    String? serieId,
   }) async {
     if (createDelay != null) {
       await Future<void>.delayed(createDelay!);
@@ -50,6 +53,9 @@ class FakeLancamentosRepository implements LancamentosRepository {
       data: data,
       vencimento: vencimento,
       obs: obs,
+      itens: itens,
+      fixoMensal: fixoMensal,
+      serieId: serieId ?? (fixoMensal ? _nextId() : null),
       createdAt: now,
       updatedAt: now,
     );
@@ -68,6 +74,9 @@ class FakeLancamentosRepository implements LancamentosRepository {
     required DateTime data,
     DateTime? vencimento,
     String? obs,
+    List<LancamentoItem>? itens,
+    bool? fixoMensal,
+    String? serieId,
   }) async {
     updateCount++;
     final index = _items.indexWhere((l) => l.id == lancamento.id);
@@ -79,6 +88,9 @@ class FakeLancamentosRepository implements LancamentosRepository {
       data: data,
       vencimento: () => vencimento,
       obs: () => obs,
+      itens: () => itens,
+      fixoMensal: fixoMensal,
+      serieId: () => serieId,
     );
     if (index >= 0) {
       _items[index] = updated;
@@ -100,5 +112,18 @@ class FakeLancamentosRepository implements LancamentosRepository {
       if (l.id == id) return l;
     }
     return null;
+  }
+
+  // Recorrência (no-op para fake)
+  @override
+  Future<Lancamento?> gerarProximaCopiaSeFixa(Lancamento lancamento) async => null;
+
+  @override
+  Future<void> ensureVigenteCopies() async {}
+
+  @override
+  Future<void> excluirSerie(String serieId) async {
+    _items.removeWhere((l) => l.serieId == serieId);
+    _emit();
   }
 }

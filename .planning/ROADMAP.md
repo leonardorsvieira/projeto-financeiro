@@ -97,13 +97,13 @@ Plans:
 
 **Nota (decisões 06):** sem receitas na Fase 6 — saldo = gastos do mês (real + previsto), receitas entram na F7. Donut: `fl_chart`. Layout: tab **Resumo | Lançamentos** em `/home`. Metas: limite mensal recorrente por categoria (editável/excluível).
 
-**Plans**: 3 plans (2 done, 1 pending)
+**Plans**: 3 plans (3 done, 0 pending)
 
 Plans:
 
 - [x] 06-01: Dashboard base + gastos do mês (card) + vencimentos na home (DASH-01, DASH-03)
 - [x] 06-02: Gráfico de gastos por categoria (donut fl_chart) (DASH-02)
-- [ ] 06-03: Metas/limites por categoria com progresso (DASH-04)
+- [x] 06-03: Metas/limites por categoria com progresso (DASH-04)
 
 ### Phase 7: Recebimentos por Voz
 

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: In progress
-stopped_at: 06-01 e 06-02 completos (HomeScreen tabs + card gastos + vencimentos na home + donut por categoria); próximo 06-03 (metas)
-last_updated: "2026-09-07T08:30:00Z"
-last_activity: 2026-09-07 — 06-02 implementado: fl_chart ^1.2.0, donut e legenda por categoria no Resumo; 110 testes passam; analyze 0 issues; web + APK OK
+stopped_at: Fase 6 completa (06-01 06-02 06-03); metas/limites por categoria com progresso no Resumo + tela dedicada
+last_updated: "2026-09-07T09:30:00Z"
+last_activity: 2026-09-07 — 06-03 implementado: tabela `metas` (migration aplicada no Supabase remoto), CRUD + progresso; 118 testes passam; analyze 0 issues; web + APK OK
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 28
-  completed_plans: 16
-  percent: 57
+  completed_plans: 17
+  percent: 61
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 
 ## Current Position
 
-Phase: 6 — Dashboard e Metas (06-01 e 06-02 concluídos)
-Plan: 06-01 ✅, 06-02 ✅, 06-03 ⏳
-Status: **06-01 + 06-02 concluídos** — `/home` é HomeScreen (tabs Resumo | Lançamentos); Resumo mostra card "Gastos do mês" (real + previsto), donut "Por categoria" (fl_chart) com legenda e próximos vencimentos. Próximo: 06-03 (metas).
-Last activity: 2026-09-07 — 06-02 implementado; 110 testes passam; build web + APK OK
+Phase: 6 — Dashboard e Metas (concluída)
+Plan: 06-01 ✅, 06-02 ✅, 06-03 ✅
+Status: **Fase 6 completa** — `/home` é HomeScreen (tabs Resumo | Lançamentos); Resumo mostra card "Gastos do mês" (real + previsto), donut "Por categoria" (fl_chart) com legenda, seção Metas com progresso e próximos vencimentos. Metas: tela dedicada `/metas` (AppBar) com CRUD por dialog e tabela `metas` no Supabase.
+Last activity: 2026-09-07 — 06-03 implementado; 118 testes passam; build web + APK OK
 
 ## Performance Metrics
 
@@ -43,7 +43,7 @@ Last activity: 2026-09-07 — 06-02 implementado; 110 testes passam; build web +
 | 3 (Ditado por Voz — Core) | 3 | 3 | 1.0 |
 | 4 (Vencimentos, Itens e Recorrências) | 4 | 4 | 1.0 |
 | 5 (Lembretes Push) | 2 | 2 | 1.0 |
-| 6 (Dashboard e Metas) | 2 | 3 | 1.0 |
+| 6 (Dashboard e Metas) | 3 | 3 | 1.0 |
 
 **Recent Trend:** N/A
 
@@ -73,6 +73,7 @@ Last activity: 2026-09-07 — 06-02 implementado; 110 testes passam; build web +
 - [Fase 6]: Decisões confirmadas pelo usuário: (1) saldo = gastos do mês (real+previsto), receitas só na F7; (2) donut com `fl_chart`; (3) `/home` ganha tabs Resumo|Lançamentos (HomeScreen), lista vira aba; (4) metas = limite mensal recorrente por categoria (editável/excluível) em tabela nova `metas` no Supabase
 - [06-01]: `/home` → `HomeScreen` (ConsumerStatefulWidget, TabBar Resumo|Lançamentos com TabBarView); `DashboardScreen` = aba Resumo (card gastos real/previsto via `resumoMesProvider`, próximos vencimentos top5 + "Ver todos", RefreshIndicator); `LancamentosListScreen` virou corpo puro; `lembretes_preferencias_dialog.dart` expõe `abrirPreferenciasLembretes`; `resumoMesProvider` (real = data no mês, previsto = vencimento no mês com data fora); testes: +4 (resumo x2, dashboard x2), ajustados flow/ditado/router/smoke/vencimentos/lembretes; build_apk.ps1 corrigido (cmd /c + 2>&1 para stderr do Gradle não abortar com $ErrorActionPreference=Stop)
 - [06-02]: `fl_chart: ^1.2.0`; `gastosPorCategoriaMesProvider` (soma por categoria do mês vigente, ordenado desc); `_DonutGastosCategoria` no Resumo (donut 200x200 + legenda cor/categoria/R$/%, paleta fixa com fallback, empty "Sem gastos neste mês."); +3 testes; analyze 0, 110 testes, web + APK OK
+- [06-03]: Migration `20260907150000_create_metas.sql` (tabela `metas` + RLS + realtime) aplicada no remoto via `supabase db push --linked` (também aplicou 04-migration itinerante pendente) — PAT revogado após uso; `Meta` + `MetasRepository` + `SupabaseMetasRepository` (stream por `created_at`); `metasStreamProvider` + `metasComProgressoProvider` (junção com `gastosPorCategoriaMesProvider`, pct/estourou/quaseEstourada); `MetasScreen` dedicada (`/metas`, AppBar ícone track_changes, FAB nova meta, dialog select categoria + valor R$, menu editar/excluir); seção `Metas` no Resumo (progresso ok verde / âmbar ≥80% / vermelho >100%, "Gerenciar"/"Criar"); `_coresCategorias` extensível; +8 testes (2 provider, 4 tela metas, 2 dashboard); analyze 0, 118 testes, web + APK OK
 
 ### Pending Todos
 
@@ -93,10 +94,10 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-09-07
-Stopped at: 06-01 e 06-02 completos e commitados. Próximo: 06-03.
+Stopped at: Fase 6 completa. Próximo: Fase 7 (receitas).
 Resume file: None
 
 ## Operator Next Steps
 
-- **Executar 06-03** — metas/limites por categoria com progresso (DASH-04): migration `metas` + tela própria de metas (acesso pelo AppBar) + CRUD + progresso no Resumo.
-- **_Nota segurança:_** revogar o PAT do Supabase exposto no chat (Account Settings → Access Tokens)
+- **Executar Fase 7** — receitas no saldo (06-01 adiou para F7); planejar 07-xx.
+- **_Nota segurança:_** PAT do Supabase exposto no chat — **revogar** em Account Settings → Access Tokens. (O token usado foi aplicado e deve ser revogado agora.)

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: In progress
-stopped_at: Discussão Fase 4 concluída; próximo passo = plan-phase Fase 4
-last_updated: "2026-09-06T21:00:00Z"
-last_activity: 2026-09-06 — Discussão Fase 4 concluída (todas as 4 áreas resolvidas)
+stopped_at: Wave 2 (04-02 recorrência, 04-03 ditado) concluída; Wave 3 pendente (81/81 testes, analyze limpo)
+last_updated: "2026-09-06T23:30:00Z"
+last_activity: 2026-09-06 — Wave 2 commitada; build_apk.ps1 criado; APK debug com defines OK
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 25
-  completed_plans: 9
-  percent: 36
+  completed_plans: 11
+  percent: 44
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 ## Current Position
 
 Phase: 4 — Vencimentos, Itens e Recorrências
-Plan: 04-01, 04-02, 04-03 (planned)
-Status: Planning complete, ready for execution
-Last activity: 2026-09-06 — Planos da Fase 4 criados (3 plans)
+Plan: 04-01, 04-02, 04-03
+Status: Implementação da Fase 4 em andamento — 04-01 (Wave 1) e 04-02+04-03 (Wave 2) implementados e commitados
+Last activity: 2026-09-06 — Wave 2 commitada; APK debug corrigido (defines do Supabase); build_apk.ps1 criado
 
 ## Performance Metrics
 
@@ -63,6 +63,8 @@ Last activity: 2026-09-06 — Planos da Fase 4 criados (3 plans)
 - [Phase 4]: Fixa mensal = gera cópias independentes dos próximos meses (lazy, no app); serie_id uuid; só mensal
 - [Phase 4]: Ditado itens = lista natural; soma confirmada; vencimento "dia 15" = próxima data com esse dia
 - [Phase 4]: 3 plans planejados (04-01 modelo/UI, 04-02 recorrência lazy, 04-03 ditado itens/vencimento)
+- [Fase 4 exec]: 04-01 (modelo/itens/recorrência), 04-02 (lista/badges/excluir série), 04-03 (ditado itens/vencimento) implementados; migration SQL criada (aplicação pendente)
+- [Fase 4 exec]: build_apk.ps1 criado (lê .env e injeta SUPABASE/GEMINI via --dart-define); APK debug corrigido (sem defines travava na splash)
 
 ### Pending Todos
 
@@ -84,10 +86,11 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-09-06
-Stopped at: Planos da Fase 4 criados; próximo passo = execute-phase Fase 4 (04-01, 04-02, 04-03)
+Stopped at: Fase 4 (04-01, 04-02, 04-03) implementada e commitada; próxima = aplicar migration ao Supabase + validação final (build web/test) + discutir instalação do APK no celular
 Resume file: None
 
 ## Operator Next Steps
 
-- **Rodar execute-phase da Fase 4** — /gsd:execute-phase 4 (executar 04-01, 04-02, 04-03)
-- (Opcional) Instalar toolchain Android para validar device de verdade
+- **Aplicar migration** `supabase/migrations/20260906140000_add_itens_recorrencia.sql` ao projeto remoto (falta SUPABASE_ACCESS_TOKEN ou via dashboard/GH Actions)
+- **Validar Fase 4** — build web + rodar fluxos (itens, fixa mensal, vencimento "dia 15")
+- **Instalar APK debug** no celular (`meubolso-debug.apk` em Downloads/meubolso) — discutir com usuário

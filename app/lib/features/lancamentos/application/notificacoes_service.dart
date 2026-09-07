@@ -6,12 +6,12 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../domain/lancamento.dart';
 
-/// Instante de disparo agendado (T-3 ou T-0).
+/// Instante de disparo agendado (T-X ou T-0).
 @visibleForTesting
 typedef AgendaNotificacao = ({tz.TZDateTime quando, String tipo, String titulo});
 
 /// Serviço de notificações locais para lembretes de vencimento.
-/// Agenda 2 notificações por lançamento: T-3 dias e no próprio dia,
+/// Agenda 2 notificações por lançamento: X dias antes e no próprio dia,
 /// no horário configurável (padrão 09:00).
 class NotificacoesService {
   NotificacoesService._();
@@ -113,12 +113,13 @@ class NotificacoesService {
     Lancamento lancamento, {
     required int hora,
     required int minuto,
+    required int diasAntes,
   }) async {
     final venc = lancamento.vencimento;
     if (venc == null || _vencimentoExpirado(venc)) return true;
 
     try {
-      for (final item in datasDeAgendamento(venc, hora, minuto)) {
+      for (final item in datasDeAgendamento(venc, hora, minuto, diasAntes)) {
         await _agendar(
           id: _idNotificacao(lancamento.id, item.tipo),
           titulo: item.titulo,
@@ -133,14 +134,20 @@ class NotificacoesService {
     }
   }
 
-  /// Instante de disparo agendado (T-3 ou T-0).
+  /// Instante de disparo agendado (T-X ou T-0).
+  /// [diasAntes] = 0 agenda apenas no dia do vencimento.
   @visibleForTesting
-  List<AgendaNotificacao> datasDeAgendamento(DateTime venc, int hora, int minuto) {
-    final tresDias = tz.TZDateTime(
+  List<AgendaNotificacao> datasDeAgendamento(
+    DateTime venc,
+    int hora,
+    int minuto,
+    int diasAntes,
+  ) {
+    final tx = tz.TZDateTime(
       tz.local,
       venc.year,
       venc.month,
-      venc.day - 3,
+      venc.day - diasAntes,
       hora,
       minuto,
     );
@@ -155,11 +162,11 @@ class NotificacoesService {
 
     final agora = tz.TZDateTime.now(tz.local);
     return [
-      if (tresDias.isAfter(agora))
+      if (diasAntes > 0 && tx.isAfter(agora))
         (
-          quando: tresDias,
-          tipo: '3d',
-          titulo: 'Vence em 3 dias',
+          quando: tx,
+          tipo: 'xd',
+          titulo: 'Vence em $diasAntes ${diasAntes == 1 ? 'dia' : 'dias'}',
         ),
       if (diaDoVencimento.isAfter(agora))
         (
@@ -207,7 +214,7 @@ class NotificacoesService {
   /// Cancela as notificações de um lançamento.
   Future<void> cancelarPorLancamento(String id) async {
     try {
-      await _plugin.cancel(id: _idNotificacao(id, '3d'));
+      await _plugin.cancel(id: _idNotificacao(id, 'xd'));
       await _plugin.cancel(id: _idNotificacao(id, 'dia'));
     } catch (e) {
       debugPrint('NotificacoesService.cancelarPorLancamento erro: $e');

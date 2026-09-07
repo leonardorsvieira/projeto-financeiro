@@ -14,27 +14,32 @@ import '../domain/lancamento_converter.dart';
 class LancamentosListScreen extends ConsumerWidget {
   const LancamentosListScreen({super.key});
 
-  Future<void> _abrirHorarioLembretes(BuildContext context, WidgetRef ref) async {
+  Future<void> _abrirPreferenciasLembretes(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final prefs = await ref.read(preferenciasLembretesProvider.future);
     if (!context.mounted) return;
 
-    // Escolher horário (padrão 09:00 configurável).
-    final horario = await showTimePicker(
+    final resultado = await showDialog<PreferenciasLembretes>(
       context: context,
-      initialTime: TimeOfDay(hour: prefs.hora, minute: prefs.minuto),
-      helpText: 'Horário dos lembretes',
+      builder: (context) => _PreferenciasLembretesDialog(initial: prefs),
     );
-    if (horario == null || !context.mounted) return;
+    if (resultado == null || !context.mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final novo = PreferenciasLembretes(
-        hora: horario.hour,
-        minuto: horario.minute,
-      );
-      await ref.read(lembretesControllerProvider.notifier).alterarHorario(novo);
+      await ref
+          .read(lembretesControllerProvider.notifier)
+          .alterarPreferencias(resultado);
       messenger.showSnackBar(
-        SnackBar(content: Text('Lembretes ajustados para ${novo.label}.')),
+        SnackBar(
+          content: Text(
+            'Lembretes: ${resultado.diasAntesNormalizado} '
+            '${resultado.diasAntesNormalizado == 1 ? 'dia' : 'dias'} antes às '
+            '${resultado.label}.',
+          ),
+        ),
       );
     } catch (_) {
       messenger.showSnackBar(
@@ -60,8 +65,8 @@ class LancamentosListScreen extends ConsumerWidget {
               (defaultTargetPlatform == TargetPlatform.android ||
                   defaultTargetPlatform == TargetPlatform.iOS))
             IconButton(
-              tooltip: 'Horário dos lembretes',
-              onPressed: () => _abrirHorarioLembretes(context, ref),
+              tooltip: 'Lembretes (horário e dias antes)',
+              onPressed: () => _abrirPreferenciasLembretes(context, ref),
               icon: const Icon(Icons.notifications_outlined),
             ),
           IconButton(
@@ -349,6 +354,112 @@ class _Lista extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _PreferenciasLembretesDialog extends StatefulWidget {
+  const _PreferenciasLembretesDialog({required this.initial});
+
+  final PreferenciasLembretes initial;
+
+  @override
+  State<_PreferenciasLembretesDialog> createState() =>
+      _PreferenciasLembretesDialogState();
+}
+
+class _PreferenciasLembretesDialogState
+    extends State<_PreferenciasLembretesDialog> {
+  late TimeOfDay _horario;
+  late int _diasAntes;
+
+  @override
+  void initState() {
+    super.initState();
+    _horario = TimeOfDay(hour: widget.initial.hora, minute: widget.initial.minuto);
+    _diasAntes = widget.initial.diasAntesNormalizado;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Lembretes de vencimento'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.schedule_outlined),
+            title: const Text('Horário do aviso'),
+            trailing: Text(
+              _horario.format(context),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            onTap: () async {
+              final horario = await showTimePicker(
+                context: context,
+                initialTime: _horario,
+                helpText: 'Horário dos lembretes',
+              );
+              if (horario != null && mounted) {
+                setState(() => _horario = horario);
+              }
+            },
+          ),
+          const Divider(),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.event_outlined),
+            title: const Text('Avisar dias antes'),
+            subtitle: Text(
+              _diasAntes == 0
+                  ? 'Apenas no dia do vencimento'
+                  : '$_diasAntes ${_diasAntes == 1 ? 'dia' : 'dias'} antes e no dia',
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'Diminuir',
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: _diasAntes > PreferenciasLembretes.diasAntesMin
+                      ? () => setState(() => _diasAntes--)
+                      : null,
+                ),
+                Text(
+                  '$_diasAntes',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                IconButton(
+                  tooltip: 'Aumentar',
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: _diasAntes < PreferenciasLembretes.diasAntesMax
+                      ? () => setState(() => _diasAntes++)
+                      : null,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop(
+              PreferenciasLembretes(
+                hora: _horario.hour,
+                minuto: _horario.minute,
+                diasAntes: _diasAntes,
+              ),
+            );
+          },
+          child: const Text('Salvar'),
+        ),
+      ],
     );
   }
 }

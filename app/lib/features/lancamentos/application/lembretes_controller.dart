@@ -41,13 +41,17 @@ class LembretesController extends AsyncNotifier<void> {
     if (prefs == null) return;
     await NotificacoesService.instance.cancelarTudo();
     for (final lan in lancamentos) {
-      await NotificacoesService.instance
-          .agendarLembrete(lan, hora: prefs.hora, minuto: prefs.minuto);
+      await NotificacoesService.instance.agendarLembrete(
+        lan,
+        hora: prefs.hora,
+        minuto: prefs.minuto,
+        diasAntes: prefs.diasAntes,
+      );
     }
   }
 
-  /// Alterar o horário dos lembretes. Persiste e reagenda.
-  Future<void> alterarHorario(PreferenciasLembretes prefs) async {
+  /// Altera preferências (horário + dias antes). Persiste e reagenda.
+  Future<void> alterarPreferencias(PreferenciasLembretes prefs) async {
     _prefsAtuais = prefs;
     await ref
         .read(preferenciasServiceProviderProvider)

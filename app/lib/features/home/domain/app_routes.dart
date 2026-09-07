@@ -12,6 +12,9 @@ class AppRoutes {
   static const String lancamentosDetalhe = '/lancamentos/:id';
   static const String proximosVencimentos = '/vencimentos/proximos';
   static const String metas = '/metas';
+  static const String investimentos = '/investimentos';
+  static const String investimentoDetalhe = '/investimentos/:id';
 
   static String lancamentoEditar(String id) => '/lancamentos/$id';
+  static String investimentoDetalheDe(String id) => '/investimentos/$id';
 }

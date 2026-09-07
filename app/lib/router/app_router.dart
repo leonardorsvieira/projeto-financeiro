@@ -15,6 +15,8 @@ import '../features/dashboard/presentation/home_screen.dart';
 import '../features/lancamentos/presentation/lancamento_form_screen.dart';
 import '../features/lancamentos/presentation/proximos_vencimentos_screen.dart';
 import '../features/metas/presentation/metas_screen.dart';
+import '../features/investimentos/presentation/investimentos_screen.dart';
+import '../features/investimentos/presentation/investimento_detalhe_screen.dart';
 
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(Ref ref) {
@@ -76,6 +78,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.metas,
         builder: (_, _) => const MetasScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.investimentos,
+        builder: (_, _) => const InvestimentosScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.investimentoDetalhe,
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          return InvestimentoDetalheScreen(investimentoId: id);
+        },
       ),
     ],
     redirect: (context, state) {

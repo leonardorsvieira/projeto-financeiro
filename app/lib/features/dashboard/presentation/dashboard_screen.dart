@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../home/domain/app_routes.dart';
+import '../../investimentos/application/investimentos_providers.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../../metas/application/metas_providers.dart';
@@ -45,6 +46,11 @@ class DashboardScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           _CardGastosMes(resumo: resumo),
+          const SizedBox(height: 16),
+          _PatrimonioSection(
+            patrimonioCents: ref.watch(patrimonioTotalProvider),
+            rendimentoCents: ref.watch(rendimentoAcumuladoProvider),
+          ),
           const SizedBox(height: 16),
           Text('Por categoria', style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
@@ -179,6 +185,72 @@ class _ValorRotulado extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PatrimonioSection extends StatelessWidget {
+  const _PatrimonioSection({
+    required this.patrimonioCents,
+    required this.rendimentoCents,
+  });
+
+  final int patrimonioCents;
+  final int rendimentoCents;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    if (patrimonioCents == 0 && rendimentoCents == 0) {
+      return const SizedBox.shrink();
+    }
+    final positivo = rendimentoCents >= 0;
+    final corRendimento =
+        positivo ? Colors.green.shade700 : theme.colorScheme.error;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Expanded(child: Text('Patrimônio')),
+                TextButton(
+                  onPressed: () => context.push(AppRoutes.investimentos),
+                  child: const Text('Ver'),
+                ),
+              ],
+            ),
+            Text(
+              formatoBRL(patrimonioCents),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  positivo ? Icons.trending_up : Icons.trending_down,
+                  color: corRendimento,
+                  size: 18,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${positivo ? '+' : '-'}'
+                  '${formatoBRL(rendimentoCents.abs())} rendimento',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: corRendimento,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

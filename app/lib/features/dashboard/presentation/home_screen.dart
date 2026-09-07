@@ -65,6 +65,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             onPressed: () => context.push(AppRoutes.metas),
             icon: const Icon(Icons.track_changes_outlined),
           ),
+          IconButton(
+            tooltip: 'Investimentos',
+            onPressed: () => context.push(AppRoutes.investimentos),
+            icon: const Icon(Icons.pie_chart_outline),
+          ),
           PopupMenuButton<String>(
             tooltip: 'Opções',
             onSelected: (value) {

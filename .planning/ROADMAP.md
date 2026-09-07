@@ -146,6 +146,8 @@ Plans:
 - [ ] 08-04: Dividendos/rendimentos mensais
 - [ ] 08-05: Captura de aporte/investimento por voz (VOZ-03)
 
+### Fase 8 em execução (2026-09-07) — decisões registradas em 08-CONTEXT.md (sem cotação automática; preço manual; 3 tabelas novas; VOZ-03 estende o prompt com tipo "investimento").
+
 ## Progress
 
 **Execution Order:**
@@ -160,4 +162,4 @@ Phases execute in numeric order: 4 → 5 → 6 → 7 → 8 (v1.1)
 | 5. Lembretes Push | v1.1 | 2/2 | Complete | 2026-09-07 |
 | 6. Dashboard e Metas | v1.1 | 3/3 | Complete | 2026-09-07 |
 | 7. Recebimentos por Voz | v1.1 | 2/2 | Complete | 2026-09-07 |
-| 8. Investimentos | v1.1 | 0/5 | Not started | - |
+| 8. Investimentos | v1.1 | 0/5 | In progress | - |

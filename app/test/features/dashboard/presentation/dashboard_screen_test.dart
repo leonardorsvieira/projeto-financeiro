@@ -3,13 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:meubolso/features/dashboard/presentation/dashboard_screen.dart';
+import 'package:meubolso/features/investimentos/application/investimentos_providers.dart';
+import 'package:meubolso/features/investimentos/domain/investimento.dart';
 import 'package:meubolso/features/lancamentos/application/lancamentos_providers.dart';
 import 'package:meubolso/features/lancamentos/domain/lancamento.dart';
 import 'package:meubolso/features/metas/application/metas_providers.dart';
 import 'package:meubolso/features/metas/domain/meta.dart';
 
+import '../../../support/fake_investimentos_repository.dart';
 import '../../../support/fake_lancamentos_repository.dart';
 import '../../../support/fake_metas_repository.dart';
+import '../../../support/fake_movimentos_investimento_repository.dart';
 
 Lancamento _lanc({
   required String id,
@@ -38,11 +42,14 @@ Future<void> _pump(
   WidgetTester tester,
   FakeLancamentosRepository repo, {
   FakeMetasRepository? metasRepo,
+  FakeInvestimentosRepository? investimentosRepo,
 }) async {
   await tester.pumpWidget(
     ProviderScopeContainer(
       repo: repo,
       metasRepo: metasRepo ?? FakeMetasRepository(),
+      investimentosRepo:
+          investimentosRepo ?? FakeInvestimentosRepository(),
       child: const MaterialApp(home: Scaffold(body: DashboardScreen())),
     ),
   );
@@ -54,11 +61,13 @@ class ProviderScopeContainer extends StatelessWidget {
     super.key,
     required this.repo,
     required this.metasRepo,
+    required this.investimentosRepo,
     required this.child,
   });
 
   final FakeLancamentosRepository repo;
   final FakeMetasRepository metasRepo;
+  final FakeInvestimentosRepository investimentosRepo;
   final Widget child;
 
   @override
@@ -67,6 +76,9 @@ class ProviderScopeContainer extends StatelessWidget {
       overrides: [
         lancamentosRepositoryProvider.overrideWithValue(repo),
         metasRepositoryProvider.overrideWithValue(metasRepo),
+        investimentosRepositoryProvider.overrideWithValue(investimentosRepo),
+        movimentosInvestimentoRepositoryProvider
+            .overrideWithValue(FakeMovimentosInvestimentoRepository()),
       ],
       child: child,
     );
@@ -174,5 +186,33 @@ void main() {
     expect(find.text('Metas'), findsOneWidget);
     expect(find.text('Nenhuma meta definida.'), findsOneWidget);
     expect(find.text('Criar'), findsOneWidget);
+  });
+
+  testWidgets('seção Patrimônio mostra total e rendimento com link',
+      (tester) async {
+    final repo = FakeLancamentosRepository();
+    final investimentos = FakeInvestimentosRepository([
+      const Investimento(
+        id: 'i1',
+        classe: TipoClasseInvestimento.acao,
+        nome: 'PETR4',
+        quantidade: 10,
+        precoAtualCents: 4000,
+      ),
+    ]);
+
+    await _pump(tester, repo, investimentosRepo: investimentos);
+
+    expect(find.text('Patrimônio'), findsOneWidget);
+    expect(find.text('R\$ 400,00'), findsWidgets);
+    expect(find.text('Ver'), findsOneWidget);
+    // Sem movimentos → custo 0 → rendimento = patrimônio.
+    expect(find.text('+R\$ 400,00 rendimento'), findsOneWidget);
+  });
+
+  testWidgets('seção Patrimônio não aparece sem ativos', (tester) async {
+    await _pump(tester, FakeLancamentosRepository());
+    expect(find.text('Patrimônio'), findsNothing);
+    expect(find.text('Ver'), findsNothing);
   });
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../home/domain/app_routes.dart';
 import '../application/lancamentos_providers.dart';
 import '../domain/lancamento.dart';
 import '../domain/lancamento_converter.dart';
@@ -88,7 +90,7 @@ class _VencimentoTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        onTap: () {}, // TODO: navegar para edição se necessário
+        onTap: () => context.push(AppRoutes.lancamentoEditar(item.id)),
         leading: CircleAvatar(
           child: Text(
             item.categoria.characters.first,

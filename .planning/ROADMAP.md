@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 4: Vencimentos, Itens e Recorrências** - Agendar pagamento, detalhar produtos, contas fixas mensais
 - [x] **Phase 5: Lembretes Push** - Avisos "X dias antes" e no dia, na hora escolhida
-- [ ] **Phase 6: Dashboard e Metas** - Saldo do mês, gráfico por categoria, vencimentos e metas
+- [x] **Phase 6: Dashboard e Metas** - Saldo do mês, gráfico por categoria, vencimentos e metas
 - [ ] **Phase 7: Recebimentos por Voz** - Ditar receitas e ver no saldo do mês
 - [ ] **Phase 8: Investimentos** - Acompanhar patrimônio, dividendos, compras/vendas e ditar aportes
 
@@ -158,6 +158,6 @@ Phases execute in numeric order: 4 → 5 → 6 → 7 → 8 (v1.1)
 | 3. Ditado por Voz (Core) | v1.0 | 3/3 | Complete | 2026-09-06 |
 | 4. Vencimentos, Itens e Recorrências | v1.1 | 4/4 | Complete | 2026-09-07 |
 | 5. Lembretes Push | v1.1 | 2/2 | Complete | 2026-09-07 |
-| 6. Dashboard e Metas | v1.1 | 0/3 | **In progress** | - |
+| 6. Dashboard e Metas | v1.1 | 3/3 | Complete | 2026-09-07 |
 | 7. Recebimentos por Voz | v1.1 | 0/2 | Not started | - |
 | 8. Investimentos | v1.1 | 0/5 | Not started | - |

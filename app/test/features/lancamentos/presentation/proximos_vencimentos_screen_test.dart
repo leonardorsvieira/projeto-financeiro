@@ -7,6 +7,7 @@ import 'package:meubolso/features/dashboard/presentation/home_screen.dart';
 import 'package:meubolso/features/lancamentos/application/lancamentos_providers.dart';
 import 'package:meubolso/features/lancamentos/domain/lancamento.dart';
 import 'package:meubolso/features/lancamentos/domain/lancamento_converter.dart';
+import 'package:meubolso/features/lancamentos/presentation/lancamento_form_screen.dart';
 import 'package:meubolso/features/lancamentos/presentation/proximos_vencimentos_screen.dart';
 import 'package:meubolso/router/app_router.dart';
 
@@ -103,6 +104,11 @@ void main() {
         routes: [
           GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
           GoRoute(path: '/vencimentos/proximos', builder: (_, _) => const ProximosVencimentosScreen()),
+          GoRoute(
+            path: '/lancamentos/:id',
+            builder: (_, state) =>
+                LancamentoFormScreen(lancamentoId: state.pathParameters['id']),
+          ),
         ],
       );
 
@@ -201,6 +207,34 @@ void main() {
 
       expect(find.text('Passado'), findsNothing);
       expect(find.text('Futuro'), findsOneWidget);
+    });
+
+    testWidgets('tocar num vencimento navega para a edição do lançamento',
+        (tester) async {
+      final agora = DateTime.now();
+      final hoje = DateTime(agora.year, agora.month, agora.day);
+      final amanha = hoje.add(const Duration(days: 1));
+
+      await tester.pumpWidget(buildScreen(seed: [
+        Lancamento(
+          id: '42',
+          descricao: 'Conta luz',
+          valorCents: 1000,
+          categoria: 'Moradia',
+          formaPagamento: 'Boleto',
+          data: hoje,
+          vencimento: amanha,
+          createdAt: agora,
+          updatedAt: agora,
+        ),
+      ]));
+      await tester.tap(find.byIcon(Icons.event_outlined));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Conta luz'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Editar lançamento'), findsOneWidget);
     });
   });
 }

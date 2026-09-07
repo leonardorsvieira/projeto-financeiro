@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 
 **Core value:** O usuário dita um gasto, recebimento ou investimento pela voz e ele é registrado corretamente, no lugar certo, pronto para acompanhar.
-**Current focus:** Planejamento da Fase 4 — Vencimentos, Itens e Recorrências (milestone v1.1)
+**Current focus:** Resíduos do milestone pendentes concluídos. Próximo: Fase 7 — Recebimentos por Voz (milestone v1.1)
 
 ## Current Position
 
@@ -74,10 +74,11 @@ Last activity: 2026-09-07 — 06-03 implementado; 118 testes passam; build web +
 - [06-01]: `/home` → `HomeScreen` (ConsumerStatefulWidget, TabBar Resumo|Lançamentos com TabBarView); `DashboardScreen` = aba Resumo (card gastos real/previsto via `resumoMesProvider`, próximos vencimentos top5 + "Ver todos", RefreshIndicator); `LancamentosListScreen` virou corpo puro; `lembretes_preferencias_dialog.dart` expõe `abrirPreferenciasLembretes`; `resumoMesProvider` (real = data no mês, previsto = vencimento no mês com data fora); testes: +4 (resumo x2, dashboard x2), ajustados flow/ditado/router/smoke/vencimentos/lembretes; build_apk.ps1 corrigido (cmd /c + 2>&1 para stderr do Gradle não abortar com $ErrorActionPreference=Stop)
 - [06-02]: `fl_chart: ^1.2.0`; `gastosPorCategoriaMesProvider` (soma por categoria do mês vigente, ordenado desc); `_DonutGastosCategoria` no Resumo (donut 200x200 + legenda cor/categoria/R$/%, paleta fixa com fallback, empty "Sem gastos neste mês."); +3 testes; analyze 0, 110 testes, web + APK OK
 - [06-03]: Migration `20260907150000_create_metas.sql` (tabela `metas` + RLS + realtime) aplicada no remoto via `supabase db push --linked` (também aplicou 04-migration itinerante pendente) — PAT revogado após uso; `Meta` + `MetasRepository` + `SupabaseMetasRepository` (stream por `created_at`); `metasStreamProvider` + `metasComProgressoProvider` (junção com `gastosPorCategoriaMesProvider`, pct/estourou/quaseEstourada); `MetasScreen` dedicada (`/metas`, AppBar ícone track_changes, FAB nova meta, dialog select categoria + valor R$, menu editar/excluir); seção `Metas` no Resumo (progresso ok verde / âmbar ≥80% / vermelho >100%, "Gerenciar"/"Criar"); `_coresCategorias` extensível; +8 testes (2 provider, 4 tela metas, 2 dashboard); analyze 0, 118 testes, web + APK OK
+- [Cleanup v1.1]: Pendentes das fases 4-6 corrigidos: ROADMAP Fase 6 `[x]` + Progress `3/3 Complete`; PROJECT.md marca Fases 4/5/6 ✓ ("Concluído (v1.1)") restam F7/F8; `.planning/REQUIREMENTS.md` recriado para o milestone v1.1 (13/22 validados F4-6; pendentes VOZ-02 F7 + INV-01..07/VOZ-03 F8; todo do STATE anteriormente pendente); navegação vencimento → edição do lançamento implementada (`proximos_vencimentos_screen.dart` onTap → `/lancamentos/:id`, +1 teste); `.continue-here.md` órfão da Fase 3 removido; analyze 0, 119 testes
 
 ### Pending Todos
 
-- Redefinir REQUIREMENTS.md para o milestone v1.1 (a Fase 4 usa micro-requirements próprios durante o planejamento)
+- _(nenhum)_ — todo anterior "Redefinir REQUIREMENTS.md" concluído em 2026-09-07 (arquivo criado).
 
 ### Blockers/Concerns
 
@@ -93,11 +94,11 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-09-07
-Stopped at: Fase 6 completa. Próximo: Fase 7 (receitas).
+Last session: 2026-09-07 (2ª sessão do dia)
+Stopped at: Pendentes do milestone v1.1 concluídos (docs + código). Próximo: Fase 7 (receitas).
 Resume file: None
 
 ## Operator Next Steps
 
-- **Executar Fase 7** — receitas no saldo (06-01 adiou para F7); planejar 07-xx.
+- **Executar Fase 7** — receitas no saldo e ditado de recebimentos por voz (VOZ-02); planejar 07-xx.
 - **_Nota segurança:_** PAT do Supabase exposto no chat — **revogar** em Account Settings → Access Tokens. (O token usado foi aplicado e deve ser revogado agora.)

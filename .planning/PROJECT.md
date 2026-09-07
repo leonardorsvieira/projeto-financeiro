@@ -21,12 +21,15 @@ O usuário pode ditar um gasto, recebimento ou investimento com a voz e ele é r
 
 ### Active
 
-- [ ] Agendar vencimento/agendamento do dia de pagamento e adicionar itens/produtos detalhados à despesa (Fase 4)
-- [ ] Lançar contas fixas mensais e/ou valor fixo recorrente por mês (Fase 4)
-- [ ] Lembretes push de faturas/cartões "X dias antes" do vencimento (configurável por conta), reapresentando no dia (Fase 5)
-- [ ] Dashboard com: saldo do mês, gastos por categoria, próximos vencimentos e metas/limites com progresso (Fase 6)
 - [ ] Registrar recebimentos por voz e manualmente, vistos no saldo do mês (Fase 7)
 - [ ] Acompanhar investimentos (ações/FII, cripto, renda fixa, banco digital) com patrimônio, dividendos e compras/vendas (Fase 8)
+
+### Concluído (v1.1)
+
+- ✓ Agendar vencimento/agendamento do dia de pagamento e adicionar itens/produtos detalhados à despesa — **Fase 4**
+- ✓ Lançar contas fixas mensais e/ou valor fixo recorrente por mês — **Fase 4**
+- ✓ Lembretes push locais de faturas/cartões "X dias antes" do vencimento (configurável), reapresentando no dia — **Fase 5** (push FCM/APNs opcional post v1.1)
+- ✓ Dashboard com: gastos do mês (real + previsto), donut de gastos por categoria, próximos vencimentos e metas/limites com progresso — **Fase 6**
 
 ### Out of Scope
 

@@ -14,6 +14,7 @@ import '../features/ditado/presentation/lancamento_ditado_screen.dart';
 import '../features/dashboard/presentation/home_screen.dart';
 import '../features/lancamentos/presentation/lancamento_form_screen.dart';
 import '../features/lancamentos/presentation/proximos_vencimentos_screen.dart';
+import '../features/metas/presentation/metas_screen.dart';
 
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(Ref ref) {
@@ -71,6 +72,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.proximosVencimentos,
         builder: (_, _) => const ProximosVencimentosScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.metas,
+        builder: (_, _) => const MetasScreen(),
       ),
     ],
     redirect: (context, state) {

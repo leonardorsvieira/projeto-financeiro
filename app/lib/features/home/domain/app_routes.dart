@@ -11,6 +11,7 @@ class AppRoutes {
   static const String confirmacaoDitado = '/lancamentos/ditar/confirmacao';
   static const String lancamentosDetalhe = '/lancamentos/:id';
   static const String proximosVencimentos = '/vencimentos/proximos';
+  static const String metas = '/metas';
 
   static String lancamentoEditar(String id) => '/lancamentos/$id';
 }

@@ -5,8 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meubolso/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:meubolso/features/lancamentos/application/lancamentos_providers.dart';
 import 'package:meubolso/features/lancamentos/domain/lancamento.dart';
+import 'package:meubolso/features/metas/application/metas_providers.dart';
+import 'package:meubolso/features/metas/domain/meta.dart';
 
 import '../../../support/fake_lancamentos_repository.dart';
+import '../../../support/fake_metas_repository.dart';
 
 Lancamento _lanc({
   required String id,
@@ -31,11 +34,13 @@ Lancamento _lanc({
 
 Future<void> _pump(
   WidgetTester tester,
-  FakeLancamentosRepository repo,
-) async {
+  FakeLancamentosRepository repo, {
+  FakeMetasRepository? metasRepo,
+}) async {
   await tester.pumpWidget(
     ProviderScopeContainer(
       repo: repo,
+      metasRepo: metasRepo ?? FakeMetasRepository(),
       child: const MaterialApp(home: Scaffold(body: DashboardScreen())),
     ),
   );
@@ -46,10 +51,12 @@ class ProviderScopeContainer extends StatelessWidget {
   const ProviderScopeContainer({
     super.key,
     required this.repo,
+    required this.metasRepo,
     required this.child,
   });
 
   final FakeLancamentosRepository repo;
+  final FakeMetasRepository metasRepo;
   final Widget child;
 
   @override
@@ -57,6 +64,7 @@ class ProviderScopeContainer extends StatelessWidget {
     return ProviderScope(
       overrides: [
         lancamentosRepositoryProvider.overrideWithValue(repo),
+        metasRepositoryProvider.overrideWithValue(metasRepo),
       ],
       child: child,
     );
@@ -124,5 +132,35 @@ void main() {
     expect(find.text('Transporte'), findsOneWidget);
     expect(find.text('R\$ 10,00'), findsOneWidget);
     expect(find.text('(25%)'), findsOneWidget);
+  });
+
+  testWidgets('seção Metas mostra progresso da meta no dashboard',
+      (tester) async {
+    final agora = DateTime.now();
+    final mes = DateTime(agora.year, agora.month);
+
+    final repo = FakeLancamentosRepository([
+      _lanc(id: 'Pizza', valorCents: 9000, categoria: 'Alimentação', data: mes),
+    ]);
+    final metasRepo = FakeMetasRepository([
+      const Meta(id: 'm1', categoria: 'Alimentação', valorLimiteCents: 10000),
+    ]);
+
+    await _pump(tester, repo, metasRepo: metasRepo);
+
+    expect(find.text('Metas'), findsOneWidget);
+    expect(find.text('R\$ 90,00 de R\$ 100,00'), findsOneWidget);
+    expect(find.text('90%'), findsOneWidget);
+    expect(find.text('Gerenciar'), findsOneWidget);
+  });
+
+  testWidgets('seção Metas mostra Criar quando não há metas', (tester) async {
+    final repo = FakeLancamentosRepository();
+
+    await _pump(tester, repo);
+
+    expect(find.text('Metas'), findsOneWidget);
+    expect(find.text('Nenhuma meta definida.'), findsOneWidget);
+    expect(find.text('Criar'), findsOneWidget);
   });
 }

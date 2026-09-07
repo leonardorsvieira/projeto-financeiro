@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,11 +6,42 @@ import 'package:go_router/go_router.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../home/domain/app_routes.dart';
 import '../application/lancamentos_providers.dart';
+import '../application/lembretes_controller.dart';
+import '../application/preferencias_service.dart';
 import '../domain/lancamento.dart';
 import '../domain/lancamento_converter.dart';
 
 class LancamentosListScreen extends ConsumerWidget {
   const LancamentosListScreen({super.key});
+
+  Future<void> _abrirHorarioLembretes(BuildContext context, WidgetRef ref) async {
+    final prefs = await ref.read(preferenciasLembretesProvider.future);
+    if (!context.mounted) return;
+
+    // Escolher horário (padrão 09:00 configurável).
+    final horario = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: prefs.hora, minute: prefs.minuto),
+      helpText: 'Horário dos lembretes',
+    );
+    if (horario == null || !context.mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final novo = PreferenciasLembretes(
+        hora: horario.hour,
+        minuto: horario.minute,
+      );
+      await ref.read(lembretesControllerProvider.notifier).alterarHorario(novo);
+      messenger.showSnackBar(
+        SnackBar(content: Text('Lembretes ajustados para ${novo.label}.')),
+      );
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Não foi possível ajustar os lembretes.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,6 +56,14 @@ class LancamentosListScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Meu Bolso'),
         actions: [
+          if (!kIsWeb &&
+              (defaultTargetPlatform == TargetPlatform.android ||
+                  defaultTargetPlatform == TargetPlatform.iOS))
+            IconButton(
+              tooltip: 'Horário dos lembretes',
+              onPressed: () => _abrirHorarioLembretes(context, ref),
+              icon: const Icon(Icons.notifications_outlined),
+            ),
           PopupMenuButton<String>(
             tooltip: 'Opções',
             onSelected: (value) {

@@ -1,11 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/env.dart';
+import 'features/lancamentos/application/lembretes_controller.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
+
+final _appContainer = ProviderContainer();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +25,20 @@ Future<void> main() async {
       '--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...',
     );
   }
-  runApp(const ProviderScope(child: MeuBolsoApp()));
+
+  // Inicia a sincronização de lembretes apenas em mobile (notificação local).
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS)) {
+    _appContainer.read(lembretesControllerProvider);
+  }
+
+  runApp(
+    UncontrolledProviderScope(
+      container: _appContainer,
+      child: const MeuBolsoApp(),
+    ),
+  );
 }
 
 class MeuBolsoApp extends ConsumerWidget {

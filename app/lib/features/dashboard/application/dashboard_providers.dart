@@ -39,3 +39,36 @@ final resumoMesProvider = Provider<ResumoMes>((ref) {
   }
   return ResumoMes(realCents: real, previstoCents: previsto);
 });
+
+/// Gasto agregado por categoria no mês vigente.
+class GastoCategoria {
+  const GastoCategoria({
+    required this.categoria,
+    required this.valorCents,
+  });
+
+  final String categoria;
+  final int valorCents;
+}
+
+/// Gastos do mês vigente agrupados por categoria, ordenados do maior para o
+/// menor (lançamentos com `data` no mês).
+final gastosPorCategoriaMesProvider = Provider<List<GastoCategoria>>((ref) {
+  final todos = ref.watch(lancamentosStreamProvider).value ?? [];
+  final agora = DateTime.now();
+
+  final porCategoria = <String, int>{};
+  for (final l in todos) {
+    final dataNoMes = l.data.year == agora.year && l.data.month == agora.month;
+    if (dataNoMes) {
+      porCategoria.update(l.categoria, (v) => v + l.valorCents,
+          ifAbsent: () => l.valorCents);
+    }
+  }
+
+  final list = porCategoria.entries
+      .map((e) => GastoCategoria(categoria: e.key, valorCents: e.value))
+      .toList()
+    ..sort((a, b) => b.valorCents.compareTo(a.valorCents));
+  return list;
+});

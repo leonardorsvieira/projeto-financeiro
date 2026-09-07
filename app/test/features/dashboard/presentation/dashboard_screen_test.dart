@@ -12,13 +12,14 @@ Lancamento _lanc({
   required String id,
   required int valorCents,
   required DateTime data,
+  String categoria = 'Outros',
   DateTime? vencimento,
 }) {
   final agora = DateTime.now();
   return Lancamento(
     id: id,
     descricao: id,
-    categoria: 'Outros',
+    categoria: categoria,
     valorCents: valorCents,
     formaPagamento: 'Pix',
     data: data,
@@ -85,7 +86,7 @@ void main() {
     await _pump(tester, repo);
 
     expect(find.text('Gastos do mês'), findsOneWidget);
-    expect(find.text('R\$ 100,00'), findsOneWidget);
+    expect(find.text('R\$ 100,00'), findsWidgets);
     expect(find.text('Previsto no mês: R\$ 50,00'), findsOneWidget);
     expect(find.text('Conta luz'), findsOneWidget);
     expect(find.text('R\$ 50,00'), findsWidgets);
@@ -101,5 +102,27 @@ void main() {
 
     expect(find.text('Gastos do mês'), findsOneWidget);
     expect(find.text('Nenhum vencimento próximo.'), findsOneWidget);
+    expect(find.text('Sem gastos neste mês.'), findsOneWidget);
+  });
+
+  testWidgets('donut mostra legenda por categoria com R\$ e %',
+      (tester) async {
+    final agora = DateTime.now();
+    final mes = DateTime(agora.year, agora.month);
+
+    final repo = FakeLancamentosRepository([
+      _lanc(id: 'Pizza', valorCents: 3000, categoria: 'Alimentação', data: mes),
+      _lanc(id: 'Ônibus', valorCents: 1000, categoria: 'Transporte', data: mes),
+    ]);
+
+    await _pump(tester, repo);
+
+    // Legenda: categoria + valor + %.
+    expect(find.text('Alimentação'), findsOneWidget);
+    expect(find.text('R\$ 30,00'), findsWidgets);
+    expect(find.text('(75%)'), findsOneWidget);
+    expect(find.text('Transporte'), findsOneWidget);
+    expect(find.text('R\$ 10,00'), findsOneWidget);
+    expect(find.text('(25%)'), findsOneWidget);
   });
 }

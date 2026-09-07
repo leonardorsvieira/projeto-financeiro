@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: In progress
-stopped_at: Wave 2 (04-02 recorrência, 04-03 ditado) concluída; 04-04 (notificações locais) implementada; Fase 4 completa (81/81 + 11 novos testes, analyze limpo)
-last_updated: "2026-09-07T23:45:00Z"
-last_activity: 2026-09-07 — 04-04 implementado (notificações T-3/T-0, horário configurável, UI S5); APK debug com desugaring OK; build web OK
+stopped_at: Fase 4 completa; Fase 5 iniciada (05-01 tela vencimentos + 05-03 config X dias)
+last_updated: "2026-09-07T23:55:00Z"
+last_activity: 2026-09-07 — 04-04 commitado; Fase 5 planos 05-01 e 05-03 criados; pronto para implementar
 progress:
   total_phases: 8
-  completed_phases: 3
-  total_plans: 26
+  completed_phases: 4
+  total_plans: 28
   completed_plans: 12
-  percent: 46
+  percent: 43
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 
 ## Current Position
 
-Phase: 4 — Vencimentos, Itens e Recorrências
-Plan: 04-01, 04-02, 04-03, 04-04
-Status: **Fase 4 completa** — 04-01 (Wave 1), 04-02+04-03 (Wave 2), 04-04 (notificações locais) implementados e commitados
-Last activity: 2026-09-07 — 04-04 implementado (NotificacoesService T-3/T-0, PreferenciasService 09:00 configurável, LembretesController sincronizado, UI S5 com ícone horário + SnackBar); APK debug corrigido (desugaring + defines Supabase); build web OK
+Phase: 5 — Lembretes Push
+Plan: 05-01, 05-03
+Status: **Fase 4 completa**; **Fase 5 iniciada** — 05-01 (tela próximos vencimentos) e 05-03 (config X dias antes) planejados; pronto para implementar 05-01
+Last activity: 2026-09-07 — Planos 05-01/05-03 criados; Fase 4 arquivada (4 plans done)
 
 ## Performance Metrics
 
@@ -42,6 +42,7 @@ Last activity: 2026-09-07 — 04-04 implementado (NotificacoesService T-3/T-0, P
 | 2 (Lançamentos Manuais) | 3 | 3 | 1.0 |
 | 3 (Ditado por Voz — Core) | 3 | 3 | 1.0 |
 | 4 (Vencimentos, Itens e Recorrências) | 4 | 4 | 1.0 |
+| 5 (Lembretes Push) | 2 | 3 | 1.5 |
 
 **Recent Trend:** N/A
 
@@ -62,10 +63,11 @@ Last activity: 2026-09-07 — 04-04 implementado (NotificacoesService T-3/T-0, P
 - [Phase 4]: Itens = JSONB na tabela lancamentos; soma automática; editáveis no S6 e detalhe
 - [Phase 4]: Fixa mensal = gera cópias independentes dos próximos meses (lazy, no app); serie_id uuid; só mensal
 - [Phase 4]: Ditado itens = lista natural; soma confirmada; vencimento "dia 15" = próxima data com esse dia
-- [Phase 4]: 3 plans planejados (04-01 modelo/UI, 04-02 recorrência lazy, 04-03 ditado itens/vencimento)
-- [Fase 4 exec]: 04-01 (modelo/itens/recorrência), 04-02 (lista/badges/excluir série), 04-03 (ditado itens/vencimento) implementados; migration SQL criada (aplicação pendente)
-- [Fase 4 exec]: build_apk.ps1 criado (lê .env e injeta SUPABASE/GEMINI via --dart-define); APK debug corrigido (sem defines travava na splash)
-- [04-04]: Notificações locais (flutter_local_notifications 22.3.0) para vencimentos — T-3 dias e T-0 no horário configurável (padrão 09:00); gradle desugaring + multiDex + compileSdk 36; UI no S5 para ajustar horário com SnackBar em caso de falha; web build compila (controller não roda na web)
+- [Phase 4]: 4 plans planejados (04-01 modelo/UI, 04-02 recorrência lazy, 04-03 ditado itens/vencimento, 04-04 notificações locais)
+- [Phase 4]: 04-01/04-02/04-03/04-04 implementados; migration SQL aplicada no Supabase remoto
+- [Phase 4]: build_apk.ps1 criado (lê .env e injeta SUPABASE/GEMINI via --dart-define); APK debug corrigido (desugaring + defines)
+- [04-04]: Notificações locais (flutter_local_notifications 22.3.0) T-3/T-0 horário configurável; gradle desugaring + multiDex + compileSdk 36
+- [Phase 5]: 05-01 tela "próximos vencimentos" (lista filtrada/ordenada); 05-03 config X dias antes (padrão 3) unificado com horário; 05-02 push FCM/APNs adiado (pós v1.1)
 
 ### Pending Todos
 
@@ -91,5 +93,6 @@ Resume file: None
 
 ## Operator Next Steps
 
-- **Fase 4 completa** — 04-01, 04-02, 04-03, 04-04 implementados, testados, build web e APK validados
-- **Próximo**: iniciar Fase 5 (Metas por categoria + Dashboard) ou discutir melhorias no ditado
+- **Implementar 05-01** — tela "próximos vencimentos" (S7): provider filtrado, tela, rota, botão na S5, testes
+- **Implementar 05-03** — config X dias antes unificada com horário no diálogo S5
+- **Depois**: Fase 6 (Dashboard e Metas)

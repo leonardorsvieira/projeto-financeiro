@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### 🚧 v1.1 (Em planejamento)
 
-- [ ] **Phase 4: Vencimentos, Itens e Recorrências** - Agendar pagamento, detalhar produtos, contas fixas mensais
+- [x] **Phase 4: Vencimentos, Itens e Recorrências** - Agendar pagamento, detalhar produtos, contas fixas mensais
 - [ ] **Phase 5: Lembretes Push** - Avisos "X dias antes" e no dia, na hora escolhida
 - [ ] **Phase 6: Dashboard e Metas** - Saldo do mês, gráfico por categoria, vencimentos e metas
 - [ ] **Phase 7: Recebimentos por Voz** - Ditar receitas e ver no saldo do mês
@@ -52,13 +52,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Usuário marca despesa como fixa mensal (gerada todo mês) ou lança manualmente
   4. Usuário dita o vencimento e os itens, capturados pela IA na confirmação
 
-**Plans**: 3 plans
+**Plans**: 4 plans (completed)
 
 Plans:
 
-- [ ] 04-01: Campos de vencimento/agendamento e itens no modelo e UI
-- [ ] 04-02: Recorrência mensal (agendador que gera a despesa fixa no mês)
-- [ ] 04-03: Ditado de vencimento e itens na extração da IA (VOZ-04/05)
+- [x] 04-01: Campos de vencimento/agendamento e itens no modelo e UI
+- [x] 04-02: Recorrência mensal (agendador que gera a despesa fixa no mês)
+- [x] 04-03: Ditado de vencimento e itens na extração da IA (VOZ-04/05)
+- [x] 04-04: Notificações locais T-3/T-0 com horário configurável
 
 ### Phase 5: Lembretes Push
 
@@ -73,12 +74,12 @@ Plans:
   3. Tela de próximos vencimentos lista as contas a vencer
   4. Notificações funcionam mesmo com free tier (fallback local) no iOS
 
-**Plans**: 3 plans
+**Plans**: 3 plans (05-01 + 05-03 em andamento; 05-02 opcional futuro)
 
 Plans:
 
 - [ ] 05-01: Tela "próximos vencimentos" (lista ordenada)
-- [ ] 05-02: Agendamento de push (FCM/APNs + notificação local como fallback)
+- [ ] 05-02: Agendamento de push (FCM/APNs + notificação local como fallback) — *opcional, post v1.1*
 - [ ] 05-03: Configuração de período (dias antes) e horário
 
 ### Phase 6: Dashboard e Metas
@@ -153,8 +154,8 @@ Phases execute in numeric order: 4 → 5 → 6 → 7 → 8 (v1.1)
 | 1. Fundação e Acesso | v1.0 | 3/3 | Complete | 2026-09-06 |
 | 2. Lançamentos Manuais | v1.0 | 3/3 | Complete | 2026-09-06 |
 | 3. Ditado por Voz (Core) | v1.0 | 3/3 | Complete | 2026-09-06 |
-| 4. Vencimentos, Itens e Recorrências | v1.1 | 0/3 | Not started | - |
-| 5. Lembretes Push | v1.1 | 0/3 | Not started | - |
+| 4. Vencimentos, Itens e Recorrências | v1.1 | 4/4 | **Complete** | 2026-09-07 |
+| 5. Lembretes Push | v1.1 | 0/3 | **In progress** | - |
 | 6. Dashboard e Metas | v1.1 | 0/3 | Not started | - |
 | 7. Recebimentos por Voz | v1.1 | 0/2 | Not started | - |
 | 8. Investimentos | v1.1 | 0/5 | Not started | - |

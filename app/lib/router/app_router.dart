@@ -11,8 +11,8 @@ import '../features/home/domain/app_routes.dart';
 import '../features/ditado/domain/rascunho_lancamento.dart';
 import '../features/ditado/presentation/confirmacao_ditado_screen.dart';
 import '../features/ditado/presentation/lancamento_ditado_screen.dart';
+import '../features/dashboard/presentation/home_screen.dart';
 import '../features/lancamentos/presentation/lancamento_form_screen.dart';
-import '../features/lancamentos/presentation/lancamentos_list_screen.dart';
 import '../features/lancamentos/presentation/proximos_vencimentos_screen.dart';
 
 class _AuthListenable extends ChangeNotifier {
@@ -44,7 +44,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.signup, builder: (_, _) => const SignupScreen()),
       GoRoute(
         path: AppRoutes.home,
-        builder: (_, _) => const LancamentosListScreen(),
+        builder: (_, _) => const HomeScreen(),
       ),
       GoRoute(
         path: AppRoutes.lancamentoNovo,

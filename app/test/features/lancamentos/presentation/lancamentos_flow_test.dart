@@ -37,6 +37,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    // Home agora abre na aba "Resumo" (dashboard); navegar para "Lançamentos".
+    await tester.tap(find.text('Lançamentos'));
+    await tester.pumpAndSettle();
     return fakeLancamentos;
   }
 

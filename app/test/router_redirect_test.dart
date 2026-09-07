@@ -38,6 +38,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.tap(find.text('Lançamentos'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
     expect(find.byType(SplashScreen), findsNothing);
   });
@@ -55,6 +58,8 @@ void main() {
         child: const MeuBolsoApp(),
       ),
     );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Lançamentos'));
     await tester.pumpAndSettle();
     expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
 

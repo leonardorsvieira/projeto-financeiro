@@ -43,17 +43,21 @@ if (-not [string]::IsNullOrWhiteSpace($geminiKey)) {
 
 Push-Location (Join-Path $root "app")
 try {
-  $args = @(
+  $flutterArgs = @(
     "build", "apk", "--$Mode",
     "--dart-define=SUPABASE_URL=$supabaseUrl",
     "--dart-define=SUPABASE_ANON_KEY=$supabaseAnonKey"
   )
   if (-not [string]::IsNullOrWhiteSpace($geminiKey)) {
-    $args += "--dart-define=GEMINI_API_KEY=$geminiKey"
+    $flutterArgs += "--dart-define=GEMINI_API_KEY=$geminiKey"
   }
 
-  & flutter @args
-  if ($LASTEXITCODE -ne 0) { throw "flutter build falhou (exit $LASTEXITCODE)" }
+  # flutter é um .bat; cmd /c evita que o stderr (warnings nativos do Gradle)
+  # seja tratado como erro pelo $ErrorActionPreference = "Stop".
+  $flutterCmd = "flutter $($flutterArgs -join ' ') 2>&1"
+  & cmd /c $flutterCmd
+  $exitCode = $LASTEXITCODE
+  if ($exitCode -ne 0) { throw "flutter build falhou (exit $exitCode)" }
 }
 finally {
   Pop-Location

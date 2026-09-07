@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:meubolso/features/dashboard/presentation/home_screen.dart';
 import 'package:meubolso/features/lancamentos/application/lembretes_controller.dart';
 import 'package:meubolso/features/lancamentos/application/lancamentos_providers.dart';
 import 'package:meubolso/features/lancamentos/application/preferencias_service.dart';
-import 'package:meubolso/features/lancamentos/presentation/lancamentos_list_screen.dart';
 
 import '../../../support/fake_lancamentos_repository.dart';
 
@@ -32,7 +32,7 @@ Widget _buildApp(
     routes: [
       GoRoute(
         path: '/home',
-        builder: (_, _) => const LancamentosListScreen(),
+        builder: (_, _) => const HomeScreen(),
       ),
     ],
   );

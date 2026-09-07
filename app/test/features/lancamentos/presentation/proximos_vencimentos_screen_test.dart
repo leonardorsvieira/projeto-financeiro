@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:meubolso/features/dashboard/presentation/home_screen.dart';
 import 'package:meubolso/features/lancamentos/application/lancamentos_providers.dart';
 import 'package:meubolso/features/lancamentos/domain/lancamento.dart';
 import 'package:meubolso/features/lancamentos/domain/lancamento_converter.dart';
 import 'package:meubolso/features/lancamentos/presentation/proximos_vencimentos_screen.dart';
-import 'package:meubolso/features/lancamentos/presentation/lancamentos_list_screen.dart';
 import 'package:meubolso/router/app_router.dart';
 
 import '../../../support/fake_lancamentos_repository.dart';
@@ -101,7 +101,7 @@ void main() {
       final router = GoRouter(
         initialLocation: initialRoute,
         routes: [
-          GoRoute(path: '/home', builder: (_, _) => const LancamentosListScreen()),
+          GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
           GoRoute(path: '/vencimentos/proximos', builder: (_, _) => const ProximosVencimentosScreen()),
         ],
       );

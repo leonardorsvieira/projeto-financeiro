@@ -51,6 +51,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.tap(find.text('Lançamentos'));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Ditar'));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.mic_none));

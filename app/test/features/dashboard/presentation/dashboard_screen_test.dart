@@ -17,6 +17,7 @@ Lancamento _lanc({
   required DateTime data,
   String categoria = 'Outros',
   DateTime? vencimento,
+  TipoLancamento tipo = TipoLancamento.despesa,
 }) {
   final agora = DateTime.now();
   return Lancamento(
@@ -27,6 +28,7 @@ Lancamento _lanc({
     formaPagamento: 'Pix',
     data: data,
     vencimento: vencimento,
+    tipo: tipo,
     createdAt: agora,
     updatedAt: agora,
   );
@@ -72,7 +74,7 @@ class ProviderScopeContainer extends StatelessWidget {
 }
 
 void main() {
-  testWidgets('DashboardScreen mostra gastos do mês (real + previsto)',
+  testWidgets('DashboardScreen mostra saldo do mês (entradas − saídas)',
       (tester) async {
     final agora = DateTime.now();
     final mes = DateTime(agora.year, agora.month);
@@ -82,6 +84,12 @@ void main() {
     );
 
     final repo = FakeLancamentosRepository([
+      _lanc(
+        id: 'Salário',
+        valorCents: 300000,
+        data: mes.add(const Duration(days: 3)),
+        tipo: TipoLancamento.receita,
+      ),
       _lanc(id: 'Mercado', valorCents: 10000, data: mes.add(const Duration(days: 3))),
       _lanc(
         id: 'Conta luz',
@@ -93,11 +101,15 @@ void main() {
 
     await _pump(tester, repo);
 
-    expect(find.text('Gastos do mês'), findsOneWidget);
-    expect(find.text('R\$ 100,00'), findsWidgets);
+    expect(find.text('Saldo do mês'), findsOneWidget);
+    expect(find.text('Entradas'), findsOneWidget);
+    expect(find.text('Saídas'), findsOneWidget);
     expect(find.text('Previsto no mês: R\$ 50,00'), findsOneWidget);
+    expect(find.text('R\$ 3.000,00'), findsWidgets); // entradas
+    expect(find.text('R\$ 100,00'), findsWidgets); // saídas
+
+    await tester.scrollUntilVisible(find.text('Conta luz'), 100);
     expect(find.text('Conta luz'), findsOneWidget);
-    expect(find.text('R\$ 50,00'), findsWidgets);
   });
 
   testWidgets('DashboardScreen mostra empty state sem vencimentos próximos',
@@ -108,7 +120,7 @@ void main() {
 
     await _pump(tester, repo);
 
-    expect(find.text('Gastos do mês'), findsOneWidget);
+    expect(find.text('Saldo do mês'), findsOneWidget);
     expect(find.text('Nenhum vencimento próximo.'), findsOneWidget);
     expect(find.text('Sem gastos neste mês.'), findsOneWidget);
   });

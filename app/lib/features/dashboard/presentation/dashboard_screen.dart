@@ -50,7 +50,7 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(height: 4),
           _DonutGastosCategoria(
             gastos: porCategoria,
-            totalCents: resumo.realCents,
+            totalCents: resumo.saidasCents,
           ),
           const SizedBox(height: 16),
           _MetasSection(metas: ref.watch(metasComProgressoProvider)),
@@ -109,16 +109,38 @@ class _CardGastosMes extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Gastos do mês', style: theme.textTheme.labelLarge),
+            Text('Saldo do mês', style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             Text(
-              formatoBRL(resumo.realCents),
+              formatoBRL(resumo.saldoCents),
               style: theme.textTheme.headlineMedium?.copyWith(
-                color: theme.colorScheme.error,
+                color: resumo.saldoCents >= 0
+                    ? Colors.green.shade700
+                    : theme.colorScheme.error,
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _ValorRotulado(
+                    rotulo: 'Entradas',
+                    valor: resumo.entradasCents,
+                    cor: Colors.green.shade700,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _ValorRotulado(
+                    rotulo: 'Saídas',
+                    valor: resumo.saidasCents,
+                    cor: theme.colorScheme.error,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             Text(
               'Previsto no mês: ${formatoBRL(resumo.previstoCents)}',
               style: theme.textTheme.bodyMedium,
@@ -126,6 +148,37 @@ class _CardGastosMes extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ValorRotulado extends StatelessWidget {
+  const _ValorRotulado({
+    required this.rotulo,
+    required this.valor,
+    required this.cor,
+  });
+
+  final String rotulo;
+  final int valor;
+  final Color cor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(rotulo, style: theme.textTheme.bodySmall),
+        const SizedBox(height: 2),
+        Text(
+          formatoBRL(valor),
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: cor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

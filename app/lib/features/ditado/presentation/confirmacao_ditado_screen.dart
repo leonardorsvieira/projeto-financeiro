@@ -7,7 +7,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
-import '../../lancamentos/domain/lancamento.dart';
+import '../../lancamentos/domain/lancamento.dart'
+    show LancamentoItem, TipoLancamento;
 import '../../lancamentos/domain/lancamento_converter.dart'
     show parseValorBRLParaCentavos, formatoBRL, categorias, formasPagamento, formatoData;
 import '../../lancamentos/presentation/lancamento_form_validators.dart'
@@ -48,6 +49,7 @@ class _ConfirmacaoDitadoScreenState
   late final TextEditingController _valorController;
   late String _categoria;
   late String _formaPagamento;
+  late TipoLancamento _tipo;
   late DateTime _data;
   DateTime? _vencimento;
   bool _isSaving = false;
@@ -71,6 +73,8 @@ class _ConfirmacaoDitadoScreenState
     _formaPagamento = formasPagamento.contains(rascunho.formaPagamento)
         ? rascunho.formaPagamento!
         : 'Pix';
+    _tipo =
+        rascunho.tipo == 'receita' ? TipoLancamento.receita : TipoLancamento.despesa;
     _data = DateTime.tryParse(rascunho.dataIso ?? '') ?? DateTime.now();
     _vencimento = DateTime.tryParse(rascunho.vencimentoIso ?? '');
     if (rascunho.itens != null) {
@@ -104,6 +108,7 @@ class _ConfirmacaoDitadoScreenState
             : _valorController.text.trim(),
         categoria: _categoria,
         formaPagamento: _formaPagamento,
+        tipo: _tipo.dbValue,
         dataIso: _data.toIso8601String().substring(0, 10),
         vencimentoIso:
             _vencimento?.toIso8601String().substring(0, 10),
@@ -145,6 +150,12 @@ class _ConfirmacaoDitadoScreenState
                     )));
           } catch (_) {
             // ignora erro de parse
+          }
+        case CampoDitado.tipo:
+          if (valor == 'despesa' || valor == 'receita') {
+            _tipo = valor == 'receita'
+                ? TipoLancamento.receita
+                : TipoLancamento.despesa;
           }
       }
     });
@@ -301,8 +312,9 @@ class _ConfirmacaoDitadoScreenState
             valorCents: valorFinal,
             categoria: _categoria,
             formaPagamento: _formaPagamento,
+            tipo: _tipo,
             data: _data,
-            vencimento: _vencimento,
+            vencimento: _tipo == TipoLancamento.despesa ? _vencimento : null,
             itens: itensParaSalvar,
           );
       if (mounted) context.go(AppRoutes.home);
@@ -331,6 +343,34 @@ class _ConfirmacaoDitadoScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: SegmentedButton<TipoLancamento>(
+                            segments: const [
+                              ButtonSegment(
+                                value: TipoLancamento.despesa,
+                                icon: Icon(Icons.trending_down),
+                                label: Text('Despesa'),
+                              ),
+                              ButtonSegment(
+                                value: TipoLancamento.receita,
+                                icon: Icon(Icons.trending_up),
+                                label: Text('Receita'),
+                              ),
+                            ],
+                            selected: {_tipo},
+                            onSelectionChanged: _isSaving
+                                ? null
+                                : (s) => setState(() => _tipo = s.first),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        _botaoVoz(CampoDitado.tipo),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -442,25 +482,27 @@ class _ConfirmacaoDitadoScreenState
                         _botaoVoz(CampoDitado.data),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _isSaving ? null : _pickVencimento,
-                            icon: const Icon(Icons.schedule_outlined),
-                            label: Text(
-                              _vencimento == null
-                                  ? 'Vencimento (opcional)'
-                                  : 'Vencimento: ${formatoData(_vencimento!)}',
+                    if (_tipo == TipoLancamento.despesa) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _isSaving ? null : _pickVencimento,
+                              icon: const Icon(Icons.schedule_outlined),
+                              label: Text(
+                                _vencimento == null
+                                    ? 'Vencimento (opcional)'
+                                    : 'Vencimento: ${formatoData(_vencimento!)}',
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        _botaoVoz(CampoDitado.vencimento),
-                      ],
-                    ),
+                          const SizedBox(width: 4),
+                          _botaoVoz(CampoDitado.vencimento),
+                        ],
+                      ),
+                    ],
                     if (_gravandoCampo != null) ...[
                       const SizedBox(height: 16),
                       FilledButton.icon(

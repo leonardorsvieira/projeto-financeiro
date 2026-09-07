@@ -70,6 +70,15 @@ void main() {
       expect(instrucao, contains('gás/IPTU = Moradia'));
       expect(instrucao, contains('Não preencha data só porque conhece o dia'));
     });
+  test('instrução inclui tipo e regras de receita/despesa', () {
+      final payload = GeminiPrompt.payloadReconhecer(audio);
+      final sistema = payload['system_instruction'] as Map<String, dynamic>;
+      final instrucao = (sistema['parts'] as List).first['text'].toString();
+      expect(instrucao, contains('"tipo": "despesa"|"receita"|null'));
+      expect(instrucao, contains('recebi'));
+      expect(instrucao, contains('salário'));
+      expect(instrucao, contains('Se não houver sinal claro, use "despesa"'));
+    });
   });
 
   group('payloadCorrigir', () {
@@ -128,6 +137,17 @@ void main() {
       expect(rascunho.formaPagamento, 'Pix');
       expect(rascunho.dataIso, '2026-09-06');
       expect(rascunho.vencimentoIso, isNull);
+      expect(rascunho.tipo, isNull);
+    });
+
+    test('extrai tipo da resposta', () {
+      final rascunho = GeminiPrompt.parseRascunho(
+        '{"descricao": "Salário", "valor_reais": "3000,00", '
+        '"tipo": "receita", "categoria": "Outros"}',
+      );
+
+      expect(rascunho.tipo, 'receita');
+      expect(rascunho.descricao, 'Salário');
     });
 
     test('lança DitadoException sem JSON', () {

@@ -23,7 +23,10 @@ final proximosVencimentosProvider = Provider<List<Lancamento>>((ref) {
   final hoje = DateTime.now();
   final inicioHoje = DateTime(hoje.year, hoje.month, hoje.day);
   return todos
-      .where((l) => l.vencimento != null && !l.vencimento!.isBefore(inicioHoje))
+      .where((l) =>
+          l.tipo != TipoLancamento.receita &&
+          l.vencimento != null &&
+          !l.vencimento!.isBefore(inicioHoje))
       .toList()
     ..sort((a, b) => a.vencimento!.compareTo(b.vencimento!));
 });

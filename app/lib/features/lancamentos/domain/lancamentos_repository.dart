@@ -14,6 +14,7 @@ abstract class LancamentosRepository {
     List<LancamentoItem>? itens,
     bool fixoMensal = false,
     String? serieId,
+    TipoLancamento tipo = TipoLancamento.despesa,
   });
 
   Future<Lancamento> update(
@@ -28,6 +29,7 @@ abstract class LancamentosRepository {
     List<LancamentoItem>? itens,
     bool? fixoMensal,
     String? serieId,
+    TipoLancamento? tipo,
   });
 
   Future<void> delete(String id);

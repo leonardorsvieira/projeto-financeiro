@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: In progress
-stopped_at: Fase 6 completa (06-01 06-02 06-03); metas/limites por categoria com progresso no Resumo + tela dedicada
-last_updated: "2026-09-07T09:30:00Z"
-last_activity: 2026-09-07 — 06-03 implementado: tabela `metas` (migration aplicada no Supabase remoto), CRUD + progresso; 118 testes passam; analyze 0 issues; web + APK OK
+stopped_at: Fase 7 completa (07-01 07-02); receitas por voz + saldo do mês com entradas/saídas
+last_updated: "2026-09-07T18:00:00Z"
+last_activity: 2026-09-07 — Fase 7 (VOZ-02) implementada: coluna `tipo`, ditado/form com toggle despesa/receita, saldo do mês com entradas − saídas; 133 testes passam; analyze 0 issues; web + APK OK
 progress:
   total_phases: 8
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 28
-  completed_plans: 17
-  percent: 61
+  completed_plans: 19
+  percent: 68
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 
 **Core value:** O usuário dita um gasto, recebimento ou investimento pela voz e ele é registrado corretamente, no lugar certo, pronto para acompanhar.
-**Current focus:** Resíduos do milestone pendentes concluídos. Próximo: Fase 7 — Recebimentos por Voz (milestone v1.1)
+**Current focus:** Fase 7 concluída (receitas por voz + saldo no mês). Próximo: Fase 8 — Investimentos (milestone v1.1)
 
 ## Current Position
 
-Phase: 6 — Dashboard e Metas (concluída)
-Plan: 06-01 ✅, 06-02 ✅, 06-03 ✅
-Status: **Fase 6 completa** — `/home` é HomeScreen (tabs Resumo | Lançamentos); Resumo mostra card "Gastos do mês" (real + previsto), donut "Por categoria" (fl_chart) com legenda, seção Metas com progresso e próximos vencimentos. Metas: tela dedicada `/metas` (AppBar) com CRUD por dialog e tabela `metas` no Supabase.
-Last activity: 2026-09-07 — 06-03 implementado; 118 testes passam; build web + APK OK
+Phase: 7 — Recebimentos por Voz (concluída)
+Plan: 07-01 ✅, 07-02 ✅
+Status: **Fase 7 completa** — coluna `lancamentos.tipo` (despesa/receita); ditado e formulário com toggle Despesa/Receita (SegmentedButton + correção por voz do tipo); card "Saldo do mês" no Resumo com Entradas/Saídas/Saldo/Previsto; donut/metas/próximos vencimentos filtram só despesas; lista mostra receita verde com `+` e badge "Receita".
+Last activity: 2026-09-07 — Fase 7 implementada; 133 testes passam; build web + APK OK
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Last activity: 2026-09-07 — 06-03 implementado; 118 testes passam; build web +
 | 4 (Vencimentos, Itens e Recorrências) | 4 | 4 | 1.0 |
 | 5 (Lembretes Push) | 2 | 2 | 1.0 |
 | 6 (Dashboard e Metas) | 3 | 3 | 1.0 |
+| 7 (Recebimentos por Voz) | 2 | 2 | 1.0 |
 
 **Recent Trend:** N/A
 
@@ -75,6 +76,9 @@ Last activity: 2026-09-07 — 06-03 implementado; 118 testes passam; build web +
 - [06-02]: `fl_chart: ^1.2.0`; `gastosPorCategoriaMesProvider` (soma por categoria do mês vigente, ordenado desc); `_DonutGastosCategoria` no Resumo (donut 200x200 + legenda cor/categoria/R$/%, paleta fixa com fallback, empty "Sem gastos neste mês."); +3 testes; analyze 0, 110 testes, web + APK OK
 - [06-03]: Migration `20260907150000_create_metas.sql` (tabela `metas` + RLS + realtime) aplicada no remoto via `supabase db push --linked` (também aplicou 04-migration itinerante pendente) — PAT revogado após uso; `Meta` + `MetasRepository` + `SupabaseMetasRepository` (stream por `created_at`); `metasStreamProvider` + `metasComProgressoProvider` (junção com `gastosPorCategoriaMesProvider`, pct/estourou/quaseEstourada); `MetasScreen` dedicada (`/metas`, AppBar ícone track_changes, FAB nova meta, dialog select categoria + valor R$, menu editar/excluir); seção `Metas` no Resumo (progresso ok verde / âmbar ≥80% / vermelho >100%, "Gerenciar"/"Criar"); `_coresCategorias` extensível; +8 testes (2 provider, 4 tela metas, 2 dashboard); analyze 0, 118 testes, web + APK OK
 - [Cleanup v1.1]: Pendentes das fases 4-6 corrigidos: ROADMAP Fase 6 `[x]` + Progress `3/3 Complete`; PROJECT.md marca Fases 4/5/6 ✓ ("Concluído (v1.1)") restam F7/F8; `.planning/REQUIREMENTS.md` recriado para o milestone v1.1 (13/22 validados F4-6; pendentes VOZ-02 F7 + INV-01..07/VOZ-03 F8; todo do STATE anteriormente pendente); navegação vencimento → edição do lançamento implementada (`proximos_vencimentos_screen.dart` onTap → `/lancamentos/:id`, +1 teste); `.continue-here.md` órfão da Fase 3 removido; analyze 0, 119 testes
+- [Fase 7]: Decisões recomendadas aplicadas: coluna `tipo` (default 'despesa', check despesa/receita) + migration aplicada no remoto; `TipoLancamento` enum no domínio; receitas mantêm valor positivo; receita não usa vencimento/fixa/itens. `RascunhoLancamento.tipo` + `CampoDitado.tipo` + correção por voz; prompt Gemini com sinais de receita (recebi/ganhei/salário/...) e fallback despesa.
+- [07-01]: Migration `20260907160000_add_tipo_lancamento.sql` aplicada no remoto; `Lancamento.tipo` (copyWith/toMap/fromMap fallback despesa); `LancamentosRepository.create/update` com `tipo`; `SupabaseLancamentosRepository` (cópia fixa preserva tipo); `ConfirmacaoDitadoScreen` toggle Despesa/Receita + mic de tipo + vencimento oculto em receita; `LancamentoFormScreen` idem; +testes; mics da confirmação reposicionados (índices `.at()` ajustados em testes)
+- [07-02]: `ResumoMes` com `entradasCents`/`saidasCents`/`previstoCents` + `saldoCents = entradas − saídas` + alias `realCents` (compat); `gastosPorCategoriaMesProvider` e `proximosVencimentosProvider` filtram despesas; card "Saldo do mês" (Entradas/Saídas/Saldo/Previsto, donut usa saídas); lista: receita verde com `+R$` e badge "Receita", despesa `-R$` vermelha; analyze 0, 133 testes, web + APK OK
 
 ### Pending Todos
 
@@ -94,11 +98,11 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-09-07 (2ª sessão do dia)
-Stopped at: Pendentes do milestone v1.1 concluídos (docs + código). Próximo: Fase 7 (receitas).
+Last session: 2026-09-07 (3ª sessão do dia)
+Stopped at: Fase 7 (VOZ-02) completa — receitas por voz + saldo do mês com entradas/saídas. Próximo: Fase 8 (Investimentos).
 Resume file: None
 
 ## Operator Next Steps
 
-- **Executar Fase 7** — receitas no saldo e ditado de recebimentos por voz (VOZ-02); planejar 07-xx.
+- **Executar Fase 8** — Investimentos (INV-01..07 + VOZ-03) por voz e manual; planejar 08-xx.
 - **_Nota segurança:_** PAT do Supabase exposto no chat — **revogar** em Account Settings → Access Tokens. (O token usado foi aplicado e deve ser revogado agora.)

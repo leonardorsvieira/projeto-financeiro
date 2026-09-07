@@ -7,7 +7,8 @@ enum CampoDitado {
   formaPagamento('forma_pagamento'),
   data('data'),
   vencimento('vencimento'),
-  itens('itens');
+  itens('itens'),
+  tipo('tipo');
 
   const CampoDitado(this.chaveJson);
 
@@ -53,6 +54,7 @@ class RascunhoLancamento {
     this.dataIso,
     this.vencimentoIso,
     this.itens,
+    this.tipo,
   });
 
   final String? descricao;
@@ -62,6 +64,7 @@ class RascunhoLancamento {
   final String? dataIso;
   final String? vencimentoIso;
   final List<RascunhoItem>? itens;
+  final String? tipo;
 
   factory RascunhoLancamento.fromJson(Map<String, dynamic> json) {
     String? texto(String chave) {
@@ -88,6 +91,7 @@ class RascunhoLancamento {
       dataIso: texto('data'),
       vencimentoIso: texto('vencimento'),
       itens: parseItens(json['itens']),
+      tipo: texto('tipo'),
     );
   }
 
@@ -100,6 +104,7 @@ class RascunhoLancamento {
         'vencimento': vencimentoIso,
         if (itens != null && itens!.isNotEmpty)
           'itens': itens!.map((e) => e.toJson()).toList(),
+        'tipo': tipo,
       };
 
   RascunhoLancamento corrigir(CampoDitado campo, String? valor) {
@@ -113,6 +118,7 @@ class RascunhoLancamento {
           dataIso: dataIso,
           vencimentoIso: vencimentoIso,
           itens: itens,
+          tipo: tipo,
         );
       case CampoDitado.valor:
         return RascunhoLancamento(
@@ -123,6 +129,7 @@ class RascunhoLancamento {
           dataIso: dataIso,
           vencimentoIso: vencimentoIso,
           itens: itens,
+          tipo: tipo,
         );
       case CampoDitado.categoria:
         return RascunhoLancamento(
@@ -133,6 +140,7 @@ class RascunhoLancamento {
           dataIso: dataIso,
           vencimentoIso: vencimentoIso,
           itens: itens,
+          tipo: tipo,
         );
       case CampoDitado.formaPagamento:
         return RascunhoLancamento(
@@ -143,6 +151,7 @@ class RascunhoLancamento {
           dataIso: dataIso,
           vencimentoIso: vencimentoIso,
           itens: itens,
+          tipo: tipo,
         );
       case CampoDitado.data:
         return RascunhoLancamento(
@@ -153,6 +162,7 @@ class RascunhoLancamento {
           dataIso: valor,
           vencimentoIso: vencimentoIso,
           itens: itens,
+          tipo: tipo,
         );
       case CampoDitado.vencimento:
         return RascunhoLancamento(
@@ -163,6 +173,7 @@ class RascunhoLancamento {
           dataIso: dataIso,
           vencimentoIso: valor,
           itens: itens,
+          tipo: tipo,
         );
       case CampoDitado.itens:
         return RascunhoLancamento(
@@ -177,6 +188,18 @@ class RascunhoLancamento {
                   .map((e) => RascunhoItem.fromJson(e as Map<String, dynamic>))
                   .toList()
               : null,
+          tipo: tipo,
+        );
+      case CampoDitado.tipo:
+        return RascunhoLancamento(
+          descricao: descricao,
+          valorTexto: valorTexto,
+          categoria: categoria,
+          formaPagamento: formaPagamento,
+          dataIso: dataIso,
+          vencimentoIso: vencimentoIso,
+          itens: itens,
+          tipo: valor,
         );
     }
   }

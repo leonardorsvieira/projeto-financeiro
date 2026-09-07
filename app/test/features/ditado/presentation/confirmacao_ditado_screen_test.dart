@@ -6,6 +6,8 @@ import 'package:meubolso/features/auth/domain/auth_state.dart';
 import 'package:meubolso/features/ditado/domain/ditado_repository.dart';
 import 'package:meubolso/features/ditado/domain/rascunho_lancamento.dart';
 import 'package:meubolso/features/ditado/presentation/lancamento_ditado_screen.dart';
+import 'package:meubolso/features/lancamentos/domain/lancamento.dart'
+    show TipoLancamento;
 import 'package:meubolso/main.dart';
 
 import '../../../support/fake_audio_recorder_service.dart';
@@ -98,7 +100,7 @@ void main() {
     );
     await pumpConfirmacao(tester, ditado: ditado);
 
-    final micCampoValor = find.byIcon(Icons.mic_none).at(1);
+    final micCampoValor = find.byIcon(Icons.mic_none).at(2);
     await tester.ensureVisible(micCampoValor);
     await tester.tap(micCampoValor);
     await tester.pump();
@@ -204,5 +206,68 @@ void main() {
 
     await tester.pumpAndSettle();
     expect(fakeLancamentos.items.single.valorCents, 4290);
+  });
+
+  testWidgets('rascunho receita pré-preenche toggle e oculta vencimento',
+      (tester) async {
+    final (_, _) = await pumpConfirmacao(
+      tester,
+      ditado: FakeDitadoRepository(
+        rascunho: const RascunhoLancamento(
+          descricao: 'Salário',
+          valorTexto: '3000,00',
+          categoria: 'Outros',
+          formaPagamento: 'Pix',
+          tipo: 'receita',
+        ),
+      ),
+    );
+
+    expect(find.text('Salário'), findsOneWidget);
+    expect(find.text('Vencimento (opcional)'), findsNothing);
+    expect(find.textContaining('Vencimento:'), findsNothing);
+  });
+
+  testWidgets('trocar para Receita salva com tipo receita e sem vencimento',
+      (tester) async {
+    final (fakeLancamentos, _) = await pumpConfirmacao(tester);
+
+    await tester.tap(find.text('Receita'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Salvar'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
+    await tester.pumpAndSettle();
+
+    expect(fakeLancamentos.createCount, 1);
+    final item = fakeLancamentos.items.single;
+    expect(item.tipo, TipoLancamento.receita);
+    expect(item.vencimento, isNull);
+    expect(item.fixoMensal, isFalse);
+  });
+
+  testWidgets('correção por voz do tipo atualiza toggle', (tester) async {
+    final ditado = FakeDitadoRepository(
+      rascunho: const RascunhoLancamento(
+        descricao: 'Almoço',
+        valorTexto: '42,90',
+        categoria: 'Alimentação',
+        formaPagamento: 'Pix',
+      ),
+      correcao: 'receita',
+    );
+    await pumpConfirmacao(tester, ditado: ditado);
+
+    final micCampoTipo = find.byIcon(Icons.mic_none).at(0);
+    await tester.tap(micCampoTipo);
+    await tester.pump();
+
+    await tester.tap(find.text('Toque para parar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Receita'), findsOneWidget);
+    expect(ditado.corrigirCount, 1);
+    expect(ditado.ultimoCampo, CampoDitado.tipo);
+    expect(ditado.ultimoTexto, isNull);
   });
 }

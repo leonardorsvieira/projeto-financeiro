@@ -186,13 +186,20 @@ class _Lista extends ConsumerWidget {
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index];
-          final valor = formatoBRL(item.valorCents);
+          final ehReceita = item.tipo == TipoLancamento.receita;
+          final valor = '${ehReceita ? '+' : '-'}${formatoBRL(item.valorCents)}';
+          final corValor = ehReceita
+              ? Colors.green.shade700
+              : theme.colorScheme.error;
           final hasVencimento = item.vencimento != null;
           final isFixa = item.fixoMensal;
           
           return ListTile(
             onTap: () => context.push(AppRoutes.lancamentoEditar(item.id)),
             leading: CircleAvatar(
+              backgroundColor: ehReceita
+                  ? Colors.green.withValues(alpha: 0.15)
+                  : null,
               child: Text(
                 item.categoria.characters.first,
                 style: theme.textTheme.bodySmall,
@@ -205,7 +212,7 @@ class _Lista extends ConsumerWidget {
                 Text(
                   '${formatoData(item.data)} · ${item.categoria}',
                 ),
-                if (hasVencimento || isFixa) ...[
+                if (hasVencimento || isFixa || ehReceita) ...[
                   const SizedBox(height: 2),
                   Wrap(
                     spacing: 8,
@@ -223,6 +230,12 @@ class _Lista extends ConsumerWidget {
                           icon: Icons.repeat_outlined,
                           color: theme.colorScheme.primary,
                         ),
+                      if (ehReceita)
+                        _Badge(
+                          label: 'Receita',
+                          icon: Icons.arrow_downward,
+                          color: Colors.green.shade700,
+                        ),
                     ],
                   ),
                 ],
@@ -234,7 +247,7 @@ class _Lista extends ConsumerWidget {
                 Text(
                   valor,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.error,
+                    color: corValor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

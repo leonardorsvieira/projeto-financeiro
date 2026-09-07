@@ -33,12 +33,14 @@ class SupabaseLancamentosRepository implements LancamentosRepository {
     List<LancamentoItem>? itens,
     bool fixoMensal = false,
     String? serieId,
+    TipoLancamento tipo = TipoLancamento.despesa,
   }) async {
     final resp = await _db.from(_table).insert({
       'descricao': descricao,
       'valor_cents': valorCents,
       'categoria': categoria,
       'forma_pagamento': formaPagamento,
+      'tipo': tipo.dbValue,
       'data': data.toIso8601String().substring(0, 10),
       'vencimento': vencimento?.toIso8601String().substring(0, 10),
       'obs': obs,
@@ -70,6 +72,7 @@ class SupabaseLancamentosRepository implements LancamentosRepository {
     List<LancamentoItem>? itens,
     bool? fixoMensal,
     String? serieId,
+    TipoLancamento? tipo,
   }) async {
     final resp = await _db
         .from(_table)
@@ -78,6 +81,7 @@ class SupabaseLancamentosRepository implements LancamentosRepository {
       'valor_cents': valorCents,
       'categoria': categoria,
       'forma_pagamento': formaPagamento,
+      'tipo': (tipo ?? lancamento.tipo).dbValue,
       'data': data.toIso8601String().substring(0, 10),
       'vencimento': vencimento?.toIso8601String().substring(0, 10),
       'obs': obs,
@@ -143,6 +147,7 @@ class SupabaseLancamentosRepository implements LancamentosRepository {
       itens: lancamento.itens,
       fixoMensal: true,
       serieId: lancamento.serieId,
+      tipo: lancamento.tipo,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );

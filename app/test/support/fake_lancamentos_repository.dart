@@ -38,6 +38,7 @@ class FakeLancamentosRepository implements LancamentosRepository {
     List<LancamentoItem>? itens,
     bool fixoMensal = false,
     String? serieId,
+    TipoLancamento tipo = TipoLancamento.despesa,
   }) async {
     if (createDelay != null) {
       await Future<void>.delayed(createDelay!);
@@ -56,6 +57,7 @@ class FakeLancamentosRepository implements LancamentosRepository {
       itens: itens,
       fixoMensal: fixoMensal,
       serieId: serieId ?? (fixoMensal ? _nextId() : null),
+      tipo: tipo,
       createdAt: now,
       updatedAt: now,
     );
@@ -77,6 +79,7 @@ class FakeLancamentosRepository implements LancamentosRepository {
     List<LancamentoItem>? itens,
     bool? fixoMensal,
     String? serieId,
+    TipoLancamento? tipo,
   }) async {
     updateCount++;
     final index = _items.indexWhere((l) => l.id == lancamento.id);
@@ -91,6 +94,7 @@ class FakeLancamentosRepository implements LancamentosRepository {
       itens: () => itens,
       fixoMensal: fixoMensal,
       serieId: () => serieId,
+      tipo: tipo,
     );
     if (index >= 0) {
       _items[index] = updated;

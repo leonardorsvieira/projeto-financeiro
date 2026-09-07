@@ -11,6 +11,7 @@ void main() {
         'forma_pagamento': 'Pix',
         'data': '2026-09-06',
         'vencimento': '2026-09-12',
+        'tipo': 'receita',
       });
 
       expect(rascunho.descricao, 'Almoço');
@@ -19,6 +20,15 @@ void main() {
       expect(rascunho.formaPagamento, 'Pix');
       expect(rascunho.dataIso, '2026-09-06');
       expect(rascunho.vencimentoIso, '2026-09-12');
+      expect(rascunho.tipo, 'receita');
+    });
+
+    test('deixa tipo null quando ausente', () {
+      final rascunho = RascunhoLancamento.fromJson({
+        'descricao': 'Almoço',
+      });
+
+      expect(rascunho.tipo, isNull);
     });
 
     test('deixa null campos ausentes ou vazios', () {
@@ -93,6 +103,37 @@ void main() {
       expect(novaData.vencimentoIso, isNull);
     });
 
+    test('corrige tipo preservando o resto', () {
+      final baseReceita = RascunhoLancamento(
+        descricao: 'Salário',
+        valorTexto: '3000,00',
+        categoria: 'Outros',
+        formaPagamento: 'Pix',
+        dataIso: '2026-09-06',
+        vencimentoIso: null,
+        tipo: 'despesa',
+      );
+
+      final nova = baseReceita.corrigir(CampoDitado.tipo, 'receita');
+      expect(nova.tipo, 'receita');
+      expect(nova.descricao, 'Salário');
+      expect(nova.valorTexto, '3000,00');
+
+      final outro = base().corrigir(CampoDitado.tipo, null);
+      expect(outro.tipo, isNull);
+    });
+
+    test('corrigir descrição preserva o tipo', () {
+      final novo = RascunhoLancamento(
+        descricao: 'S',
+        valorTexto: null,
+        tipo: 'receita',
+      ).corrigir(CampoDitado.descricao, 'Salário');
+
+      expect(novo.descricao, 'Salário');
+      expect(novo.tipo, 'receita');
+    });
+
     test('limpa campo com valor null', () {
       final novo = base().corrigir(CampoDitado.valor, null);
       expect(novo.valorTexto, isNull);
@@ -117,7 +158,19 @@ void main() {
         'forma_pagamento': 'Pix',
         'data': '2026-09-06',
         'vencimento': null,
+        'tipo': null,
       });
+    });
+
+    test('roundtrip preserva tipo receita', () {
+      const rascunho = RascunhoLancamento(
+        descricao: 'Salário',
+        valorTexto: '3000,00',
+        categoria: 'Outros',
+        tipo: 'receita',
+      );
+
+      expect(rascunho.toJson()['tipo'], 'receita');
     });
   });
 }

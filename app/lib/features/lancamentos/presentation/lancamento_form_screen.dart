@@ -27,6 +27,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
   final _diaVencimentoController = TextEditingController();
   String _categoria = 'Outros';
   String _formaPagamento = 'Pix';
+  TipoLancamento _tipo = TipoLancamento.despesa;
   DateTime _data = DateTime.now();
   DateTime? _vencimento;
   bool _isSaving = false;
@@ -52,6 +53,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
         .replaceAll('.', ',');
     _categoria = lancamento.categoria;
     _formaPagamento = lancamento.formaPagamento;
+    _tipo = lancamento.tipo;
     _data = lancamento.data;
     _vencimento = lancamento.vencimento;
     _fixoMensal = lancamento.fixoMensal;
@@ -194,8 +196,9 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
           valorCents: valorFinal,
           categoria: _categoria,
           formaPagamento: _formaPagamento,
+          tipo: _tipo,
           data: _data,
-          vencimento: vencimentoFinal,
+          vencimento: _tipo == TipoLancamento.despesa ? vencimentoFinal : null,
           obs: obs,
           itens: itensParaSalvar,
           fixoMensal: _fixoMensal,
@@ -207,8 +210,9 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
           valorCents: valorFinal,
           categoria: _categoria,
           formaPagamento: _formaPagamento,
+          tipo: _tipo,
           data: _data,
-          vencimento: vencimentoFinal,
+          vencimento: _tipo == TipoLancamento.despesa ? vencimentoFinal : null,
           obs: obs,
           itens: itensParaSalvar,
           fixoMensal: _fixoMensal,
@@ -257,6 +261,25 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    SegmentedButton<TipoLancamento>(
+                      segments: const [
+                        ButtonSegment(
+                          value: TipoLancamento.despesa,
+                          icon: Icon(Icons.trending_down),
+                          label: Text('Despesa'),
+                        ),
+                        ButtonSegment(
+                          value: TipoLancamento.receita,
+                          icon: Icon(Icons.trending_up),
+                          label: Text('Receita'),
+                        ),
+                      ],
+                      selected: {_tipo},
+                      onSelectionChanged: _isSaving
+                          ? null
+                          : (s) => setState(() => _tipo = s.first),
+                    ),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: _descricaoController,
                       textCapitalization: TextCapitalization.sentences,
@@ -399,32 +422,63 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                               () => _formaPagamento = value ?? 'Pix'),
                     ),
                     const SizedBox(height: 16),
-                    // Checkbox "Despesa fixa mensal"
-                    CheckboxListTile(
-                      value: _fixoMensal,
-                      onChanged: _isSaving
-                          ? null
-                          : (v) => setState(() => _fixoMensal = v ?? false),
-                      title: const Text('Despesa fixa mensal'),
-                      subtitle: const Text('Gera cópias automáticas nos próximos meses'),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    if (_fixoMensal) ...[
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _diaVencimentoController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Dia do vencimento (1-31)',
-                          prefixIcon: Icon(Icons.schedule_outlined),
-                        ),
-                        validator: (v) {
-                          if (!_fixoMensal) return null;
-                          final d = int.tryParse(v ?? '');
-                          return (d == null || d < 1 || d > 31) ? '1-31' : null;
-                        },
+                    if (_tipo == TipoLancamento.despesa) ...[
+                      // Checkbox "Despesa fixa mensal"
+                      CheckboxListTile(
+                        value: _fixoMensal,
+                        onChanged: _isSaving
+                            ? null
+                            : (v) => setState(() => _fixoMensal = v ?? false),
+                        title: const Text('Despesa fixa mensal'),
+                        subtitle: const Text('Gera cópias automáticas nos próximos meses'),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
                       ),
+                      if (_fixoMensal) ...[
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _diaVencimentoController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Dia do vencimento (1-31)',
+                            prefixIcon: Icon(Icons.schedule_outlined),
+                          ),
+                          validator: (v) {
+                            if (!_fixoMensal) return null;
+                            final d = int.tryParse(v ?? '');
+                            return (d == null || d < 1 || d > 31) ? '1-31' : null;
+                          },
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: _isSaving ? null : _pickData,
+                          icon: const Icon(Icons.event_outlined),
+                          label: Text('Data: ${formatoData(_data)}'),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: _isSaving ? null : _pickVencimento,
+                          icon: const Icon(Icons.schedule_outlined),
+                          label: Text(
+                            _vencimento == null
+                                ? 'Vencimento (opcional)'
+                                : 'Vencimento: ${formatoData(_vencimento!)}',
+                          ),
+                        ),
+                        if (_vencimento != null) ...[
+                          const SizedBox(height: 4),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _isSaving
+                                  ? null
+                                  : () => setState(() => _vencimento = null),
+                              child: const Text('Remover vencimento'),
+                            ),
+                          ),
+                        ],
+                      ],
                     ] else ...[
                       const SizedBox(height: 16),
                       OutlinedButton.icon(
@@ -432,28 +486,6 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                         icon: const Icon(Icons.event_outlined),
                         label: Text('Data: ${formatoData(_data)}'),
                       ),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: _isSaving ? null : _pickVencimento,
-                        icon: const Icon(Icons.schedule_outlined),
-                        label: Text(
-                          _vencimento == null
-                              ? 'Vencimento (opcional)'
-                              : 'Vencimento: ${formatoData(_vencimento!)}',
-                        ),
-                      ),
-                      if (_vencimento != null) ...[
-                        const SizedBox(height: 4),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: _isSaving
-                                ? null
-                                : () => setState(() => _vencimento = null),
-                            child: const Text('Remover vencimento'),
-                          ),
-                        ),
-                      ],
                     ],
                     const SizedBox(height: 8),
                     TextFormField(

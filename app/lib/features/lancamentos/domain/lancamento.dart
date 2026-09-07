@@ -1,3 +1,15 @@
+enum TipoLancamento {
+  despesa('despesa'),
+  receita('receita');
+
+  const TipoLancamento(this.dbValue);
+
+  final String dbValue;
+
+  static TipoLancamento fromDb(String v) =>
+      v == 'receita' ? TipoLancamento.receita : TipoLancamento.despesa;
+}
+
 class LancamentoItem {
   const LancamentoItem({
     required this.descricao,
@@ -33,6 +45,7 @@ class Lancamento {
     this.itens,
     this.fixoMensal = false,
     this.serieId,
+    this.tipo = TipoLancamento.despesa,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -48,6 +61,7 @@ class Lancamento {
   final List<LancamentoItem>? itens;
   final bool fixoMensal;
   final String? serieId;
+  final TipoLancamento tipo;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -69,6 +83,7 @@ class Lancamento {
     List<LancamentoItem>? Function()? itens,
     bool? fixoMensal,
     String? Function()? serieId,
+    TipoLancamento? tipo,
   }) {
     return Lancamento(
       id: id,
@@ -82,6 +97,7 @@ class Lancamento {
       itens: itens != null ? itens() : this.itens,
       fixoMensal: fixoMensal ?? this.fixoMensal,
       serieId: serieId != null ? serieId() : this.serieId,
+      tipo: tipo ?? this.tipo,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -94,6 +110,7 @@ class Lancamento {
       'valor_cents': valorCents,
       'categoria': categoria,
       'forma_pagamento': formaPagamento,
+      'tipo': tipo.dbValue,
       'data': data.toIso8601String().substring(0, 10),
       'vencimento': vencimento?.toIso8601String().substring(0, 10),
       'obs': obs,
@@ -112,6 +129,7 @@ class Lancamento {
       valorCents: (map['valor_cents'] as num).toInt(),
       categoria: map['categoria'] as String,
       formaPagamento: map['forma_pagamento'] as String,
+      tipo: TipoLancamento.fromDb(map['tipo'] as String? ?? 'despesa'),
       data: DateTime.parse(map['data'] as String),
       vencimento: map['vencimento'] != null
           ? DateTime.parse(map['vencimento'] as String)

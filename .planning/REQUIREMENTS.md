@@ -39,7 +39,7 @@ Fases 4-6 concluídas (2026-09-07). Próximo: **Fase 7 (Recebimentos por Voz)** 
 
 ### Recebimentos (VOZ-02 — Fase 7)
 
-- [ ] **VOZ-02**: Usuário dita recebimentos (ex.: "recebi 3000 de salário") e a IA registra como receita — *Fase 7 (próximo)*
+- [x] **VOZ-02**: Usuário dita recebimentos (ex.: "recebi 3000 de salário") e a IA registra como receita — *Validated Fase 7: campo `tipo` na migration/modelo/prompt, toggle na confirmação e no form, receitas no saldo do mês (entradas − saídas), lista com badge "Receita"*
 
 ### Investimentos (INV + VOZ-03 — Fase 8)
 
@@ -66,11 +66,11 @@ Fases 4-6 concluídas (2026-09-07). Próximo: **Fase 7 (Recebimentos por Voz)** 
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| VOZ-02 | 7 | Pending |
+| VOZ-02 | 7 | Validated |
 | VOZ-03 | 8 | Pending |
 | INV-01..INV-07 | 8 | Pending |
 
-**Coverage (v1.1 até agora):** 13/22 do milestone validados nas Fases 4-6; restam VOZ-02 (F7) e INV-01..07 + VOZ-03 (F8).
+**Coverage até agora:** 14/22 do milestone validados (Fases 4-6 + Fase 7); restam INV-01..07 + VOZ-03 (F8).
 
 ---
 *Definido: 2026-09-07*

@@ -79,7 +79,7 @@ void main() {
     expect(find.byType(LancamentosListScreen), findsOneWidget);
     expect(fakeLancamentos.createCount, 1);
     expect(find.text('Almoço'), findsOneWidget);
-    expect(find.text('R\$ 42,90'), findsOneWidget);
+    expect(find.text('-R\$ 42,90'), findsOneWidget);
   });
 
   testWidgets('V2: correção por voz do campo descrição e salvar persistido',
@@ -96,7 +96,7 @@ void main() {
     final (fakeLancamentos, _) =
         await abrirConfirmacao(tester, ditado: fakeDitado);
 
-    await tester.tap(find.byIcon(Icons.mic_none).at(0));
+    await tester.tap(find.byIcon(Icons.mic_none).at(1));
     await tester.pump();
     await tester.tap(find.byTooltip('Parar'));
     await tester.pumpAndSettle();

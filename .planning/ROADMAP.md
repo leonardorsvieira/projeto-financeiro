@@ -95,13 +95,15 @@ Plans:
   3. Usuário vê próximos vencimentos na primeira tela
   4. Usuário define meta por categoria e vê o progresso
 
-**Plans**: 3 plans
+**Nota (decisões 06):** sem receitas na Fase 6 — saldo = gastos do mês (real + previsto), receitas entram na F7. Donut: `fl_chart`. Layout: tab **Resumo | Lançamentos** em `/home`. Metas: limite mensal recorrente por categoria (editável/excluível).
+
+**Plans**: 3 plans (planned, not started)
 
 Plans:
 
-- [ ] 06-01: Card de saldo do mês (com previstos)
-- [ ] 06-02: Gráfico de gastos por categoria
-- [ ] 06-03: Metas/limites por categoria com progresso
+- [ ] 06-01: Dashboard base + gastos do mês (card) + vencimentos na home (DASH-01, DASH-03)
+- [ ] 06-02: Gráfico de gastos por categoria (donut fl_chart) (DASH-02)
+- [ ] 06-03: Metas/limites por categoria com progresso (DASH-04)
 
 ### Phase 7: Recebimentos por Voz
 
@@ -156,6 +158,6 @@ Phases execute in numeric order: 4 → 5 → 6 → 7 → 8 (v1.1)
 | 3. Ditado por Voz (Core) | v1.0 | 3/3 | Complete | 2026-09-06 |
 | 4. Vencimentos, Itens e Recorrências | v1.1 | 4/4 | Complete | 2026-09-07 |
 | 5. Lembretes Push | v1.1 | 2/2 | Complete | 2026-09-07 |
-| 6. Dashboard e Metas | v1.1 | 0/3 | Not started | - |
+| 6. Dashboard e Metas | v1.1 | 0/3 | **In progress** | - |
 | 7. Recebimentos por Voz | v1.1 | 0/2 | Not started | - |
 | 8. Investimentos | v1.1 | 0/5 | Not started | - |

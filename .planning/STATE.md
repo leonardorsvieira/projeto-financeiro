@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: In progress
-stopped_at: Fase 5 completa (05-01 + 05-03); próxima = Fase 6 (Dashboard e Metas)
-last_updated: "2026-09-07T05:10:00Z"
+stopped_at: Fase 5 completa; Fase 6 (Dashboard e Metas) planejada — 06-01/06-02/06-03 criados
+last_updated: "2026-09-07T06:00:00Z"
 last_activity: 2026-09-07 — 05-03 implementado (diasAntes configurável 0-30, diálogo unificado horário+stepper, reagendamento); 103 testes passam; build web + APK OK
 progress:
   total_phases: 8
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 
 ## Current Position
 
-Phase: 5 — Lembretes Push (completa)
-Plan: 05-01 ✅, 05-03 ✅
-Status: **Fase 5 completa** — 05-03 concluído: `diasAntes` configurável (0-30, padrão 3), diálogo unificado horário + stepper na S5, reagendamento automático, testes de borda
-Last activity: 2026-09-07 — 05-03 implementado e commitado; 103 testes; build web + APK validados
+Phase: 6 — Dashboard e Metas (planejada)
+Plan: 06-01 🔄, 06-02 ⏳, 06-03 ⏳
+Status: **Fase 5 completa**; **Fase 6 planejada** — 06-01 (Home com tabs + card gastos do mês/cards vencimentos), 06-02 (donut fl_chart), 06-03 (metas recorrentes no Supabase). Execução começa em 06-01.
+Last activity: 2026-09-07 — Fase 6 planejada; decisões confirmadas (gastos mês sem receitas, fl_chart, tab Resumo|Lançamentos, metas editáveis)
 
 ## Performance Metrics
 
@@ -43,6 +43,7 @@ Last activity: 2026-09-07 — 05-03 implementado e commitado; 103 testes; build 
 | 3 (Ditado por Voz — Core) | 3 | 3 | 1.0 |
 | 4 (Vencimentos, Itens e Recorrências) | 4 | 4 | 1.0 |
 | 5 (Lembretes Push) | 2 | 2 | 1.0 |
+| 6 (Dashboard e Metas) | 0 | 3 | - |
 
 **Recent Trend:** N/A
 
@@ -69,6 +70,7 @@ Last activity: 2026-09-07 — 05-03 implementado e commitado; 103 testes; build 
 - [04-04]: Notificações locais (flutter_local_notifications 22.3.0) T-3/T-0 horário configurável; gradle desugaring + multiDex + compileSdk 36
 - [Phase 5]: 05-01 tela "próximos vencimentos" (lista filtrada/ordenada, pull-to-refresh, badges) e 05-03 config "X dias antes" (diasAntes 0-30, padrão 3) unificada com horário no diálogo S5 — concluídos; 05-02 push FCM/APNs adiado (pós v1.1)
 - [05-03]: `PreferenciasLembretes.diasAntes` (0-30, normalizado); chave `lembretes_dias_antes`; `datasDeAgendamento(venc, hora, minuto, diasAntes)` ordena T-X cronológico antes de T-0; tipo da notificação `xd` (migrou de `3d`, cancelamento ajustado); `alterarPreferencias` substitui `alterarHorario`
+- [Fase 6]: Decisões confirmadas pelo usuário: (1) saldo = gastos do mês (real+previsto), receitas só na F7; (2) donut com `fl_chart`; (3) `/home` ganha tabs Resumo|Lançamentos (HomeScreen), lista vira aba; (4) metas = limite mensal recorrente por categoria (editável/excluível) em tabela nova `metas` no Supabase
 
 ### Pending Todos
 
@@ -89,10 +91,11 @@ Items acknowledged and carried forward from previous milestone close:
 ## Session Continuity
 
 Last session: 2026-09-07
-Stopped at: Fase 5 (05-01 + 05-03) implementada e commitada; próxima = Fase 6 (Dashboard e Metas)
+Stopped at: Fase 5 completa e commitada; Fase 6 planejada (06-01/06-02/06-03). Próximo: executar 06-01.
 Resume file: None
 
 ## Operator Next Steps
 
-- **Iniciar Fase 6 (Dashboard e Metas)** — planejar 06-01 (card de saldo do mês), 06-02 (gráfico por categoria), 06-03 (metas por categoria com progresso)
+- **Executar 06-01** — HomeScreen (tabs Resumo|Lançamentos) + card gastos do mês + vencimentos na home.
+- **Depois**: 06-02 (donut fl_chart), 06-03 (metas + migration no Supabase).
 - **_Nota segurança:_** revogar o PAT do Supabase exposto no chat (Account Settings → Access Tokens)

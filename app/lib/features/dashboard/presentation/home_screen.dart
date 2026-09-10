@@ -59,36 +59,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ],
         ),
         actions: [
-          if (!kIsWeb &&
-              (defaultTargetPlatform == TargetPlatform.android ||
-                  defaultTargetPlatform == TargetPlatform.iOS))
-            IconButton(
-              tooltip: 'Lembretes (horário e dias antes)',
-              onPressed: () => abrirPreferenciasLembretes(context, ref),
-              icon: const Icon(Icons.notifications_outlined),
-            ),
-          IconButton(
-            tooltip: 'Próximos vencimentos',
-            onPressed: () => context.push(AppRoutes.proximosVencimentos),
-            icon: const Icon(Icons.event_outlined),
-          ),
-          IconButton(
-            tooltip: 'Metas',
-            onPressed: () => context.push(AppRoutes.metas),
-            icon: const Icon(Icons.track_changes_outlined),
-          ),
-          IconButton(
-            tooltip: 'Histórico de Meses',
-            onPressed: () => context.push(AppRoutes.historicoMeses),
-            icon: const Icon(Icons.history_outlined),
-          ),
-          IconButton(
-            tooltip: 'Investimentos',
-            onPressed: () => context.push(AppRoutes.investimentos),
-            icon: const Icon(Icons.pie_chart_outline),
-          ),
           PopupMenuButton<String>(
             tooltip: 'Opções',
+            icon: const Icon(Icons.more_vert),
             onSelected: (value) {
               if (value == 'historico') {
                 context.push(AppRoutes.historicoMeses);

@@ -7,6 +7,7 @@ import 'package:meubolso/features/lancamentos/domain/lancamento.dart';
 import 'package:meubolso/features/metas/application/metas_providers.dart';
 import 'package:meubolso/features/metas/domain/meta.dart';
 import 'package:meubolso/features/metas/presentation/metas_screen.dart';
+import 'package:meubolso/theme/app_theme.dart';
 
 import '../../../support/fake_lancamentos_repository.dart';
 import '../../../support/fake_metas_repository.dart';
@@ -42,7 +43,10 @@ Future<void> _pump(
         lancamentosRepositoryProvider.overrideWithValue(lancamentos),
         metasRepositoryProvider.overrideWithValue(metas),
       ],
-      child: const MaterialApp(home: MetasScreen()),
+      child: MaterialApp(
+        theme: AppTheme.light,
+        home: const MetasScreen(),
+      ),
     ),
   );
   await tester.pumpAndSettle();

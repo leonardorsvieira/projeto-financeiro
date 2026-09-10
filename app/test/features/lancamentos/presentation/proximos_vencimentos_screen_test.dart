@@ -11,6 +11,8 @@ import 'package:meubolso/features/lancamentos/presentation/lancamento_form_scree
 import 'package:meubolso/features/lancamentos/presentation/proximos_vencimentos_screen.dart';
 import 'package:meubolso/router/app_router.dart';
 
+import 'package:meubolso/theme/app_theme.dart';
+
 import '../../../support/fake_lancamentos_repository.dart';
 import '../../../support/fake_wrappers.dart';
 
@@ -117,13 +119,18 @@ void main() {
           lancamentosRepositoryProvider.overrideWithValue(fakeRepo),
           appRouterProvider.overrideWithValue(router),
         ],
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp.router(
+          theme: AppTheme.light,
+          routerConfig: router,
+        ),
       );
     }
 
     testWidgets('mostra empty state quando não há vencimentos futuros', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.tap(find.byIcon(Icons.event_outlined));
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Próximos Vencimentos'));
       await tester.pumpAndSettle();
 
       expect(find.text('Próximos vencimentos'), findsOneWidget);
@@ -160,7 +167,9 @@ void main() {
           updatedAt: agora,
         ),
       ]));
-      await tester.tap(find.byIcon(Icons.event_outlined));
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Próximos Vencimentos'));
       await tester.pumpAndSettle();
 
       expect(find.text('Próximos vencimentos'), findsOneWidget);
@@ -202,7 +211,9 @@ void main() {
           updatedAt: agora,
         ),
       ]));
-      await tester.tap(find.byIcon(Icons.event_outlined));
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Próximos Vencimentos'));
       await tester.pumpAndSettle();
 
       expect(find.text('Passado'), findsNothing);
@@ -228,7 +239,9 @@ void main() {
           updatedAt: agora,
         ),
       ]));
-      await tester.tap(find.byIcon(Icons.event_outlined));
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Próximos Vencimentos'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Conta luz'));

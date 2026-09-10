@@ -8,6 +8,7 @@ import 'package:meubolso/features/dashboard/presentation/home_screen.dart';
 import 'package:meubolso/features/lancamentos/application/lembretes_controller.dart';
 import 'package:meubolso/features/lancamentos/application/lancamentos_providers.dart';
 import 'package:meubolso/features/lancamentos/application/preferencias_service.dart';
+import 'package:meubolso/theme/app_theme.dart';
 
 import '../../../support/fake_lancamentos_repository.dart';
 
@@ -42,7 +43,10 @@ Widget _buildApp(
       lancamentosRepositoryProvider.overrideWithValue(fakeRepo),
       lembretesControllerProvider.overrideWith(() => controller),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      theme: AppTheme.light,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -61,7 +65,9 @@ void main() {
     await tester.pumpWidget(_buildApp(controller, fakeRepo));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.notifications_outlined));
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Lembretes'));
     await tester.pumpAndSettle();
 
     expect(find.text('Lembretes de vencimento'), findsOneWidget);
@@ -99,7 +105,9 @@ void main() {
     await tester.pumpWidget(_buildApp(controller, fakeRepo));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.notifications_outlined));
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Lembretes'));
     await tester.pumpAndSettle();
 
     expect(find.text('Apenas no dia do vencimento'), findsOneWidget);

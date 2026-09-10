@@ -57,7 +57,6 @@ try {
   $flutterCmd = "flutter $($flutterArgs -join ' ') 2>&1"
   & cmd /c $flutterCmd
   $exitCode = $LASTEXITCODE
-  if ($exitCode -ne 0) { throw "flutter build falhou (exit $exitCode)" }
 }
 finally {
   Pop-Location
@@ -68,6 +67,7 @@ $apk = Join-Path $root "app\build\app\outputs\flutter-apk\app-$Mode.apk"
 if (Test-Path $externalApk) { $apk = $externalApk }
 
 if (-not (Test-Path $apk)) {
+  if ($exitCode -ne 0) { throw "flutter build falhou (exit $exitCode)" }
   Write-Host "AVISO: APK nao encontrado em $apk" -ForegroundColor Yellow
   exit 1
 }

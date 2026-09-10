@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/lembretes_controller.dart';
+import '../application/notificacoes_service.dart';
 import '../application/preferencias_service.dart';
 
 /// Abre o diálogo de preferências de lembretes (horário + dias antes).
@@ -122,6 +123,26 @@ class _LembretesPreferenciasDialogState
                 ),
               ],
             ),
+          ),
+          const Divider(),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              final ok =
+                  await NotificacoesService.instance.enviarNotificacaoTeste();
+              if (!mounted) return;
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    ok
+                        ? 'Notificação enviada para o dispositivo!'
+                        : 'Permita as notificações nas configurações do dispositivo.',
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.notifications_active_outlined),
+            label: const Text('Testar notificação no aparelho'),
           ),
         ],
       ),

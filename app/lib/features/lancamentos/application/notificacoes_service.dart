@@ -183,6 +183,43 @@ class NotificacoesService {
     return !diaVenc.isAfter(hoje);
   }
 
+  /// Envia uma notificação de teste imediatamente para o dispositivo.
+  Future<bool> enviarNotificacaoTeste() async {
+    if (!_inicializado) await init();
+    final concedida = await pedirPermissao();
+    if (!concedida) return false;
+
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _canalId,
+        _canalNome,
+        channelDescription: 'Lembra faturas que vencem em 3 dias e no dia',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+
+    try {
+      await _plugin.show(
+        id: 99999,
+        title: '🔔 Meu Bolso',
+        body: 'As notificações estão ativas e funcionando no seu dispositivo!',
+        notificationDetails: details,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('NotificacoesService.enviarNotificacaoTeste erro: $e');
+      return false;
+    }
+  }
+
   Future<void> _agendar({
     required int id,
     required String titulo,
@@ -194,10 +231,16 @@ class NotificacoesService {
         _canalId,
         _canalNome,
         channelDescription: 'Lembra faturas que vencem em 3 dias e no dia',
-        importance: Importance.high,
+        importance: Importance.max,
         priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
       ),
-      iOS: DarwinNotificationDetails(),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
     await _plugin.zonedSchedule(
       id: id,

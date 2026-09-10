@@ -133,8 +133,9 @@ void main() {
     await _pump(tester, repo);
 
     expect(find.text('Saldo do mês'), findsOneWidget);
-    expect(find.text('Nenhum vencimento próximo.'), findsOneWidget);
     expect(find.text('Sem gastos neste mês.'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Nenhum vencimento próximo.'), 100);
+    expect(find.text('Nenhum vencimento próximo.'), findsOneWidget);
   });
 
   testWidgets('donut mostra legenda por categoria com R\$ e %',
@@ -172,10 +173,11 @@ void main() {
 
     await _pump(tester, repo, metasRepo: metasRepo);
 
+    await tester.scrollUntilVisible(find.text('Metas'), 100);
     expect(find.text('Metas'), findsOneWidget);
     expect(find.text('R\$ 90,00 de R\$ 100,00'), findsOneWidget);
     expect(find.text('90%'), findsOneWidget);
-    expect(find.text('Gerenciar'), findsOneWidget);
+    expect(find.text('Gerenciar'), findsWidgets);
   });
 
   testWidgets('seção Metas mostra Criar quando não há metas', (tester) async {
@@ -210,9 +212,10 @@ void main() {
     expect(find.text('+R\$ 400,00 rendimento'), findsOneWidget);
   });
 
-  testWidgets('seção Patrimônio não aparece sem ativos', (tester) async {
+  testWidgets('seção Patrimônio mostra estado vazio sem ativos', (tester) async {
     await _pump(tester, FakeLancamentosRepository());
-    expect(find.text('Patrimônio'), findsNothing);
-    expect(find.text('Ver'), findsNothing);
+    expect(find.text('Patrimônio'), findsOneWidget);
+    expect(find.text('Nenhum investimento cadastrado.'), findsOneWidget);
+    expect(find.text('Gerenciar'), findsWidgets);
   });
 }

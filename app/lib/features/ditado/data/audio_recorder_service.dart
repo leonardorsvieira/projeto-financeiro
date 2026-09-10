@@ -22,23 +22,31 @@ class RecordAudioRecorderService implements AudioRecorderService {
 
   @override
   Future<bool> temPermissao() async {
-    // On web, don't auto-request via hasPermission() (which doesn't support request param);
-    // let start() handle the prompt to avoid double getUserMedia calls.
-    if (kIsWeb) return false;
     return _gravador.hasPermission();
   }
 
   @override
   Future<void> iniciar() async {
-    final diretorio = await getTemporaryDirectory();
-    return _gravador.start(
-      const RecordConfig(
-        encoder: AudioEncoder.wav,
-        numChannels: 1,
-        sampleRate: 16000,
-      ),
-      path: '${diretorio.path}/ditado.wav',
-    );
+    if (kIsWeb) {
+      return _gravador.start(
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc,
+          numChannels: 1,
+          sampleRate: 16000,
+        ),
+        path: '',
+      );
+    } else {
+      final diretorio = await getTemporaryDirectory();
+      return _gravador.start(
+        const RecordConfig(
+          encoder: AudioEncoder.wav,
+          numChannels: 1,
+          sampleRate: 16000,
+        ),
+        path: '${diretorio.path}/ditado.wav',
+      );
+    }
   }
 
   @override
@@ -53,7 +61,7 @@ class RecordAudioRecorderService implements AudioRecorderService {
     }
     return LancamentoAudio(
       bytes: bytes,
-      mimeType: 'audio/wav',
+      mimeType: kIsWeb ? 'audio/aac' : 'audio/wav',
     );
   }
 

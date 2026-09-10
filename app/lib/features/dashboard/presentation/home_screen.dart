@@ -7,6 +7,7 @@ import '../../auth/application/auth_controller.dart';
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/presentation/lancamentos_list_screen.dart';
 import '../../lancamentos/presentation/lembretes_preferencias_dialog.dart';
+import '../../seguranca/presentation/bloqueio_biometrico_dialog.dart';
 import 'dashboard_screen.dart';
 
 /// Primeira tela autenticada (`/home`): tab **Resumo** (dashboard) e tab
@@ -38,12 +39,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meu Bolso'),
+        title: Row(
+          children: [
+            const Icon(Icons.account_balance_wallet_outlined),
+            const SizedBox(width: 8),
+            Text(
+              'Meu Bolso',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Resumo'),
-            Tab(text: 'Lançamentos'),
+            Tab(icon: Icon(Icons.space_dashboard_outlined), text: 'Dashboard'),
+            Tab(icon: Icon(Icons.list_alt_outlined), text: 'Lançamentos'),
           ],
         ),
         actions: [
@@ -88,6 +100,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 context.push(AppRoutes.proximosVencimentos);
               } else if (value == 'lembretes') {
                 abrirPreferenciasLembretes(context, ref);
+              } else if (value == 'biometria') {
+                mostrarDialogoBloqueioBiometrico(context);
               } else if (value == 'signout') {
                 ref.read(authControllerProvider.notifier).signOut();
               }
@@ -127,7 +141,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
               if (!kIsWeb &&
                   (defaultTargetPlatform == TargetPlatform.android ||
-                      defaultTargetPlatform == TargetPlatform.iOS))
+                      defaultTargetPlatform == TargetPlatform.iOS)) ...[
                 const PopupMenuItem(
                   value: 'lembretes',
                   child: ListTile(
@@ -136,6 +150,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     dense: true,
                   ),
                 ),
+                const PopupMenuItem(
+                  value: 'biometria',
+                  child: ListTile(
+                    leading: Icon(Icons.fingerprint),
+                    title: Text('Segurança & Biometria'),
+                    dense: true,
+                  ),
+                ),
+              ],
               const PopupMenuDivider(),
               const PopupMenuItem(
                 value: 'signout',

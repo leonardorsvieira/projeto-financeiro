@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/env.dart';
 import 'features/lancamentos/application/lembretes_controller.dart';
+import 'features/seguranca/presentation/biometric_lock_wrapper.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
@@ -61,6 +62,9 @@ class MeuBolsoApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       routerConfig: router,
+      builder: (context, child) {
+        return BiometricLockWrapper(child: child ?? const SizedBox.shrink());
+      },
     );
   }
 }

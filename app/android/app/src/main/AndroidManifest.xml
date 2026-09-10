@@ -6,6 +6,8 @@
     <!-- Gravação de áudio: ditado por voz -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-feature android:name="android.hardware.microphone" android:required="false"/>
+    <!-- Biometria / Impressão Digital -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <application
         android:label="Meu Bolso"
         android:name="${applicationName}"

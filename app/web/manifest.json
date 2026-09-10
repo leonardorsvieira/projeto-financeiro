@@ -1,11 +1,11 @@
 {
-    "name": "meubolso",
-    "short_name": "meubolso",
+    "name": "Meu Bolso",
+    "short_name": "Meu Bolso",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#121212",
+    "theme_color": "#00897B",
+    "description": "Meu Bolso - Gestão financeira pessoal por voz com Inteligência Artificial",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

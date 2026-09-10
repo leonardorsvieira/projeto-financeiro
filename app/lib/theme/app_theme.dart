@@ -17,6 +17,7 @@ class AppTheme {
     final isLight = brightness == Brightness.light;
     return ThemeData(
       useMaterial3: true,
+      splashFactory: InkRipple.splashFactory,
       colorScheme: scheme,
       scaffoldBackgroundColor: isLight ? backgroundLight : backgroundDark,
       inputDecorationTheme: InputDecorationTheme(

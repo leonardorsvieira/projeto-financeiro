@@ -32,46 +32,66 @@ class GeminiDitadoRepository implements DitadoRepository {
   final String _modelo;
   final List<Duration> _esperasRetry;
 
+  static const List<String> _modelosCandidatos = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-3.5-flash-lite',
+  ];
+
   Future<Map<String, dynamic>> _post(Map<String, dynamic> corpo) async {
     if (_apiKey.isEmpty) {
       throw const DitadoException(
         'IA não configurada. Adicione a GEMINI_API_KEY no deploy.',
       );
     }
-    for (var tentativa = 0; tentativa < _maxTentativas; tentativa++) {
-      if (tentativa > 0 && tentativa - 1 < _esperasRetry.length) {
-        await Future<void>.delayed(_esperasRetry[tentativa - 1]);
-      }
-      final uri = Uri.https(
-        _baseUrl,
-        '$_caminho$_modelo:generateContent',
-        {'key': _apiKey},
-      );
-      final resposta = await _cliente.post(
-        uri,
-        headers: const {'Content-Type': 'application/json'},
-        body: jsonEncode(corpo),
-      );
-      if (resposta.statusCode == 200) {
-        final decodificado = jsonDecode(resposta.body);
-        if (decodificado is! Map<String, dynamic>) {
-          throw const DitadoException(
-            'A resposta da IA veio em um formato inesperado.',
-          );
+
+    Object? ultimoErro;
+    final modelosTestar = <String>[
+      _modelo,
+      ..._modelosCandidatos.where((m) => m != _modelo),
+    ];
+
+    for (final mod in modelosTestar) {
+      for (var tentativa = 0; tentativa < _maxTentativas; tentativa++) {
+        if (tentativa > 0 && tentativa - 1 < _esperasRetry.length) {
+          await Future<void>.delayed(_esperasRetry[tentativa - 1]);
         }
-        return decodificado;
+        final uri = Uri.https(
+          _baseUrl,
+          '$_caminho$mod:generateContent',
+          {'key': _apiKey},
+        );
+        try {
+          final resposta = await _cliente.post(
+            uri,
+            headers: const {'Content-Type': 'application/json'},
+            body: jsonEncode(corpo),
+          );
+          if (resposta.statusCode == 200) {
+            final decodificado = jsonDecode(resposta.body);
+            if (decodificado is! Map<String, dynamic>) {
+              throw const DitadoException(
+                'A resposta da IA veio em um formato inesperado.',
+              );
+            }
+            return decodificado;
+          }
+          final ultimaTentativa = tentativa == _maxTentativas - 1;
+          if (!ultimaTentativa &&
+              _errosTemporarios.contains(resposta.statusCode)) {
+            continue;
+          }
+          ultimoErro = 'HTTP ${resposta.statusCode}';
+        } catch (e) {
+          ultimoErro = e;
+        }
       }
-      final ultimaTentativa = tentativa == _maxTentativas - 1;
-      if (!ultimaTentativa &&
-          _errosTemporarios.contains(resposta.statusCode)) {
-        continue;
-      }
-      throw DitadoException(
-        'IA indisponível no momento (HTTP ${resposta.statusCode}). '
-        'Tente de novo.',
-      );
     }
-    throw const DitadoException('IA indisponível no momento. Tente de novo.');
+
+    throw DitadoException(
+      'IA indisponível no momento ($ultimoErro). Tente de novo.',
+    );
   }
 
   @override
@@ -104,5 +124,21 @@ class GeminiDitadoRepository implements DitadoRepository {
       throw const DitadoException('A IA retornou uma resposta vazia.');
     }
     return GeminiPrompt.parseCorrecao(corpo, campo);
+  }
+
+  @override
+  Future<String> gerarAnaliseMensal(
+    dynamic resumo,
+    dynamic gastos,
+    String mesAnoLabel,
+  ) async {
+    final resposta = await _post(
+      GeminiPrompt.payloadAnaliseMensal(resumo, gastos, mesAnoLabel),
+    );
+    final texto = GeminiPrompt.textoResposta(resposta);
+    if (texto == null || texto.trim().isEmpty) {
+      throw const DitadoException('A IA retornou um diagnóstico vazio.');
+    }
+    return texto.trim();
   }
 }

@@ -185,6 +185,41 @@ class GeminiPrompt {
     };
   }
 
+  static Map<String, dynamic> payloadAnaliseMensal(
+    dynamic resumo,
+    dynamic gastos,
+    String mesAnoLabel,
+  ) {
+    return {
+      'system_instruction': {
+        'parts': [
+          {
+            'text':
+                'Você é um consultor financeiro pessoal amigável do app "Meu Bolso". '
+                    'Analise os dados financeiros do usuário do mês de $mesAnoLabel e forneça '
+                    'um diagnóstico curto em português (3 parágrafos pequenos), com tom positivo e direto, '
+                    'destacando o saldo do mês, as maiores categorias de gasto e 1 dica prática de economia.'
+          },
+        ],
+      },
+      'contents': [
+        {
+          'role': 'user',
+          'parts': [
+            {
+              'text': 'Dados do mês ($mesAnoLabel):\n'
+                  'Resumo do Mês: $resumo\n'
+                  'Gastos por Categoria: $gastos'
+            },
+          ],
+        },
+      ],
+      'generation_config': {
+        'temperature': 0.3,
+      },
+    };
+  }
+
   static String? textoResposta(Map<String, dynamic> resposta) {
     final candidatos = resposta['candidates'];
     if (candidatos is! List || candidatos.isEmpty) return null;

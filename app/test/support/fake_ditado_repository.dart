@@ -46,4 +46,13 @@ class FakeDitadoRepository implements DitadoRepository {
     if (erro != null) throw erro;
     return correcao;
   }
+
+  @override
+  Future<String> gerarAnaliseMensal(
+    dynamic resumo,
+    dynamic gastos,
+    String mesAnoLabel,
+  ) async {
+    return 'Análise simulada do mês de $mesAnoLabel: Orçamento sob controle!';
+  }
 }

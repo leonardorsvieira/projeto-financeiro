@@ -27,4 +27,10 @@ abstract class DitadoRepository {
     String? texto,
     RascunhoLancamento? rascunhoAtual,
   });
+
+  Future<String> gerarAnaliseMensal(
+    dynamic resumo,
+    dynamic gastos,
+    String mesAnoLabel,
+  );
 }

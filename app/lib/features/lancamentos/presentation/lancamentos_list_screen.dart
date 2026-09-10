@@ -7,6 +7,8 @@ import '../application/lancamentos_providers.dart';
 import '../domain/lancamento.dart';
 import '../domain/lancamento_converter.dart';
 
+import '../application/exportar_service.dart';
+
 /// Corpo da aba "Lançamentos" do home. Sem Scaffold próprio — a HomeScreen
 /// (dashboard) é quem fornece AppBar, ações e FABs.
 class LancamentosListScreen extends ConsumerWidget {
@@ -30,7 +32,7 @@ class LancamentosListScreen extends ConsumerWidget {
         if (items.isEmpty) {
           return const _EmptyState();
         }
-        return _Lista(items: items);
+        return _ListaComFiltro(items: items);
       },
     );
   }
@@ -106,10 +108,62 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _Lista extends ConsumerWidget {
-  const _Lista({required this.items});
+class _ListaComFiltro extends ConsumerStatefulWidget {
+  const _ListaComFiltro({required this.items});
 
   final List<Lancamento> items;
+
+  @override
+  ConsumerState<_ListaComFiltro> createState() => _ListaComFiltroState();
+}
+
+class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
+  final TextEditingController _buscaController = TextEditingController();
+  String _filtroTipo = 'todos'; // 'todos', 'despesa', 'receita'
+
+  @override
+  void dispose() {
+    _buscaController.dispose();
+    super.dispose();
+  }
+
+  void _exportarCSV(List<Lancamento> filtrados) {
+    final csvContent = ExportarService.gerarCSV(filtrados);
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exportar CSV'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${filtrados.length} lançamentos formatados para Excel:'),
+            const SizedBox(height: 8),
+            Container(
+              height: 160,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                child: SelectableText(
+                  csvContent,
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _confirmarExclusao(
     BuildContext context,
@@ -177,15 +231,91 @@ class _Lista extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return RefreshIndicator(
-      onRefresh: () async {},
-      child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 88),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
+    final termoBusca = _buscaController.text.trim().toLowerCase();
+
+    final filtrados = widget.items.where((item) {
+      final tipoMatch = _filtroTipo == 'todos' ||
+          (_filtroTipo == 'receita' && item.tipo == TipoLancamento.receita) ||
+          (_filtroTipo == 'despesa' && item.tipo != TipoLancamento.receita);
+
+      final buscaMatch = termoBusca.isEmpty ||
+          item.descricao.toLowerCase().contains(termoBusca) ||
+          item.categoria.toLowerCase().contains(termoBusca);
+
+      return tipoMatch && buscaMatch;
+    }).toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Column(
+            children: [
+              TextField(
+                controller: _buscaController,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Buscar lançamento por nome ou categoria...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _buscaController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => setState(() => _buscaController.clear()),
+                        )
+                      : null,
+                  isDense: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  FilterChip(
+                    label: const Text('Todos'),
+                    selected: _filtroTipo == 'todos',
+                    onSelected: (_) => setState(() => _filtroTipo = 'todos'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilterChip(
+                    label: const Text('Despesas'),
+                    selected: _filtroTipo == 'despesa',
+                    onSelected: (_) => setState(() => _filtroTipo = 'despesa'),
+                  ),
+                  const SizedBox(width: 8),
+                  FilterChip(
+                    label: const Text('Receitas'),
+                    selected: _filtroTipo == 'receita',
+                    onSelected: (_) => setState(() => _filtroTipo = 'receita'),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: 'Exportar para CSV (Excel)',
+                    icon: const Icon(Icons.download_outlined),
+                    onPressed: () => _exportarCSV(filtrados),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: filtrados.isEmpty
+              ? Center(
+                  child: Text(
+                    'Nenhum lançamento encontrado.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 88),
+                  itemCount: filtrados.length,
+                  itemBuilder: (context, index) {
+                    final item = filtrados[index];
           final ehReceita = item.tipo == TipoLancamento.receita;
           final valor = '${ehReceita ? '+' : '-'}${formatoBRL(item.valorCents)}';
           final corValor = ehReceita
@@ -274,8 +404,10 @@ class _Lista extends ConsumerWidget {
           );
         },
       ),
-    );
-  }
+    ),
+  ],
+);
+}
 }
 
 class _Badge extends StatelessWidget {

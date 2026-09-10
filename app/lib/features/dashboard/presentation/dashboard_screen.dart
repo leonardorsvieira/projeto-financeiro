@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:intl/intl.dart';
+
+import '../../ditado/application/ditado_providers.dart';
 import '../../home/domain/app_routes.dart';
 import '../../investimentos/application/investimentos_providers.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
@@ -45,7 +48,11 @@ class DashboardScreen extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         children: [
+          const _SeletorMesHeader(),
+          const SizedBox(height: 12),
           _CardGastosMes(resumo: resumo),
+          const SizedBox(height: 16),
+          const _CardAnaliseIA(),
           const SizedBox(height: 16),
           _PatrimonioSection(
             patrimonioCents: ref.watch(patrimonioTotalProvider),
@@ -464,6 +471,212 @@ class _MetaProgressoTile extends StatelessWidget {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SeletorMesHeader extends ConsumerWidget {
+  const _SeletorMesHeader();
+
+  static const _meses = [
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro'
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final mesAno = ref.watch(mesSelecionadoProvider);
+    final nomeCapitalizado = '${_meses[mesAno.month - 1]} ${mesAno.year}';
+
+    final agora = DateTime.now();
+    final ehMesAtual =
+        mesAno.year == agora.year && mesAno.month == agora.month;
+
+    return Card(
+      color: theme.colorScheme.surfaceContainerHigh,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          children: [
+            IconButton(
+              tooltip: 'Mês anterior',
+              icon: const Icon(Icons.chevron_left),
+              onPressed: () {
+                ref.read(mesSelecionadoProvider.notifier).mesAnterior();
+              },
+            ),
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  context.push(AppRoutes.historicoMeses);
+                },
+                child: Column(
+                  children: [
+                    Text(
+                      nomeCapitalizado,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (!ehMesAtual)
+                      Text(
+                        'Histórico de Meses',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Próximo mês',
+              icon: const Icon(Icons.chevron_right),
+              onPressed: () {
+                ref.read(mesSelecionadoProvider.notifier).proximoMes();
+              },
+            ),
+            if (!ehMesAtual)
+              IconButton(
+                tooltip: 'Voltar ao mês atual',
+                icon: const Icon(Icons.today),
+                onPressed: () {
+                  ref.read(mesSelecionadoProvider.notifier).resetarParaAtual();
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CardAnaliseIA extends ConsumerStatefulWidget {
+  const _CardAnaliseIA();
+
+  @override
+  ConsumerState<_CardAnaliseIA> createState() => _CardAnaliseIAState();
+}
+
+class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
+  bool _carregando = false;
+  String? _analiseTexto;
+  String? _erro;
+
+  Future<void> _gerarAnalise() async {
+    setState(() {
+      _carregando = true;
+      _erro = null;
+    });
+
+    final resumo = ref.read(resumoMesProvider);
+    final gastos = ref.read(gastosPorCategoriaMesProvider);
+    final mesAno = ref.read(mesSelecionadoProvider);
+    final formatMes = DateFormat('MMMM yyyy', 'pt_BR').format(mesAno);
+
+    try {
+      final repo = ref.read(ditadoRepositoryProvider);
+      final texto = await repo.gerarAnaliseMensal(resumo, gastos, formatMes);
+      if (mounted) {
+        setState(() {
+          _analiseTexto = texto;
+          _carregando = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _erro = 'Não foi possível gerar a análise no momento. Tente novamente.';
+          _carregando = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.25),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.auto_awesome, color: Colors.amber),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Análise Inteligente (IA)',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                if (_analiseTexto != null || _erro != null)
+                  IconButton(
+                    icon: const Icon(Icons.refresh, size: 20),
+                    onPressed: _gerarAnalise,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (_analiseTexto == null && !_carregando && _erro == null) ...[
+              Text(
+                'Receba um diagnóstico completo dos seus gastos e dicas de economia geradas por Inteligência Artificial para este mês.',
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _gerarAnalise,
+                icon: const Icon(Icons.psychology_outlined),
+                label: const Text('Gerar Diagnóstico por IA'),
+              ),
+            ] else if (_carregando) ...[
+              const Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text('A IA está analisando seu orçamento...'),
+                  ),
+                ],
+              ),
+            ] else if (_analiseTexto != null) ...[
+              Text(
+                _analiseTexto!,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ] else if (_erro != null) ...[
+              Text(
+                _erro!,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
           ],
         ),
       ),

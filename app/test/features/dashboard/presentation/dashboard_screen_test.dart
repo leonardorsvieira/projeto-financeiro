@@ -10,6 +10,10 @@ import 'package:meubolso/features/lancamentos/domain/lancamento.dart';
 import 'package:meubolso/features/metas/application/metas_providers.dart';
 import 'package:meubolso/features/metas/domain/meta.dart';
 
+import 'package:meubolso/features/ditado/application/ditado_providers.dart';
+import 'package:meubolso/theme/app_theme.dart';
+
+import '../../../support/fake_ditado_repository.dart';
 import '../../../support/fake_investimentos_repository.dart';
 import '../../../support/fake_lancamentos_repository.dart';
 import '../../../support/fake_metas_repository.dart';
@@ -50,7 +54,10 @@ Future<void> _pump(
       metasRepo: metasRepo ?? FakeMetasRepository(),
       investimentosRepo:
           investimentosRepo ?? FakeInvestimentosRepository(),
-      child: const MaterialApp(home: Scaffold(body: DashboardScreen())),
+      child: MaterialApp(
+        theme: AppTheme.light,
+        home: const Scaffold(body: DashboardScreen()),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -79,6 +86,7 @@ class ProviderScopeContainer extends StatelessWidget {
         investimentosRepositoryProvider.overrideWithValue(investimentosRepo),
         movimentosInvestimentoRepositoryProvider
             .overrideWithValue(FakeMovimentosInvestimentoRepository()),
+        ditadoRepositoryProvider.overrideWithValue(FakeDitadoRepository()),
       ],
       child: child,
     );
@@ -133,6 +141,7 @@ void main() {
     await _pump(tester, repo);
 
     expect(find.text('Saldo do mês'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Sem gastos neste mês.'), 100);
     expect(find.text('Sem gastos neste mês.'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Nenhum vencimento próximo.'), 100);
     expect(find.text('Nenhum vencimento próximo.'), findsOneWidget);
@@ -151,6 +160,7 @@ void main() {
     await _pump(tester, repo);
 
     // Legenda: categoria + valor + %.
+    await tester.scrollUntilVisible(find.text('Alimentação'), 100);
     expect(find.text('Alimentação'), findsOneWidget);
     expect(find.text('R\$ 30,00'), findsWidgets);
     expect(find.text('(75%)'), findsOneWidget);
@@ -185,6 +195,7 @@ void main() {
 
     await _pump(tester, repo);
 
+    await tester.scrollUntilVisible(find.text('Metas'), 100);
     expect(find.text('Metas'), findsOneWidget);
     expect(find.text('Nenhuma meta definida.'), findsOneWidget);
     expect(find.text('Criar'), findsOneWidget);
@@ -205,6 +216,7 @@ void main() {
 
     await _pump(tester, repo, investimentosRepo: investimentos);
 
+    await tester.scrollUntilVisible(find.text('Patrimônio'), 100);
     expect(find.text('Patrimônio'), findsOneWidget);
     expect(find.text('R\$ 400,00'), findsWidgets);
     expect(find.text('Ver'), findsOneWidget);
@@ -214,6 +226,7 @@ void main() {
 
   testWidgets('seção Patrimônio mostra estado vazio sem ativos', (tester) async {
     await _pump(tester, FakeLancamentosRepository());
+    await tester.scrollUntilVisible(find.text('Patrimônio'), 100);
     expect(find.text('Patrimônio'), findsOneWidget);
     expect(find.text('Nenhum investimento cadastrado.'), findsOneWidget);
     expect(find.text('Gerenciar'), findsWidgets);

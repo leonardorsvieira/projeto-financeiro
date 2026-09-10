@@ -35,16 +35,46 @@ class ResumoMes {
       'previsto: $previstoCents)';
 }
 
-/// Fluxo do mês vigente (real + previsto).
+/// Mês e Ano selecionado para o Dashboard e Histórico.
+final mesSelecionadoProvider = NotifierProvider<MesSelecionadoNotifier, DateTime>(
+  MesSelecionadoNotifier.new,
+);
+
+class MesSelecionadoNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() {
+    final agora = DateTime.now();
+    return DateTime(agora.year, agora.month);
+  }
+
+  void selecionarMes(DateTime mesAno) {
+    state = DateTime(mesAno.year, mesAno.month);
+  }
+
+  void mesAnterior() {
+    state = DateTime(state.year, state.month - 1);
+  }
+
+  void proximoMes() {
+    state = DateTime(state.year, state.month + 1);
+  }
+
+  void resetarParaAtual() {
+    final agora = DateTime.now();
+    state = DateTime(agora.year, agora.month);
+  }
+}
+
+/// Fluxo do mês selecionado (real + previsto).
 final resumoMesProvider = Provider<ResumoMes>((ref) {
   final todos = ref.watch(lancamentosStreamProvider).value ?? [];
-  final agora = DateTime.now();
+  final mesAno = ref.watch(mesSelecionadoProvider);
 
   int entradas = 0;
   int saidas = 0;
   int previsto = 0;
   for (final l in todos) {
-    final dataNoMes = l.data.year == agora.year && l.data.month == agora.month;
+    final dataNoMes = l.data.year == mesAno.year && l.data.month == mesAno.month;
     final receita = l.tipo == TipoLancamento.receita;
     if (dataNoMes) {
       if (receita) {
@@ -57,7 +87,7 @@ final resumoMesProvider = Provider<ResumoMes>((ref) {
     if (receita) continue;
     final venc = l.vencimento;
     final venceNoMes =
-        venc != null && venc.year == agora.year && venc.month == agora.month;
+        venc != null && venc.year == mesAno.year && venc.month == mesAno.month;
     if (venceNoMes && !dataNoMes) previsto += l.valorCents;
   }
   return ResumoMes(
@@ -78,16 +108,16 @@ class GastoCategoria {
   final int valorCents;
 }
 
-/// Gastos do mês vigente agrupados por categoria, ordenados do maior para o
+/// Gastos do mês selecionado agrupados por categoria, ordenados do maior para o
 /// menor (lançamentos com `data` no mês).
 final gastosPorCategoriaMesProvider = Provider<List<GastoCategoria>>((ref) {
   final todos = ref.watch(lancamentosStreamProvider).value ?? [];
-  final agora = DateTime.now();
+  final mesAno = ref.watch(mesSelecionadoProvider);
 
   final porCategoria = <String, int>{};
   for (final l in todos) {
     if (l.tipo == TipoLancamento.receita) continue;
-    final dataNoMes = l.data.year == agora.year && l.data.month == agora.month;
+    final dataNoMes = l.data.year == mesAno.year && l.data.month == mesAno.month;
     if (dataNoMes) {
       porCategoria.update(l.categoria, (v) => v + l.valorCents,
           ifAbsent: () => l.valorCents);
@@ -99,4 +129,55 @@ final gastosPorCategoriaMesProvider = Provider<List<GastoCategoria>>((ref) {
       .toList()
     ..sort((a, b) => b.valorCents.compareTo(a.valorCents));
   return list;
+});
+
+class MesHistorico {
+  const MesHistorico({
+    required this.mesAno,
+    required this.resumo,
+  });
+
+  final DateTime mesAno;
+  final ResumoMes resumo;
+}
+
+/// Histórico dos últimos 6 meses com totais de fluxo para comparativo.
+final historicoUltimosMesesProvider = Provider<List<MesHistorico>>((ref) {
+  final todos = ref.watch(lancamentosStreamProvider).value ?? [];
+  final agora = DateTime.now();
+
+  final resultado = <MesHistorico>[];
+  for (var i = 0; i < 6; i++) {
+    final mes = DateTime(agora.year, agora.month - i);
+    int entradas = 0;
+    int saidas = 0;
+    int previsto = 0;
+    for (final l in todos) {
+      final dataNoMes = l.data.year == mes.year && l.data.month == mes.month;
+      final receita = l.tipo == TipoLancamento.receita;
+      if (dataNoMes) {
+        if (receita) {
+          entradas += l.valorCents;
+        } else {
+          saidas += l.valorCents;
+        }
+      }
+      if (receita) continue;
+      final venc = l.vencimento;
+      final venceNoMes =
+          venc != null && venc.year == mes.year && venc.month == mes.month;
+      if (venceNoMes && !dataNoMes) previsto += l.valorCents;
+    }
+    resultado.add(
+      MesHistorico(
+        mesAno: mes,
+        resumo: ResumoMes(
+          entradasCents: entradas,
+          saidasCents: saidas,
+          previstoCents: previsto,
+        ),
+      ),
+    );
+  }
+  return resultado;
 });

@@ -66,6 +66,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             icon: const Icon(Icons.track_changes_outlined),
           ),
           IconButton(
+            tooltip: 'Histórico de Meses',
+            onPressed: () => context.push(AppRoutes.historicoMeses),
+            icon: const Icon(Icons.history_outlined),
+          ),
+          IconButton(
             tooltip: 'Investimentos',
             onPressed: () => context.push(AppRoutes.investimentos),
             icon: const Icon(Icons.pie_chart_outline),
@@ -73,7 +78,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           PopupMenuButton<String>(
             tooltip: 'Opções',
             onSelected: (value) {
-              if (value == 'investimentos') {
+              if (value == 'historico') {
+                context.push(AppRoutes.historicoMeses);
+              } else if (value == 'investimentos') {
                 context.push(AppRoutes.investimentos);
               } else if (value == 'metas') {
                 context.push(AppRoutes.metas);
@@ -86,6 +93,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               }
             },
             itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'historico',
+                child: ListTile(
+                  leading: Icon(Icons.history_outlined),
+                  title: Text('Histórico de Meses'),
+                  dense: true,
+                ),
+              ),
               const PopupMenuItem(
                 value: 'investimentos',
                 child: ListTile(

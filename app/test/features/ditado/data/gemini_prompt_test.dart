@@ -70,14 +70,13 @@ void main() {
       expect(instrucao, contains('gás/IPTU = Moradia'));
       expect(instrucao, contains('Não preencha data só porque conhece o dia'));
     });
-  test('instrução inclui tipo e regras de receita/despesa', () {
+  test('instrução reforça lista fixa com fallback e mapeamentos', () {
       final payload = GeminiPrompt.payloadReconhecer(audio);
       final sistema = payload['system_instruction'] as Map<String, dynamic>;
       final instrucao = (sistema['parts'] as List).first['text'].toString();
-      expect(instrucao, contains('"tipo": "despesa"|"receita"|null'));
-      expect(instrucao, contains('recebi'));
-      expect(instrucao, contains('salário'));
-      expect(instrucao, contains('Se não houver sinal claro, use "despesa"'));
+      expect(instrucao, contains('use "Outros" para categoria e "Outro" para forma de pagamento'));
+      expect(instrucao, contains('gás/IPTU = Moradia'));
+      expect(instrucao, contains('Não preencha data só porque conhece o dia'));
     });
   });
 

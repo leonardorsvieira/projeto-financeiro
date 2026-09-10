@@ -18,6 +18,7 @@ node_modules/
 *.sqlite3
 *.zip
 *.rar
+*.apk
 Thumbs.db
 .DS_Store
 !.env.example

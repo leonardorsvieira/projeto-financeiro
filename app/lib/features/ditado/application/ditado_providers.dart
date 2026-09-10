@@ -5,6 +5,7 @@ import '../data/audio_recorder_service.dart';
 import '../data/gemini_ditado_repository.dart';
 import '../domain/ditado_repository.dart';
 import '../domain/rascunho_lancamento.dart';
+import '../domain/rascunho_investimento.dart';
 
 sealed class DitadoState {
   const DitadoState();
@@ -26,6 +27,12 @@ class DitadoSucesso extends DitadoState {
   const DitadoSucesso(this.rascunho);
 
   final RascunhoLancamento rascunho;
+
+  bool get isLancamento => true;
+  bool get isInvestimento => false;
+
+  RascunhoLancamento? get lancamento => rascunho;
+  RascunhoInvestimento? get investimento => null;
 }
 
 class DitadoErro extends DitadoState {

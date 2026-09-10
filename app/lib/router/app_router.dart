@@ -9,7 +9,9 @@ import '../features/auth/presentation/signup_screen.dart';
 import '../features/auth/presentation/splash_screen.dart';
 import '../features/home/domain/app_routes.dart';
 import '../features/ditado/domain/rascunho_lancamento.dart';
+import '../features/ditado/domain/rascunho_investimento.dart';
 import '../features/ditado/presentation/confirmacao_ditado_screen.dart';
+import '../features/ditado/presentation/confirmacao_investimento_screen.dart';
 import '../features/ditado/presentation/lancamento_ditado_screen.dart';
 import '../features/dashboard/presentation/home_screen.dart';
 import '../features/lancamentos/presentation/lancamento_form_screen.dart';
@@ -65,6 +67,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) {
           final rascunho = state.extra as RascunhoLancamento;
           return ConfirmacaoDitadoScreen(rascunho: rascunho);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.confirmacaoInvestimento,
+        builder: (_, state) {
+          final rascunho = state.extra as RascunhoInvestimento;
+          return ConfirmacaoInvestimentoScreen(rascunho: rascunho);
         },
       ),
       GoRoute(

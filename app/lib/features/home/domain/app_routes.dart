@@ -9,6 +9,7 @@ class AppRoutes {
   static const String lancamentoNovo = '/lancamentos/novo';
   static const String lancamentoDitado = '/lancamentos/ditar';
   static const String confirmacaoDitado = '/lancamentos/ditar/confirmacao';
+  static const String confirmacaoInvestimento = '/investimentos/ditar/confirmacao';
   static const String lancamentosDetalhe = '/lancamentos/:id';
   static const String proximosVencimentos = '/vencimentos/proximos';
   static const String metas = '/metas';

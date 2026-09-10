@@ -28,7 +28,7 @@ class FakeDitadoRepository implements DitadoRepository {
     if (atraso != null) await Future<void>.delayed(atraso);
     final erro = erroLancado;
     if (erro != null) throw erro;
-    return rascunho ?? const RascunhoLancamento();
+    return rascunho ?? RascunhoLancamento();
   }
 
   @override

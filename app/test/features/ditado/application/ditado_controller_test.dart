@@ -27,7 +27,7 @@ void main() {
     agora = DateTime(2026, 1, 1);
     gravador = FakeAudioRecorderService();
     repositorio = FakeDitadoRepository(
-      rascunho: const RascunhoLancamento(
+      rascunho: RascunhoLancamento(
         descricao: 'Almoço',
         valorTexto: '42,90',
         categoria: 'Alimentação',
@@ -59,8 +59,10 @@ void main() {
     await controller.parar();
     expect(estado(), isA<DitadoSucesso>());
     final sucesso = estado() as DitadoSucesso;
-    expect(sucesso.rascunho.descricao, 'Almoço');
-    expect(sucesso.rascunho.valorTexto, '42,90');
+    final rascunho = sucesso.lancamento;
+    expect(rascunho, isNotNull);
+    expect(rascunho!.descricao, 'Almoço');
+    expect(rascunho.valorTexto, '42,90');
 
     expect(gravador.iniciarCount, 1);
     expect(gravador.pararCount, 1);

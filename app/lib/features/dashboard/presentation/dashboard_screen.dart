@@ -201,12 +201,11 @@ class _PatrimonioSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    if (patrimonioCents == 0 && rendimentoCents == 0) {
-      return const SizedBox.shrink();
-    }
     final positivo = rendimentoCents >= 0;
     final corRendimento =
         positivo ? Colors.green.shade700 : theme.colorScheme.error;
+
+    final temInvestimentos = patrimonioCents != 0 || rendimentoCents != 0;
 
     return Card(
       child: Padding(
@@ -216,38 +215,51 @@ class _PatrimonioSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Expanded(child: Text('Patrimônio')),
-                TextButton(
-                  onPressed: () => context.push(AppRoutes.investimentos),
-                  child: const Text('Ver'),
-                ),
-              ],
-            ),
-            Text(
-              formatoBRL(patrimonioCents),
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  positivo ? Icons.trending_up : Icons.trending_down,
-                  color: corRendimento,
-                  size: 18,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${positivo ? '+' : '-'}'
-                  '${formatoBRL(rendimentoCents.abs())} rendimento',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: corRendimento,
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    'Patrimônio',
+                    style: theme.textTheme.titleMedium,
                   ),
                 ),
+                TextButton(
+                  onPressed: () => context.push(AppRoutes.investimentos),
+                  child: Text(temInvestimentos ? 'Ver' : 'Gerenciar'),
+                ),
               ],
             ),
+            if (!temInvestimentos) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Nenhum investimento cadastrado.',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ] else ...[
+              Text(
+                formatoBRL(patrimonioCents),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    positivo ? Icons.trending_up : Icons.trending_down,
+                    color: corRendimento,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${positivo ? '+' : '-'}'
+                    '${formatoBRL(rendimentoCents.abs())} rendimento',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: corRendimento,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

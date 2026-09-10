@@ -73,12 +73,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           PopupMenuButton<String>(
             tooltip: 'Opções',
             onSelected: (value) {
-              if (value == 'signout') {
+              if (value == 'investimentos') {
+                context.push(AppRoutes.investimentos);
+              } else if (value == 'metas') {
+                context.push(AppRoutes.metas);
+              } else if (value == 'vencimentos') {
+                context.push(AppRoutes.proximosVencimentos);
+              } else if (value == 'lembretes') {
+                abrirPreferenciasLembretes(context, ref);
+              } else if (value == 'signout') {
                 ref.read(authControllerProvider.notifier).signOut();
               }
             },
-            itemBuilder: (context) => const [
-              PopupMenuItem(
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'investimentos',
+                child: ListTile(
+                  leading: Icon(Icons.pie_chart_outline),
+                  title: Text('Investimentos'),
+                  dense: true,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'metas',
+                child: ListTile(
+                  leading: Icon(Icons.track_changes_outlined),
+                  title: Text('Metas'),
+                  dense: true,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'vencimentos',
+                child: ListTile(
+                  leading: Icon(Icons.event_outlined),
+                  title: Text('Próximos Vencimentos'),
+                  dense: true,
+                ),
+              ),
+              if (!kIsWeb &&
+                  (defaultTargetPlatform == TargetPlatform.android ||
+                      defaultTargetPlatform == TargetPlatform.iOS))
+                const PopupMenuItem(
+                  value: 'lembretes',
+                  child: ListTile(
+                    leading: Icon(Icons.notifications_outlined),
+                    title: Text('Lembretes'),
+                    dense: true,
+                  ),
+                ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
                 value: 'signout',
                 child: ListTile(
                   leading: Icon(Icons.logout),

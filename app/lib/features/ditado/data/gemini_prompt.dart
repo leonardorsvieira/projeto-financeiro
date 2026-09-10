@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../domain/ditado_repository.dart';
 import '../domain/rascunho_lancamento.dart';
+import '../domain/rascunho_investimento.dart';
 
 class GeminiPrompt {
   GeminiPrompt._();
@@ -11,15 +12,21 @@ class GeminiPrompt {
 
   static final String _instrucaoReconhecer =
       'Você é o assistente financeiro do aplicativo "Meu Bolso". '
-      'O usuário dita um lançamento em português do Brasil — um gasto ou um '
-      'recebimento.\n\n'
+      'O usuário dita um lançamento em português do Brasil — um gasto, um '
+      'recebimento OU um investimento.\n\n'
       'Transcreva o áudio e devolva APENAS um JSON válido — sem texto fora '
       'do JSON — no formato exato:\n'
       '{"descricao": string|null, "valor_reais": string|null, '
       '"categoria": string|null, "forma_pagamento": string|null, '
       '"data": "AAAA-MM-DD"|null, "vencimento": "AAAA-MM-DD"|null, '
-      '"tipo": "despesa"|"receita"|null, '
-      '"itens": [{"descricao": string, "valor_reais": string|null}]|null}\n\n'
+      '"tipo": "despesa"|"receita"|"investimento"|null, '
+      '"itens": [{"descricao": string, "valor_reais": string|null}]|null, '
+      '"investimento_classe": "acao"|"fii"|"cripto"|"renda_fixa"|"banco_digital"|null, '
+      '"investimento_nome": string|null, '
+      '"operacao": "compra"|"venda"|"aporte"|"resgate"|"dividendo"|"juros"|"rendimento"|null, '
+      '"quantidade": string|null, '
+      '"preco_unitario": string|null, '
+      '"valor": string|null}\n\n'
       'Regras:\n'
       '- valor_reais deve ser uma string numérica com vírgula como separador '
       'decimal e sem cifrão (ex.: "42,90"). Resolva números falados por '
@@ -28,7 +35,23 @@ class GeminiPrompt {
       '"ganhei", "solicitei", "salário", "depósito recebido", "transferência '
       'recebida", "devolução", "pagamento recebido"). "despesa" quando pagar '
       'ou gastar (ex.: "gastei", "paguei", "comprei", "fatura", "conta de", '
-      '"transferi"). Se não houver sinal claro, use "despesa".\n'
+      '"transferi"). "investimento" quando houver sinais de compra/venda/aporte/'
+      'resgate/dividendos de ativos (ex.: "comprei 10 PETR4 a 38,50", "aportei '
+      '500 no CDB", "vendi 5 BBSE3", "resgatei 1000 do Nubank", "recebi '
+      'dividendos da TAEE11", "rendimento de 50 do Tesouro"). Se não houver '
+      'sinal claro de investimento, use "despesa".\n'
+      '- Se tipo="investimento", os campos a seguir SÃO OBRIGATÓRIOS:\n'
+      '  * investimento_classe: escolha APENAS entre acao, fii, cripto, '
+      'renda_fixa, banco_digital.\n'
+      '  * investimento_nome: nome do ativo (ex.: PETR4, CDB, Nubank, Bitcoin).\n'
+      '  * operacao: compra|venda (para acao/fii/cripto) OU aporte|resgate '
+      '(para renda_fixa/banco_digital) OU dividendo|juros|rendimento '
+      '(para proventos).\n'
+      '  * Para compra/venda: quantidade (ex.: "10") + preco_unitario '
+      '(ex.: "38,50").\n'
+      '  * Para aporte/resgate: valor (ex.: "500,00").\n'
+      '  * Para dividendo/juros/rendimento: valor (ex.: "120,00").\n'
+      '  * data: apenas se citada; senão null.\n'
       '- categoria deve ser escolhida APENAS entre: ${categorias.join(', ')}.\n'
       '- forma_pagamento deve ser escolhida APENAS entre: '
       '${formasPagamento.join(', ')}.\n'
@@ -194,6 +217,10 @@ class GeminiPrompt {
 
   static RascunhoLancamento parseRascunho(String texto) {
     return RascunhoLancamento.fromJson(extraiJson(texto));
+  }
+
+  static RascunhoInvestimento parseRascunhoInvestimento(String texto) {
+    return RascunhoInvestimento.fromJson(extraiJson(texto));
   }
 
   static String? parseCorrecao(String texto, CampoDitado campo) {

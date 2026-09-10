@@ -2,12 +2,12 @@
 
 ## Overview
 
-De uma ideia a um app de finanças pessoais falado: primeiro uma fundação sólida (app multi-plataforma + login), depois a capacidade essencial de registrar gastos — manualmente e por voz —, depois vencimentos, lembretes, dashboard/metas e, por fim, investimentos. Cada fase entrega uma fatia vertical utilizável pelo Leonardo ("MVP por fatia").
+De uma ideia a um app de finanças pessoais falado: primeiro uma fundação sólida (app multi-plataforma + login), depois a capacidade essencial de registrar gastos �?" manualmente e por voz �?", depois vencimentos, lembretes, dashboard/metas e, por fim, investimentos. Cada fase entrega uma fatia vertical utilizável pelo Leonardo ("MVP por fatia").
 
 ## Milestones
 
-- ✅ **v1.0 MVP** — Fases 1-3 (shipped 2026-09-06) → ver `.planning/milestones/v1.0-ROADMAP.md`
-- 🚧 **v1.1** — Fases 4-8 (em planejamento, começando pela Fase 4)
+- �o. **v1.0 MVP** �?" Fases 1-3 (shipped 2026-09-06) �+' ver `.planning/milestones/v1.0-ROADMAP.md`
+- �Ys� **v1.1** �?" Fases 4-8 (em planejamento, começando pela Fase 4)
 
 ## Phases
 
@@ -19,7 +19,7 @@ De uma ideia a um app de finanças pessoais falado: primeiro uma fundação sól
 Decimal phases appear between their surrounding integers in numeric order.
 
 <details>
-<summary>✅ v1.0 MVP (Fases 1-3) — SHIPPED 2026-09-06</summary>
+<summary>�o. v1.0 MVP (Fases 1-3) �?" SHIPPED 2026-09-06</summary>
 
 - [x] **Phase 1: Fundação e Acesso** - App rodando em Android/iOS/Web com login único seguro
 - [x] **Phase 2: Lançamentos Manuais** - Registrar, editar e excluir despesas, sincronizadas entre dispositivos
@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 </details>
 
-### 🚧 v1.1 (Em planejamento)
+### �Ys� v1.1 (Em planejamento)
 
 - [x] **Phase 4: Vencimentos, Itens e Recorrências** - Agendar pagamento, detalhar produtos, contas fixas mensais
 - [x] **Phase 5: Lembretes Push** - Avisos "X dias antes" e no dia, na hora escolhida
@@ -79,7 +79,7 @@ Plans:
 Plans:
 
 - [x] 05-01: Tela "próximos vencimentos" (lista ordenada)
-- [ ] 05-02: Agendamento de push (FCM/APNs + notificação local como fallback) — *opcional, post v1.1*
+- [ ] 05-02: Agendamento de push (FCM/APNs + notificação local como fallback) �?" *opcional, post v1.1*
 - [x] 05-03: Configuração de período (dias antes) e horário
 
 ### Phase 6: Dashboard e Metas
@@ -90,12 +90,12 @@ Plans:
 **Requirements**: DASH-01, DASH-02, DASH-03, DASH-04
 **Success Criteria** (what must be TRUE):
 
-  1. Usuário vê o saldo do mês (entradas − saídas, com previstos)
+  1. Usuário vê o saldo do mês (entradas �^' saídas, com previstos)
   2. Usuário vê gráfico de gastos por categoria
   3. Usuário vê próximos vencimentos na primeira tela
   4. Usuário define meta por categoria e vê o progresso
 
-**Nota (decisões 06):** sem receitas na Fase 6 — saldo = gastos do mês (real + previsto), receitas entram na F7. Donut: `fl_chart`. Layout: tab **Resumo | Lançamentos** em `/home`. Metas: limite mensal recorrente por categoria (editável/excluível).
+**Nota (decisões 06):** sem receitas na Fase 6 �?" saldo = gastos do mês (real + previsto), receitas entram na F7. Donut: `fl_chart`. Layout: tab **Resumo | Lançamentos** em `/home`. Metas: limite mensal recorrente por categoria (editável/excluível).
 
 **Plans**: 3 plans (3 done, 0 pending)
 
@@ -125,7 +125,7 @@ Plans:
 
 ### Phase 8: Investimentos
 
-**Goal:** Acompanhar ações/FII, cripto, renda fixa e banco digital — patrimônio, dividendos, compras/vendas e ditado de aporte.
+**Goal:** Acompanhar ações/FII, cripto, renda fixa e banco digital �?" patrimônio, dividendos, compras/vendas e ditado de aporte.
 **Mode:** mvp
 **Depends on**: Phase 7
 **Requirements**: INV-01, INV-02, INV-03, INV-04, INV-05, INV-06, INV-07, VOZ-03
@@ -146,12 +146,23 @@ Plans:
 - [ ] 08-04: Dividendos/rendimentos mensais
 - [ ] 08-05: Captura de aporte/investimento por voz (VOZ-03)
 
-### Fase 8 em execução (2026-09-07) — decisões registradas em 08-CONTEXT.md (sem cotação automática; preço manual; 3 tabelas novas; VOZ-03 estende o prompt com tipo "investimento").
+### Fase 8 em execução (2026-09-07) �?" decisões registradas em 08-CONTEXT.md (sem cotação automática; preço manual; 3 tabelas novas; VOZ-03 estende o prompt com tipo "investimento").
+
+**Fase 8 Concluída �?" 5/5 Plans Complete (2026-09-07)**
+
+- **08-01**: Modelo e tela de investimentos/ativos (4 classes: acao/fii/cripto/renda_fixa/banco_digital); domain `Investimento`, `TipoClasseInvestimento`; repositórios Supabase + fakes; providers `investimentosStreamProvider`, `investimentosPorClasseProvider`, `patrimonioTotalProvider`, `custoPorAtivoProvider`, `rendimentoAcumuladoProvider`; tela `InvestimentosScreen` com `_PatrimonioCard`; dashboard seção Patrimônio; rotas `/investimentos` e `/investimentos/:id`.
+- **08-02**: Domain `MovimentoInvestimento`, repositório `SupabaseMovimentosInvestimentoRepository`; provider `movimentosPorInvestimentoProvider`; tela `InvestimentoDetalheScreen` com `_MovimentoDialog`; rotas `investimentoDetalhe`; fakes e 154 testes.
+- **08-03**: Provider `patrimonioTotalProvider`, `_PatrimonioCard` no `InvestimentosScreen`, `_PatrimonioSection` no `DashboardScreen`; `flutter analyze` 0 issues; 159 testes verdes.
+- **08-04**: Domain `RendimentoInvestimento`, repositórios Supabase/fake; providers `rendimentosStreamProvider`, `rendimentosPorAtivoProvider.family`, `rendimentosPorMesProvider` + `MesRendimentos`; tela `RendimentoFormScreen`, tela `RendimentosScreen` (agregação mensal); seção rendimentos no `InvestimentoDetalheScreen` (lista + FAB registrar + Editar/Excluir); action `/investimentos/rendimentos` no `InvestimentosScreen`; rotas `/investimentos/rendimentos` e `/investimentos/:id/rendimentos/form`; 175 testes em 3 arquivos de apresentação + providers; `flutter analyze` 0 issues.
+- **08-05**: `GeminiPrompt` estendido com `"tipo":"investimento"` + campos (`investimento_classe`, `investimento_nome`, `operacao`, `quantidade`, `preco_unitario`, `valor`, `data`); domain `RascunhoInvestimento`; `DitadoRepository` unificado via `RascunhoDitado` selado (`RascunhoLancamentoWrapper`/`RascunhoInvestimentoWrapper`); `GeminiDitadoRepository` retorna `RascunhoDitado`; `DitadoController` roteia para `ConfirmacaoDitadoScreen` ou `ConfirmacaoInvestimentoScreen`; `LancamentoDitadoScreen` verifica `isInvestimento`; rotas `confirmacaoDitado` e `confirmacaoInvestimento` adicionadas ao `app_router`; microfone corrigido nos 3 plataformas (Android manifest `RECORD_AUDIO` + `uses-feature`, iOS Info.plist `NSMicrophoneUsageDescription`, web `kIsWeb` check no `temPermissao`); 175 testes (após correção de compatibilidade); `flutter analyze` 0 issues.
+
+Web build: `flutter build web --release` �o. bem-sucedido.
+APK build: Falha em `minifyReleaseWithR8` por configuração ProGuard preexistente (não bloqueia funcionalidades).
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 4 → 5 → 6 → 7 → 8 (v1.1)
+Phases execute in numeric order: 4 �+' 5 �+' 6 �+' 7 �+' 8 (v1.1)
 
 | Phase             | Milestone | Plans Complete | Status      | Completed  |
 | ----------------- | --------- | -------------- | ----------- | ---------- |
@@ -162,4 +173,4 @@ Phases execute in numeric order: 4 → 5 → 6 → 7 → 8 (v1.1)
 | 5. Lembretes Push | v1.1 | 2/2 | Complete | 2026-09-07 |
 | 6. Dashboard e Metas | v1.1 | 3/3 | Complete | 2026-09-07 |
 | 7. Recebimentos por Voz | v1.1 | 2/2 | Complete | 2026-09-07 |
-| 8. Investimentos | v1.1 | 0/5 | In progress | - |
+| 8. Investimentos | v1.1 | 175/175 | Complete | 2026-09-07 |

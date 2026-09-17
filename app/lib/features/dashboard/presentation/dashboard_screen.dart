@@ -13,6 +13,7 @@ import '../../lancamentos/domain/lancamento_converter.dart';
 import '../../metas/application/metas_providers.dart';
 import '../application/dashboard_providers.dart';
 import '../application/home_widget_service.dart';
+import 'relatorio_cartoes_widget.dart';
 
 /// Cores do donut por categoria (fallback para categorias novas).
 const _coresCategorias = <String, Color>{
@@ -59,6 +60,8 @@ class DashboardScreen extends ConsumerWidget {
           const _SeletorMesHeader(),
           const SizedBox(height: 12),
           _CardGastosMes(resumo: resumo),
+          const SizedBox(height: 16),
+          const RelatorioCartoesWidget(),
           const SizedBox(height: 16),
           const _CardAnaliseIA(),
           const SizedBox(height: 16),

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../application/lancamentos_providers.dart';
+import '../../cartoes/application/cartoes_providers.dart';
+import '../../cartoes/data/cartoes_repository.dart';
 import '../domain/lancamento.dart';
 import '../domain/lancamento_converter.dart';
 import 'lancamento_form_validators.dart';
@@ -406,20 +408,36 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                               setState(() => _categoria = value ?? 'Outros'),
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      initialValue: _formaPagamento,
-                      decoration: const InputDecoration(
-                        labelText: 'Forma de pagamento',
-                        prefixIcon: Icon(Icons.payments_outlined),
-                      ),
-                      items: [
-                        for (final f in formasPagamento)
-                          DropdownMenuItem(value: f, child: Text(f)),
-                      ],
-                      onChanged: _isSaving
-                          ? null
-                          : (value) => setState(
-                              () => _formaPagamento = value ?? 'Pix'),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final cartoesState = ref.watch(cartoesControllerProvider);
+                        final cartoes = cartoesState.value ?? CartoesRepository.cartoesPadrao;
+                        final opcoesForma = <String>[
+                          'Pix',
+                          for (final c in cartoes) 'Cartão: ${c.nome}',
+                          'Cartão de Crédito',
+                        ];
+
+                        final formaValida = opcoesForma.contains(_formaPagamento)
+                            ? _formaPagamento
+                            : opcoesForma.first;
+
+                        return DropdownButtonFormField<String>(
+                          initialValue: formaValida,
+                          decoration: const InputDecoration(
+                            labelText: 'Forma de pagamento',
+                            prefixIcon: Icon(Icons.payments_outlined),
+                          ),
+                          items: [
+                            for (final f in opcoesForma)
+                              DropdownMenuItem(value: f, child: Text(f)),
+                          ],
+                          onChanged: _isSaving
+                              ? null
+                              : (value) => setState(
+                                  () => _formaPagamento = value ?? 'Pix'),
+                        );
+                      },
                     ),
                     const SizedBox(height: 16),
                     if (_tipo == TipoLancamento.despesa) ...[

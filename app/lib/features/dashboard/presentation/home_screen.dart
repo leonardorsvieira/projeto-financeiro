@@ -9,6 +9,9 @@ import '../../lancamentos/presentation/lancamentos_list_screen.dart';
 import '../../lancamentos/presentation/lembretes_preferencias_dialog.dart';
 import '../../seguranca/presentation/bloqueio_biometrico_dialog.dart';
 import '../../../theme/theme_selector_dialog.dart';
+import '../../cartoes/presentation/cartoes_screen.dart';
+import '../../cartoes/application/cartoes_providers.dart';
+import '../../cartoes/application/cartoes_notificacoes_service.dart';
 import 'dashboard_screen.dart';
 
 /// Primeira tela autenticada (`/home`): tab **Resumo** (dashboard) e tab
@@ -28,6 +31,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final cartoes = await ref.read(cartoesRepositoryProvider).getCartoes();
+      await CartoesNotificacoesService.agendarNotificacoesCartoes(cartoes);
+    });
   }
 
   @override
@@ -74,6 +81,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 context.push(AppRoutes.proximosVencimentos);
               } else if (value == 'lembretes') {
                 abrirPreferenciasLembretes(context, ref);
+              } else if (value == 'cartoes') {
+                abrirGerenciadorCartoes(context);
               } else if (value == 'biometria') {
                 mostrarDialogoBloqueioBiometrico(context);
               } else if (value == 'tema') {
@@ -112,6 +121,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 child: ListTile(
                   leading: Icon(Icons.event_outlined),
                   title: Text('Próximos Vencimentos'),
+                  dense: true,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'cartoes',
+                child: ListTile(
+                  leading: Icon(Icons.credit_card_outlined),
+                  title: Text('Meus Cartões de Crédito'),
                   dense: true,
                 ),
               ),

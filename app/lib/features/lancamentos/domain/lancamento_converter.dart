@@ -57,10 +57,7 @@ const categorias = [
 
 const formasPagamento = [
   'Pix',
+  'Cartão: Nubank',
+  'Cartão: Inter',
   'Cartão de Crédito',
-  'Cartão de Débito',
-  'Dinheiro',
-  'Boleto',
-  'Transferência',
-  'Outro',
 ];

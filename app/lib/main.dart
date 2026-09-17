@@ -9,6 +9,7 @@ import 'features/lancamentos/application/lembretes_controller.dart';
 import 'features/seguranca/presentation/biometric_lock_wrapper.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
+import 'theme/theme_controller.dart';
 
 final _appContainer = ProviderContainer();
 
@@ -48,12 +49,13 @@ class MeuBolsoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final themeMode = ref.watch(themeControllerProvider);
     return MaterialApp.router(
       title: 'Meu Bolso',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       locale: const Locale('pt', 'BR'),
       supportedLocales: const [Locale('pt', 'BR')],
       localizationsDelegates: const [

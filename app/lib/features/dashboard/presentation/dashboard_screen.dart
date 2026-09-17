@@ -12,6 +12,7 @@ import '../../lancamentos/application/lancamentos_providers.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../../metas/application/metas_providers.dart';
 import '../application/dashboard_providers.dart';
+import '../application/home_widget_service.dart';
 
 /// Cores do donut por categoria (fallback para categorias novas).
 const _coresCategorias = <String, Color>{
@@ -41,6 +42,13 @@ class DashboardScreen extends ConsumerWidget {
     final resumo = ref.watch(resumoMesProvider);
     final porCategoria = ref.watch(gastosPorCategoriaMesProvider);
     final proximos = ref.watch(proximosVencimentosProvider);
+
+    HomeWidgetService.atualizarWidget(
+      saldoFormatado: formatoBRL(resumo.saldoCents),
+      vencimentosTexto: proximos.isEmpty
+          ? 'Sem vencimentos hoje'
+          : '${proximos.length} vencimento(s) próximo(s)',
+    );
 
     return RefreshIndicator(
       onRefresh: () => _atualizar(ref),

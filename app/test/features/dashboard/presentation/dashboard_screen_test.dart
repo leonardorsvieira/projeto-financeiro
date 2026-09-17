@@ -115,7 +115,7 @@ void main() {
         id: 'Conta luz',
         valorCents: 5000,
         data: outroMes,
-        vencimento: mes.add(const Duration(days: 10)),
+        vencimento: agora.add(const Duration(days: 10)),
       ),
     ]);
 

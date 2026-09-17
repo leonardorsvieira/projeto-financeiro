@@ -15,6 +15,32 @@ class InvestimentosScreen extends ConsumerStatefulWidget {
 }
 
 class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
+  bool _isRefreshing = false;
+
+  Future<void> _atualizarCotacoes() async {
+    setState(() => _isRefreshing = true);
+    try {
+      final atualizados = await ref.read(atualizarCotacoesProvider.future);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            atualizados > 0
+                ? '$atualizados cotação(ões) atualizada(s) da internet.'
+                : 'Todas as cotações já estão atualizadas.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao buscar cotações da internet.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isRefreshing = false);
+    }
+  }
+
   Future<void> _salvar({
     Investimento? investimento,
     required TipoClasseInvestimento classe,
@@ -114,6 +140,17 @@ class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
       appBar: AppBar(
         title: const Text('Investimentos'),
         actions: [
+          IconButton(
+            tooltip: 'Atualizar cotações (B3/Internet)',
+            icon: _isRefreshing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync),
+            onPressed: _isRefreshing ? null : _atualizarCotacoes,
+          ),
           IconButton(
             tooltip: 'Rendimentos por mês',
             icon: const Icon(Icons.card_giftcard),
@@ -348,22 +385,23 @@ class _InvestimentoTile extends StatelessWidget {
   }
 }
 
-class _InvestimentoFormDialog extends StatefulWidget {
+class _InvestimentoFormDialog extends ConsumerStatefulWidget {
   const _InvestimentoFormDialog({this.investimento});
 
   final Investimento? investimento;
 
   @override
-  State<_InvestimentoFormDialog> createState() => _InvestimentoFormDialogState();
+  ConsumerState<_InvestimentoFormDialog> createState() => _InvestimentoFormDialogState();
 }
 
-class _InvestimentoFormDialogState extends State<_InvestimentoFormDialog> {
+class _InvestimentoFormDialogState extends ConsumerState<_InvestimentoFormDialog> {
   late final TextEditingController _nomeController;
   late final TextEditingController _quantidadeController;
   late final TextEditingController _precoController;
   late final TextEditingController _saldoController;
   late TipoClasseInvestimento _classe;
   bool _isSaving = false;
+  bool _isFetchingCotacao = false;
 
   bool get _editando => widget.investimento != null;
 
@@ -400,6 +438,48 @@ class _InvestimentoFormDialogState extends State<_InvestimentoFormDialog> {
     _precoController.dispose();
     _saldoController.dispose();
     super.dispose();
+  }
+
+  Future<void> _buscarCotacaoNaInternet() async {
+    final nome = _nomeController.text.trim();
+    if (nome.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Digite o ticker do ativo (ex: PETR4, MXRF11, BTC).'),
+        ),
+      );
+      return;
+    }
+    setState(() => _isFetchingCotacao = true);
+    try {
+      final service = ref.read(cotacoesServiceProvider);
+      final precoCents = await service.buscarPrecoCents(nome, _classe);
+      if (!mounted) return;
+      if (precoCents != null && precoCents > 0) {
+        _precoController.text = _semPrefixo(formatoBRL(precoCents));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Cotação encontrada: ${formatoBRL(precoCents)}'),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cotação não encontrada para este ativo.'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erro ao buscar cotação na internet.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isFetchingCotacao = false);
+    }
   }
 
   Future<void> _salvar() async {
@@ -476,7 +556,7 @@ class _InvestimentoFormDialogState extends State<_InvestimentoFormDialog> {
             TextField(
               controller: _nomeController,
               textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(labelText: 'Nome'),
+              decoration: const InputDecoration(labelText: 'Nome/Ticker'),
             ),
             if (porQuantidade) ...[
               const SizedBox(height: 16),
@@ -491,9 +571,21 @@ class _InvestimentoFormDialogState extends State<_InvestimentoFormDialog> {
                 controller: _precoController,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Preço atual',
                   prefixText: 'R\$ ',
+                  suffixIcon: IconButton(
+                    tooltip: 'Buscar cotação na internet',
+                    icon: _isFetchingCotacao
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.cloud_download_outlined),
+                    onPressed:
+                        _isFetchingCotacao ? null : _buscarCotacaoNaInternet,
+                  ),
                 ),
               ),
             ] else ...[

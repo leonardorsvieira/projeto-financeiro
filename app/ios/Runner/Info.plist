@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>O Meu Bolso usa o microfone para registrar gastos, recebimentos e investimentos por voz.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>O Meu Bolso usa o Face ID / Touch ID para proteger o acesso ao aplicativo.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

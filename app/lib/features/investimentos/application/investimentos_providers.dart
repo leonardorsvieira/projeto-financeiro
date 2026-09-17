@@ -10,9 +10,47 @@ import '../domain/movimentos_investimento_repository.dart';
 import '../domain/rendimento_investimento.dart';
 import '../domain/rendimentos_investimento_repository.dart';
 
+import '../data/cotacoes_service.dart';
+import '../data/supabase_investimentos_repository.dart';
+
+final cotacoesServiceProvider = Provider<CotacoesService>(
+  (ref) => CotacoesService(),
+);
+
 final investimentosRepositoryProvider = Provider<InvestimentosRepository>(
   (ref) => SupabaseInvestimentosRepository(),
 );
+
+/// Provider para atualizar todas as cotações dos ativos por quantidade.
+final atualizarCotacoesProvider = FutureProvider.autoDispose<int>((ref) async {
+  final service = ref.read(cotacoesServiceProvider);
+  final repo = ref.read(investimentosRepositoryProvider);
+  final investimentos = ref.read(investimentosStreamProvider).value ?? [];
+
+  final ativosPorQtd = investimentos.where((i) => i.ePorQuantidade).toList();
+  if (ativosPorQtd.isEmpty) return 0;
+
+  var atualizados = 0;
+  for (final inv in ativosPorQtd) {
+    final novoPreco = await service.buscarPrecoCents(inv.nome, inv.classe);
+    if (novoPreco != null && novoPreco > 0) {
+      if (novoPreco != inv.precoAtualCents) {
+        await repo.update(
+          Investimento(
+            id: inv.id,
+            classe: inv.classe,
+            nome: inv.nome,
+            quantidade: inv.quantidade,
+            precoAtualCents: novoPreco,
+            saldoCents: inv.saldoCents,
+          ),
+        );
+        atualizados++;
+      }
+    }
+  }
+  return atualizados;
+});
 
 final investimentosStreamProvider = StreamProvider<List<Investimento>>((ref) {
   return ref.watch(investimentosRepositoryProvider).watch();

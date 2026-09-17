@@ -8,6 +8,7 @@ import '../../home/domain/app_routes.dart';
 import '../../lancamentos/presentation/lancamentos_list_screen.dart';
 import '../../lancamentos/presentation/lembretes_preferencias_dialog.dart';
 import '../../seguranca/presentation/bloqueio_biometrico_dialog.dart';
+import '../../../theme/theme_selector_dialog.dart';
 import 'dashboard_screen.dart';
 
 /// Primeira tela autenticada (`/home`): tab **Resumo** (dashboard) e tab
@@ -75,6 +76,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 abrirPreferenciasLembretes(context, ref);
               } else if (value == 'biometria') {
                 mostrarDialogoBloqueioBiometrico(context);
+              } else if (value == 'tema') {
+                mostrarDialogoSelecaoTema(context);
               } else if (value == 'signout') {
                 ref.read(authControllerProvider.notifier).signOut();
               }
@@ -109,6 +112,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 child: ListTile(
                   leading: Icon(Icons.event_outlined),
                   title: Text('Próximos Vencimentos'),
+                  dense: true,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'tema',
+                child: ListTile(
+                  leading: Icon(Icons.palette_outlined),
+                  title: Text('Aparência & Tema'),
                   dense: true,
                 ),
               ),

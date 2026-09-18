@@ -23,6 +23,7 @@ import '../features/investimentos/presentation/investimentos_screen.dart';
 import '../features/investimentos/presentation/investimento_detalhe_screen.dart';
 import '../features/investimentos/presentation/rendimento_form_screen.dart';
 import '../features/investimentos/presentation/rendimentos_screen.dart';
+import '../features/investimentos/presentation/calendario_proventos_screen.dart';
 import '../features/investimentos/domain/rendimento_investimento.dart';
 
 class _AuthListenable extends ChangeNotifier {
@@ -115,6 +116,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.rendimentos,
         builder: (_, _) => const RendimentosScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.calendarioProventos,
+        builder: (_, _) => const CalendarioProventosScreen(),
       ),
       GoRoute(
         path: AppRoutes.rendimentoForm,

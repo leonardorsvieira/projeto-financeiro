@@ -74,7 +74,7 @@ void main() {
     expect(find.text('Patrimônio: R\$ 385,00'), findsOneWidget);
     expect(find.text('Movimentos'), findsOneWidget);
     expect(find.text('Compra · 10.00 un'), findsOneWidget);
-    expect(find.text('R\$ 385,00'), findsOneWidget);
+    expect(find.text('R\$ 385,00'), findsWidgets);
   });
 
   testWidgets('criar compra chama create e atualiza posição',

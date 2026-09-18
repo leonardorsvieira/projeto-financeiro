@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/cotacoes_service.dart';
 import '../data/supabase_investimentos_repository.dart';
 import '../data/supabase_movimentos_investimento_repository.dart';
 import '../data/supabase_rendimentos_investimento_repository.dart';
@@ -9,9 +11,7 @@ import '../domain/movimento_investimento.dart';
 import '../domain/movimentos_investimento_repository.dart';
 import '../domain/rendimento_investimento.dart';
 import '../domain/rendimentos_investimento_repository.dart';
-
-import '../data/cotacoes_service.dart';
-import '../data/supabase_investimentos_repository.dart';
+import 'investimentos_calculos_service.dart';
 
 final cotacoesServiceProvider = Provider<CotacoesService>(
   (ref) => CotacoesService(),
@@ -201,4 +201,75 @@ final rendimentosPorMesProvider = Provider<List<MesRendimentos>>((ref) {
       return porAno != 0 ? porAno : a.mes.compareTo(b.mes);
     });
   return meses.reversed.toList();
+});
+
+/// Preço Médio (PM) e Rentabilidade apurada por ativo.
+final precoMedioPorAtivoProvider =
+    Provider.family<PrecoMedioResultado?, String>((ref, id) {
+  final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
+  final investimento =
+      investimentos.where((i) => i.id == id).firstOrNull;
+  if (investimento == null) return null;
+
+  final movs = ref.watch(movimentosPorInvestimentoProvider(id)).value ?? [];
+  return InvestimentosCalculosService.calcularPrecoMedio(
+    investimento: investimento,
+    movimentos: movs,
+  );
+});
+
+/// Metas percentuais de alocação por classe de investimento.
+final metasAlocacaoProvider = NotifierProvider<MetasAlocacaoNotifier,
+    Map<TipoClasseInvestimento, double>>(
+  MetasAlocacaoNotifier.new,
+);
+
+class MetasAlocacaoNotifier
+    extends Notifier<Map<TipoClasseInvestimento, double>> {
+  @override
+  Map<TipoClasseInvestimento, double> build() {
+    _carregarPrefs();
+    return const {
+      TipoClasseInvestimento.rendaFixa: 40.0,
+      TipoClasseInvestimento.bancoDigital: 10.0,
+      TipoClasseInvestimento.acao: 30.0,
+      TipoClasseInvestimento.fii: 15.0,
+      TipoClasseInvestimento.cripto: 5.0,
+    };
+  }
+
+  Future<void> _carregarPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final metas = <TipoClasseInvestimento, double>{};
+    for (final classe in TipoClasseInvestimento.values) {
+      final key = 'meta_alocacao_${classe.dbValue}';
+      if (prefs.containsKey(key)) {
+        metas[classe] = prefs.getDouble(key) ?? 0.0;
+      } else {
+        metas[classe] = state[classe] ?? 0.0;
+      }
+    }
+    state = metas;
+  }
+
+  Future<void> salvarMetas(
+      Map<TipoClasseInvestimento, double> novasMetas) async {
+    state = novasMetas;
+    final prefs = await SharedPreferences.getInstance();
+    for (final entry in novasMetas.entries) {
+      await prefs.setDouble('meta_alocacao_${entry.key.dbValue}', entry.value);
+    }
+  }
+}
+
+/// Sugestões de rebalanceamento da carteira para um determinado valor de aporte em cents.
+final rebalanceamentoSugestoesProvider = Provider.family<
+    List<SugestaoAporteClasse>, int>((ref, aporteCents) {
+  final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
+  final metas = ref.watch(metasAlocacaoProvider);
+  return InvestimentosCalculosService.calcularRebalanceamento(
+    investimentos: investimentos,
+    metasPercentuais: metas,
+    aporteCents: aporteCents,
+  );
 });

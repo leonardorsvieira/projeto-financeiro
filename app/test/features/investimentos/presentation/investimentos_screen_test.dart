@@ -66,8 +66,8 @@ void main() {
     expect(find.text('R\$ 385,00'), findsOneWidget);
     expect(find.text('R\$ 500,00'), findsOneWidget);
     expect(find.text('R\$ 25,00'), findsOneWidget);
-    // Subtitle: 10 Ações · R$ 38,50
-    expect(find.text('10 Ações · R\$ 38,50'), findsOneWidget);
+    // Subtitle: 10 un · R$ 38,50
+    expect(find.textContaining('10 un · R\$ 38,50'), findsOneWidget);
     // Card patrimônio total
     expect(find.text('Patrimônio total'), findsOneWidget);
     expect(find.text('R\$ 910,00'), findsWidgets);

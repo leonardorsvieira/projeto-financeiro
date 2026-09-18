@@ -18,6 +18,7 @@ class AppRoutes {
   static const String investimentos = '/investimentos';
   static const String investimentoDetalhe = '/investimentos/:id';
   static const String rendimentos = '/investimentos/rendimentos';
+  static const String calendarioProventos = '/investimentos/proventos';
   static const String rendimentoForm = '/investimentos/:id/rendimentos/form';
 
   static String lancamentoEditar(String id) => '/lancamentos/$id';

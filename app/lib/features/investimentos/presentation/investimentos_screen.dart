@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
+import '../application/investimentos_calculos_service.dart';
 import '../application/investimentos_providers.dart';
 import '../domain/investimento.dart';
+
+import 'rebalanceamento_dialog.dart';
 
 class InvestimentosScreen extends ConsumerStatefulWidget {
   const InvestimentosScreen({super.key});
@@ -141,6 +144,16 @@ class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
         title: const Text('Investimentos'),
         actions: [
           IconButton(
+            tooltip: 'Calculadora de Rebalanceamento',
+            icon: const Icon(Icons.balance),
+            onPressed: () => mostrarDialogoRebalanceamento(context),
+          ),
+          IconButton(
+            tooltip: 'Calendário de Proventos',
+            icon: const Icon(Icons.calendar_month),
+            onPressed: () => context.push(AppRoutes.calendarioProventos),
+          ),
+          IconButton(
             tooltip: 'Atualizar cotações (B3/Internet)',
             icon: _isRefreshing
                 ? const SizedBox(
@@ -150,11 +163,6 @@ class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
                   )
                 : const Icon(Icons.sync),
             onPressed: _isRefreshing ? null : _atualizarCotacoes,
-          ),
-          IconButton(
-            tooltip: 'Rendimentos por mês',
-            icon: const Icon(Icons.card_giftcard),
-            onPressed: () => context.push(AppRoutes.rendimentos),
           ),
         ],
       ),
@@ -316,7 +324,7 @@ class _PatrimonioCard extends StatelessWidget {
   }
 }
 
-class _InvestimentoTile extends StatelessWidget {
+class _InvestimentoTile extends ConsumerWidget {
   const _InvestimentoTile({
     required this.investimento,
     required this.onTap,
@@ -329,22 +337,30 @@ class _InvestimentoTile extends StatelessWidget {
   final VoidCallback onEditar;
   final VoidCallback onExcluir;
 
-  String _subtitle() {
+  String _subtitle(PrecoMedioResultado? pm) {
+    final sb = StringBuffer();
     if (investimento.ePorQuantidade) {
       final qtd = investimento.quantidade.toStringAsFixed(
         investimento.quantidade == investimento.quantidade.roundToDouble()
             ? 0
             : 2,
       );
-      return '$qtd ${investimento.classe.rotulo}'
-          ' · ${formatoBRL(investimento.precoAtualCents)}';
+      sb.write('$qtd un · ${formatoBRL(investimento.precoAtualCents)}');
+      if (pm != null && pm.precoMedioCents > 0) {
+        sb.write(' · PM: ${formatoBRL(pm.precoMedioCents)}');
+      }
+    } else {
+      sb.write(investimento.classe.rotulo);
     }
-    return investimento.classe.rotulo;
+    return sb.toString();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final pm = ref.watch(precoMedioPorAtivoProvider(investimento.id));
+    final isLucro = (pm?.lucroPrejuizoCents ?? 0) >= 0;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -357,15 +373,32 @@ class _InvestimentoTile extends StatelessWidget {
           ),
         ),
         title: Text(investimento.nome),
-        subtitle: Text(_subtitle()),
+        subtitle: Text(_subtitle(pm)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              formatoBRL(investimento.patrimonioCents),
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  formatoBRL(investimento.patrimonioCents),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (pm != null && pm.custoTotalCents > 0)
+                  Text(
+                    '${isLucro ? "+" : ""}${pm.rentabilidadePercent.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isLucro
+                          ? Colors.green.shade700
+                          : theme.colorScheme.error,
+                    ),
+                  ),
+              ],
             ),
             PopupMenuButton<String>(
               tooltip: 'Ações',

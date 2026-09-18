@@ -14,6 +14,7 @@ class AppRoutes {
   static const String proximosVencimentos = '/vencimentos/proximos';
   static const String metas = '/metas';
   static const String historicoMeses = '/historico-meses';
+  static const String relatorios = '/relatorios';
   static const String investimentos = '/investimentos';
   static const String investimentoDetalhe = '/investimentos/:id';
   static const String rendimentos = '/investimentos/rendimentos';

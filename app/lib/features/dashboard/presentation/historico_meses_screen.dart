@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../home/domain/app_routes.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../application/dashboard_providers.dart';
 
@@ -19,6 +20,13 @@ class HistoricoMesesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Histórico de Meses'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart),
+            tooltip: 'Gráficos & Comparativos',
+            onPressed: () => context.push(AppRoutes.relatorios),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

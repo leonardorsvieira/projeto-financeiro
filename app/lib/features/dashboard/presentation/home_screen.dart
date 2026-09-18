@@ -73,6 +73,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             onSelected: (value) {
               if (value == 'historico') {
                 context.push(AppRoutes.historicoMeses);
+              } else if (value == 'relatorios') {
+                context.push(AppRoutes.relatorios);
               } else if (value == 'investimentos') {
                 context.push(AppRoutes.investimentos);
               } else if (value == 'metas') {
@@ -97,6 +99,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 child: ListTile(
                   leading: Icon(Icons.history_outlined),
                   title: Text('Histórico de Meses'),
+                  dense: true,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'relatorios',
+                child: ListTile(
+                  leading: Icon(Icons.bar_chart_outlined),
+                  title: Text('Relatórios & Comparativos'),
                   dense: true,
                 ),
               ),

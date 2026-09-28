@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/open_finance_providers.dart';
 import '../../data/open_finance_repository.dart';
+import '../../data/pluggy_open_finance_service.dart';
 
 void mostrarDialogoConfigurarPluggy(BuildContext context) {
   showDialog(
@@ -28,6 +29,7 @@ class __ConfigurarPluggyDialogState
   bool _carregado = false;
   bool _testando = false;
   bool _salvando = false;
+  bool _abrindoMeuPluggy = false;
   bool _usarApiKeyDireta = false;
   String? _statusMensagem;
   bool? _statusSucesso;
@@ -74,6 +76,40 @@ class __ConfigurarPluggyDialogState
             ? _apiKeyCtrl.text.trim()
             : null,
       );
+    }
+  }
+
+  Future<void> _abrirMeuPluggy() async {
+    final creds = _obterCredenciaisDoFormulario();
+    if (!creds.isPreenchido) {
+      setState(() {
+        _statusMensagem = 'Preencha suas credenciais primeiro.';
+        _statusSucesso = false;
+      });
+      return;
+    }
+    await ref.read(pluggyCredentialsProvider.notifier).salvar(creds);
+    setState(() => _abrindoMeuPluggy = true);
+    try {
+      final service = ref.read(pluggyOpenFinanceServiceProvider);
+      await service.abrirWidgetConexao(
+        creds,
+        connectorId: PluggyOpenFinanceService.connectorMeuPluggy,
+      );
+      if (!mounted) return;
+      setState(() {
+        _statusSucesso = true;
+        _statusMensagem =
+            'Navegador aberto! Autorize no meu.pluggy.ai e depois clique em "Salvar e Sincronizar".';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _statusSucesso = false;
+        _statusMensagem = 'Erro ao abrir navegador: $e';
+      });
+    } finally {
+      if (mounted) setState(() => _abrindoMeuPluggy = false);
     }
   }
 
@@ -285,6 +321,25 @@ class __ConfigurarPluggyDialogState
                   ),
                 ),
               ],
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonalIcon(
+                  style: FilledButton.styleFrom(
+                    foregroundColor: Colors.purple.shade900,
+                    backgroundColor: Colors.purple.shade100,
+                  ),
+                  onPressed: _abrindoMeuPluggy ? null : _abrirMeuPluggy,
+                  icon: _abrindoMeuPluggy
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.cloud_sync, size: 18),
+                  label: const Text('Conectar com meu.pluggy.ai (Navegador)'),
+                ),
+              ),
 
               if (_statusMensagem != null) ...[
                 const SizedBox(height: 12),

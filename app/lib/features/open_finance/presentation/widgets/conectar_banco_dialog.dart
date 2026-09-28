@@ -24,6 +24,8 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
   BancoDisponivelOpenFinance? _bancoSelecionado;
   String _tipoConta = 'Cartão & Conta Corrente';
   bool _conectando = false;
+  final TextEditingController _itemIdCtrl = TextEditingController();
+  bool _vinculandoItemId = false;
 
   final _tipos = [
     'Cartão & Conta Corrente',
@@ -31,7 +33,146 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
     'Apenas Conta Corrente & Pix',
   ];
 
-  Future<void> _conectar() async {
+  @override
+  void dispose() {
+    _itemIdCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _conectarMeuPluggy() async {
+    final creds = ref.read(pluggyCredentialsProvider).value;
+    if (creds == null || !creds.isPreenchido) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Configure primeiro suas credenciais da Pluggy.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _conectando = true);
+    try {
+      final service = ref.read(pluggyOpenFinanceServiceProvider);
+      await service.abrirWidgetConexao(
+        creds,
+        connectorId: PluggyOpenFinanceService.connectorMeuPluggy,
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Navegador aberto para conectar ao meu.pluggy.ai! Conclua o login e autorização na Pluggy e depois clique em "Sincronizar Agora".',
+          ),
+          backgroundColor: Colors.purple.shade700,
+          duration: const Duration(seconds: 7),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao abrir conexão: $e'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _conectando = false);
+    }
+  }
+
+  Future<void> _abrirPluggyConnectGeral({int? connectorId}) async {
+    final creds = ref.read(pluggyCredentialsProvider).value;
+    if (creds == null || !creds.isPreenchido) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Configure primeiro suas credenciais da Pluggy.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _conectando = true);
+    try {
+      final service = ref.read(pluggyOpenFinanceServiceProvider);
+      await service.abrirWidgetConexao(creds, connectorId: connectorId);
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Pluggy Connect aberto no navegador! Autorize sua instituição bancária e clique em "Sincronizar Agora".',
+          ),
+          backgroundColor: Colors.green.shade700,
+          duration: const Duration(seconds: 7),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao abrir Pluggy Connect: $e'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _conectando = false);
+    }
+  }
+
+  Future<void> _vincularPorItemId() async {
+    final itemId = _itemIdCtrl.text.trim();
+    if (itemId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe o ID do Item da Pluggy.')),
+      );
+      return;
+    }
+
+    final creds = ref.read(pluggyCredentialsProvider).value;
+    if (creds == null || !creds.isPreenchido) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Credenciais da Pluggy não configuradas.')),
+      );
+      return;
+    }
+
+    setState(() => _vinculandoItemId = true);
+    try {
+      final service = ref.read(pluggyOpenFinanceServiceProvider);
+      final conta = await service.buscarItemPorId(creds, itemId);
+
+      await ref.read(contasConectadasProvider.notifier).adicionarConta(conta);
+
+      // Executa sincronização das transações imediatamente
+      await sincronizarComPluggy(ref);
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${conta.nomeBanco} vinculado e sincronizado com sucesso!'),
+          backgroundColor: Colors.green.shade700,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Falha ao vincular Item: $e'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _vinculandoItemId = false);
+    }
+  }
+
+  Future<void> _conectarManual() async {
     if (_bancoSelecionado == null) return;
     setState(() => _conectando = true);
 
@@ -83,27 +224,164 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Banner de Destaque: Conexão direta com meu.pluggy.ai
           Card(
-            color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+            color: Colors.purple.shade50,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.purple.shade200),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.security, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Conexão 100% segura e regulada pelo Banco Central. Leitura automática de extratos, cartões e Pix.',
-                      style: theme.textTheme.bodySmall,
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.purple.shade700,
+                        radius: 18,
+                        child: const Icon(Icons.cloud_sync, color: Colors.white, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Vincular com meu.pluggy.ai',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purple.shade900,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Conecte o Meu Bolso diretamente ao painel meu.pluggy.ai onde suas contas já estão vinculadas.',
+                              style: TextStyle(fontSize: 12, color: Colors.purple.shade900),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.purple.shade700,
+                      ),
+                      onPressed: _conectando ? null : _conectarMeuPluggy,
+                      icon: _conectando
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.open_in_new, size: 18),
+                      label: const Text('Autorizar no meu.pluggy.ai'),
                     ),
                   ),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 12),
+
+          // Opção: Conectar qualquer banco via Widget Pluggy Connect
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.blue.shade100,
+                        radius: 18,
+                        child: Icon(Icons.account_balance, color: Colors.blue.shade800, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Conectar Banco via Pluggy Connect',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Text(
+                              'Abre a lista completa com mais de 230 bancos e fintechs brasileiras.',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _conectando ? null : () => _abrirPluggyConnectGeral(),
+                      icon: const Icon(Icons.launch, size: 18),
+                      label: const Text('Abrir Catálogo de Bancos Pluggy'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Opção: Vincular por Item ID direto
+          ExpansionTile(
+            leading: const Icon(Icons.pin_outlined),
+            title: const Text(
+              'Vincular Conexão por Item ID',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            subtitle: const Text(
+              'Já tem o identificador do Item criado na Pluggy?',
+              style: TextStyle(fontSize: 12),
+            ),
+            childrenPadding: const EdgeInsets.all(12),
+            children: [
+              TextField(
+                controller: _itemIdCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Item ID da Pluggy',
+                  hintText: 'Ex: e1c385fa-7b98-4c02-...',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  prefixIcon: Icon(Icons.tag),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _vinculandoItemId ? null : _vincularPorItemId,
+                  icon: _vinculandoItemId
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.check),
+                  label: const Text('Vincular e Importar Contas'),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
+
           Text(
-            'Selecione sua Instituição Financeira',
+            'Ou selecione um Banco Rápido',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -192,25 +470,31 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                 if (val != null) setState(() => _tipoConta = val);
               },
             ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 48,
-              child: FilledButton.icon(
-                onPressed: _conectando ? null : _conectar,
-                icon: _conectando
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.lock_open),
-                label: Text(
-                  _conectando
-                      ? 'Autenticando no ${_bancoSelecionado!.nome}...'
-                      : 'Autorizar Open Finance no ${_bancoSelecionado!.nome}',
+            const SizedBox(height: 16),
+            if (_bancoSelecionado!.connectorId != null) ...[
+              SizedBox(
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: _conectando
+                      ? null
+                      : () => _abrirPluggyConnectGeral(
+                            connectorId: _bancoSelecionado!.connectorId,
+                          ),
+                  icon: const Icon(Icons.open_in_new),
+                  label: Text('Conectar ${_bancoSelecionado!.nome} Oficial'),
                 ),
               ),
+              const SizedBox(height: 8),
+            ],
+            SizedBox(
+              height: 44,
+              child: OutlinedButton.icon(
+                onPressed: _conectando ? null : _conectarManual,
+                icon: const Icon(Icons.add),
+                label: Text('Adicionar ${_bancoSelecionado!.nome} Manualmente'),
+              ),
             ),
+            const SizedBox(height: 24),
           ],
         ],
       ),

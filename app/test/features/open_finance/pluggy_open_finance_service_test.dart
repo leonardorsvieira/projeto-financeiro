@@ -176,5 +176,67 @@ void main() {
       expect(deposito.valorCents, equals(50000));
       expect(deposito.isReceita, isTrue);
     });
+
+    test('gerarConnectToken faz POST /connect_token e retorna token', () async {
+      final mockClient = MockClient((request) async {
+        if (request.url.path == '/connect_token' &&
+            request.method == 'POST' &&
+            request.headers['X-API-KEY'] == 'token_valido') {
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          expect(body['options']['connectorId'], equals(200));
+          return http.Response(jsonEncode({'accessToken': 'connect_token_12345'}), 200);
+        }
+        return http.Response('Error', 400);
+      });
+
+      final service = PluggyOpenFinanceService(httpClient: mockClient);
+      const creds = PluggyCredentials(apiKey: 'token_valido');
+
+      final token = await service.gerarConnectToken(creds, connectorId: 200);
+      expect(token, equals('connect_token_12345'));
+    });
+
+    test('buscarItemPorId busca dados de um item específico', () async {
+      final mockClient = MockClient((request) async {
+        if (request.url.path == '/items/item_meu_pluggy') {
+          return http.Response(
+            jsonEncode({
+              'id': 'item_meu_pluggy',
+              'connector': {
+                'name': 'MeuPluggy',
+                'primaryColor': '#EF294B',
+              },
+              'status': 'UPDATED',
+              'lastUpdatedAt': '2026-09-28T12:00:00Z',
+            }),
+            200,
+          );
+        }
+        if (request.url.path == '/accounts') {
+          return http.Response(
+            jsonEncode({
+              'results': [
+                {
+                  'id': 'acc_mp_1',
+                  'type': 'CREDIT',
+                  'number': '98765432',
+                }
+              ]
+            }),
+            200,
+          );
+        }
+        return http.Response('Not found', 404);
+      });
+
+      final service = PluggyOpenFinanceService(httpClient: mockClient);
+      const creds = PluggyCredentials(apiKey: 'token_valido');
+
+      final item = await service.buscarItemPorId(creds, 'item_meu_pluggy');
+      expect(item.id, equals('item_meu_pluggy'));
+      expect(item.nomeBanco, equals('MeuPluggy'));
+      expect(item.corHex, equals('#EF294B'));
+      expect(item.mascaraCartao, equals('•••• 5432'));
+    });
   });
 }

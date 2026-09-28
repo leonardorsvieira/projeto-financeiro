@@ -36,14 +36,20 @@ class OpenFinanceRepository {
   static const _keyCapturaNotificacoes = 'open_finance_captura_notif_v1';
   static const _keyPluggyCreds = 'open_finance_pluggy_creds_v1';
 
+  static const defaultCreds = PluggyCredentials(
+    clientId: '1c5530f7-de34-45d4-9562-16b949469d0f',
+    clientSecret: '1n5geQSKSLLSxnz0CY0vKADVoKRGrEzmp0tptIfdXoM',
+  );
+
   Future<PluggyCredentials?> getPluggyCredentials() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_keyPluggyCreds);
-    if (raw == null || raw.isEmpty) return null;
+    if (raw == null || raw.isEmpty) return defaultCreds;
     try {
-      return PluggyCredentials.fromMap(jsonDecode(raw) as Map<String, dynamic>);
+      final creds = PluggyCredentials.fromMap(jsonDecode(raw) as Map<String, dynamic>);
+      return creds.isPreenchido ? creds : defaultCreds;
     } catch (_) {
-      return null;
+      return defaultCreds;
     }
   }
 

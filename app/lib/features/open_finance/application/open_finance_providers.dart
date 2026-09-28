@@ -148,13 +148,24 @@ Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) async {
 
   final service = ref.read(pluggyOpenFinanceServiceProvider);
   final contasNotifier = ref.read(contasConectadasProvider.notifier);
+  final contasAtuais = ref.read(contasConectadasProvider).value ?? [];
 
-  // 1. Busca os bancos conectados no Pluggy
-  final contas = await service.buscarItensConectados(creds);
-  await contasNotifier.salvarTodas(contas);
+  // 1. Busca ou atualiza os bancos conectados no Pluggy
+  final contas = await service.buscarItensConectados(
+    creds,
+    contasExistentes: contasAtuais,
+  );
+  if (contas.isNotEmpty) {
+    await contasNotifier.salvarTodas(contas);
+  }
+
+  final listaParaBuscarTransacoes = contas.isNotEmpty ? contas : contasAtuais;
 
   // 2. Busca todas as transações das contas conectadas
-  final transacoes = await service.buscarTodasTransacoes(creds);
+  final transacoes = await service.buscarTodasTransacoes(
+    creds,
+    contas: listaParaBuscarTransacoes,
+  );
 
   // 3. Importa transações sem duplicar (baseado em obs: 'pluggy_id:{id}')
   final lancamentoRepo = ref.read(lancamentosRepositoryProvider);
@@ -187,7 +198,7 @@ Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) async {
   ref.invalidate(lancamentosStreamProvider);
 
   return ResultadoSincronizacaoPluggy(
-    contasSincronizadas: contas.length,
+    contasSincronizadas: listaParaBuscarTransacoes.length,
     transacoesNovas: transacoesImportadas,
   );
 }

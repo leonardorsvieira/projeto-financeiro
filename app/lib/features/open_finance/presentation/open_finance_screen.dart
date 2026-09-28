@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../application/open_finance_providers.dart';
+import '../data/pluggy_open_finance_service.dart';
 import '../domain/conta_bancaria_conectada.dart';
 import 'widgets/conectar_banco_dialog.dart';
 import 'widgets/configurar_pluggy_dialog.dart';
@@ -16,6 +17,48 @@ class OpenFinanceScreen extends ConsumerStatefulWidget {
 
 class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
   bool _sincronizando = false;
+  bool _abrindoMeuPluggy = false;
+
+  Future<void> _abrirMeuPluggyConnect() async {
+    final creds = ref.read(pluggyCredentialsProvider).value;
+    if (creds == null || !creds.isPreenchido) {
+      mostrarDialogoConfigurarPluggy(context);
+      return;
+    }
+    setState(() => _abrindoMeuPluggy = true);
+    try {
+      final service = ref.read(pluggyOpenFinanceServiceProvider);
+      await service.abrirWidgetConexao(
+        creds,
+        connectorId: PluggyOpenFinanceService.connectorMeuPluggy,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Navegador aberto para conectar ao meu.pluggy.ai! Conclua a autorização e depois clique em "Sincronizar Agora".',
+          ),
+          backgroundColor: Colors.purple.shade700,
+          duration: const Duration(seconds: 8),
+          action: SnackBarAction(
+            label: 'Sincronizar',
+            textColor: Colors.white,
+            onPressed: _executarSincronizacao,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao abrir autorização: $e'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _abrindoMeuPluggy = false);
+    }
+  }
 
   Future<void> _executarSincronizacao() async {
     setState(() => _sincronizando = true);
@@ -89,6 +132,14 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
             color: pluggyConfigurado
                 ? Colors.purple.shade50
                 : Colors.amber.shade50,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: pluggyConfigurado
+                    ? Colors.purple.shade200
+                    : Colors.amber.shade300,
+              ),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -126,7 +177,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                             const SizedBox(height: 2),
                             Text(
                               pluggyConfigurado
-                                  ? 'Suas conexões bancárias e faturas são sincronizadas via API oficial Open Finance.'
+                                  ? 'Conectado à API oficial com suas credenciais. Vincule o meu.pluggy.ai ou outros bancos para sincronizar compras e Pix automaticamente.'
                                   : 'Conecte sua conta do meu.pluggy.ai para puxar suas compras no cartão e Pix automaticamente.',
                               style: theme.textTheme.bodySmall,
                             ),
@@ -135,10 +186,29 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Row(
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       if (pluggyConfigurado) ...[
+                        FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.purple.shade700,
+                          ),
+                          onPressed: _abrindoMeuPluggy ? null : _abrirMeuPluggyConnect,
+                          icon: _abrindoMeuPluggy
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.cloud_sync, size: 18),
+                          label: const Text('Conectar meu.pluggy.ai'),
+                        ),
                         FilledButton.icon(
                           onPressed: _sincronizando ? null : _executarSincronizacao,
                           icon: _sincronizando
@@ -155,7 +225,6 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                               ? 'Sincronizando...'
                               : 'Sincronizar Agora'),
                         ),
-                        const SizedBox(width: 8),
                         OutlinedButton(
                           onPressed: () => mostrarDialogoConfigurarPluggy(context),
                           child: const Text('Credenciais'),
@@ -259,29 +328,50 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                         const SizedBox(height: 12),
                         Text(
                           pluggyConfigurado
-                              ? 'Nenhum banco sincronizado ainda.'
+                              ? 'Nenhuma instituição sincronizada ainda.'
                               : 'Vincule seu Pluggy para listar seus bancos.',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           pluggyConfigurado
-                              ? 'Clique em "Sincronizar Agora" acima para carregar suas contas do meu.pluggy.ai.'
+                              ? 'Clique no botão abaixo para autorizar o meu.pluggy.ai ou conectar qualquer banco diretamente via Open Finance.'
                               : 'Conecte suas credenciais do meu.pluggy.ai para importar suas contas e movimentações de forma automática.',
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 12),
                         ),
                         const SizedBox(height: 16),
-                        FilledButton.icon(
-                          onPressed: pluggyConfigurado
-                              ? _executarSincronizacao
-                              : () => mostrarDialogoConfigurarPluggy(context),
-                          icon: Icon(pluggyConfigurado
-                              ? Icons.sync
-                              : Icons.vpn_key_outlined),
-                          label: Text(pluggyConfigurado
-                              ? 'Sincronizar Agora'
-                              : 'Vincular Conta Pluggy'),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            if (pluggyConfigurado) ...[
+                              FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.purple.shade700,
+                                ),
+                                onPressed: _abrindoMeuPluggy
+                                    ? null
+                                    : _abrirMeuPluggyConnect,
+                                icon: const Icon(Icons.cloud_sync, size: 18),
+                                label: const Text('Conectar meu.pluggy.ai'),
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: () =>
+                                    mostrarDialogoConectarBanco(context),
+                                icon: const Icon(Icons.add, size: 18),
+                                label: const Text('Adicionar Bancos / Item ID'),
+                              ),
+                            ] else ...[
+                              FilledButton.icon(
+                                onPressed: () =>
+                                    mostrarDialogoConfigurarPluggy(context),
+                                icon: const Icon(Icons.vpn_key_outlined),
+                                label: const Text('Vincular Conta Pluggy'),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
@@ -465,8 +555,8 @@ class _CardContaBancaria extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: conta.status == StatusConexaoBanco.conectado
-                      ? Colors.green.shade300
-                      : Colors.amber.shade300,
+                    ? Colors.green.shade300
+                    : Colors.amber.shade300,
                 ),
               ),
               child: Text(

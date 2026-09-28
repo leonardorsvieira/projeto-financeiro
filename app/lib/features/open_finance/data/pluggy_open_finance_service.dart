@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../domain/conta_bancaria_conectada.dart';
 import '../domain/transacao_bancaria_importada.dart';
@@ -10,12 +11,14 @@ class BancoDisponivelOpenFinance {
     required this.nome,
     required this.corHex,
     required this.logoSvgPath,
+    this.connectorId,
     this.tiposSuportados = const ['Conta Corrente', 'Cartão de Crédito', 'Pix'],
   });
 
   final String nome;
   final String corHex;
   final String logoSvgPath;
+  final int? connectorId;
   final List<String> tiposSuportados;
 }
 
@@ -26,32 +29,44 @@ class PluggyOpenFinanceService {
       : _httpClient = httpClient ?? http.Client();
 
   static const String baseUrl = 'https://api.pluggy.ai';
+  static const int connectorMeuPluggy = 200;
 
   static const List<BancoDisponivelOpenFinance> bancosPrincipais = [
+    BancoDisponivelOpenFinance(
+      nome: 'Meu Pluggy (meu.pluggy.ai)',
+      corHex: '#EF294B',
+      logoSvgPath: 'assets/bancos/pluggy.png',
+      connectorId: 200,
+    ),
     BancoDisponivelOpenFinance(
       nome: 'Nubank',
       corHex: '#8A05BE',
       logoSvgPath: 'assets/bancos/nubank.png',
+      connectorId: 2,
     ),
     BancoDisponivelOpenFinance(
       nome: 'Banco Inter',
       corHex: '#FF7A00',
       logoSvgPath: 'assets/bancos/inter.png',
+      connectorId: 0,
     ),
     BancoDisponivelOpenFinance(
       nome: 'Itaú Unibanco',
       corHex: '#EC7000',
       logoSvgPath: 'assets/bancos/itau.png',
+      connectorId: 1,
     ),
     BancoDisponivelOpenFinance(
       nome: 'Bradesco',
       corHex: '#CC092F',
       logoSvgPath: 'assets/bancos/bradesco.png',
+      connectorId: 4,
     ),
     BancoDisponivelOpenFinance(
       nome: 'Santander',
       corHex: '#EA1D2C',
       logoSvgPath: 'assets/bancos/santander.png',
+      connectorId: 3,
     ),
     BancoDisponivelOpenFinance(
       nome: 'C6 Bank',
@@ -110,26 +125,93 @@ class PluggyOpenFinanceService {
   Future<bool> testarConexao(PluggyCredentials creds) async {
     try {
       final apiKey = await obterApiKey(creds);
+      // Tenta listar conectores (disponível em todas as contas)
       final resp = await _httpClient.get(
-        Uri.parse('$baseUrl/items?pageSize=1'),
+        Uri.parse('$baseUrl/connectors?pageSize=1'),
         headers: {
           'X-API-KEY': apiKey,
           'Content-Type': 'application/json',
         },
       );
-      return resp.statusCode == 200;
+      if (resp.statusCode == 200) return true;
+
+      // Fallback para mock/outras configurações
+      final fallback = await _httpClient.get(
+        Uri.parse('$baseUrl/items?pageSize=1'),
+        headers: {'X-API-KEY': apiKey},
+      );
+      return fallback.statusCode == 200;
     } catch (_) {
       return false;
     }
   }
 
-  /// Busca todos os bancos conectados (Items) pelo usuário na Pluggy.
-  Future<List<ContaBancariaConectada>> buscarItensConectados(
+  /// Gera um Connect Token temporário para carregar o widget oficial da Pluggy.
+  Future<String> gerarConnectToken(
+    PluggyCredentials creds, {
+    int? connectorId,
+    String? oauthRedirectUri,
+  }) async {
+    final apiKey = await obterApiKey(creds);
+    final Map<String, dynamic> options = {};
+    if (connectorId != null) {
+      options['connectorId'] = connectorId;
+    }
+    if (oauthRedirectUri != null && oauthRedirectUri.isNotEmpty) {
+      options['oauthRedirectUri'] = oauthRedirectUri;
+    }
+
+    final body = options.isNotEmpty ? {'options': options} : <String, dynamic>{};
+
+    final resp = await _httpClient.post(
+      Uri.parse('$baseUrl/connect_token'),
+      headers: {
+        'X-API-KEY': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (resp.statusCode == 200) {
+      final data = jsonDecode(resp.body) as Map<String, dynamic>;
+      final token = data['accessToken'] as String?;
+      if (token != null && token.isNotEmpty) {
+        return token;
+      }
+    }
+
+    throw Exception(
+      'Falha ao gerar Connect Token na Pluggy (Status ${resp.statusCode}).',
+    );
+  }
+
+  /// Abre a interface oficial de autenticação da Pluggy (Widget Connect) no navegador.
+  Future<void> abrirWidgetConexao(
+    PluggyCredentials creds, {
+    int? connectorId,
+    String? oauthRedirectUri,
+  }) async {
+    final connectToken = await gerarConnectToken(
+      creds,
+      connectorId: connectorId,
+      oauthRedirectUri: oauthRedirectUri,
+    );
+    final url = Uri.parse('https://connect.pluggy.ai/?connect_token=$connectToken');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      throw Exception('Não foi possível abrir o navegador para autenticação.');
+    }
+  }
+
+  /// Busca um item específico da Pluggy pelo seu ID.
+  Future<ContaBancariaConectada> buscarItemPorId(
     PluggyCredentials creds,
+    String itemId,
   ) async {
     final apiKey = await obterApiKey(creds);
     final resp = await _httpClient.get(
-      Uri.parse('$baseUrl/items'),
+      Uri.parse('$baseUrl/items/$itemId'),
       headers: {
         'X-API-KEY': apiKey,
         'Content-Type': 'application/json',
@@ -138,102 +220,225 @@ class PluggyOpenFinanceService {
 
     if (resp.statusCode != 200) {
       throw Exception(
-        'Erro ao consultar conexões na Pluggy (Status ${resp.statusCode}).',
+        'Item não localizado na Pluggy (Status ${resp.statusCode}). Verifique o ID fornecido.',
       );
     }
 
-    final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    final results = (data['results'] as List<dynamic>?) ?? [];
-    final contas = <ContaBancariaConectada>[];
+    final item = jsonDecode(resp.body) as Map<String, dynamic>;
+    final connector = item['connector'] as Map<String, dynamic>? ?? {};
+    final nomeBanco = connector['name'] as String? ?? 'Banco Conectado';
+    final corHex = connector['primaryColor'] as String? ?? '#8A05BE';
+    final statusRaw = (item['status'] as String? ?? '').toUpperCase();
 
-    for (final rawItem in results) {
-      final item = rawItem as Map<String, dynamic>;
-      final itemId = item['id'] as String;
-      final connector = item['connector'] as Map<String, dynamic>? ?? {};
-      final nomeBanco = connector['name'] as String? ?? 'Banco';
-      final corHex = connector['primaryColor'] as String? ?? '#8A05BE';
-      final statusRaw = (item['status'] as String? ?? '').toUpperCase();
+    StatusConexaoBanco status;
+    if (statusRaw == 'UPDATED' || statusRaw == 'SUCCESS') {
+      status = StatusConexaoBanco.conectado;
+    } else if (statusRaw == 'UPDATING') {
+      status = StatusConexaoBanco.sincronizando;
+    } else if (statusRaw == 'LOGIN_ERROR' ||
+        statusRaw == 'WAITING_USER_INPUT') {
+      status = StatusConexaoBanco.requerReautenticacao;
+    } else {
+      status = StatusConexaoBanco.conectado;
+    }
 
-      StatusConexaoBanco status;
-      if (statusRaw == 'UPDATED' || statusRaw == 'SUCCESS') {
-        status = StatusConexaoBanco.conectado;
-      } else if (statusRaw == 'UPDATING') {
-        status = StatusConexaoBanco.sincronizando;
-      } else if (statusRaw == 'LOGIN_ERROR' ||
-          statusRaw == 'WAITING_USER_INPUT') {
-        status = StatusConexaoBanco.requerReautenticacao;
-      } else {
-        status = StatusConexaoBanco.conectado;
-      }
+    final lastSyncStr = item['lastUpdatedAt'] as String?;
+    final lastSync = lastSyncStr != null
+        ? DateTime.tryParse(lastSyncStr)?.toLocal() ?? DateTime.now()
+        : DateTime.now();
 
-      final lastSyncStr = item['lastUpdatedAt'] as String?;
-      final lastSync = lastSyncStr != null
-          ? DateTime.tryParse(lastSyncStr)?.toLocal() ?? DateTime.now()
-          : DateTime.now();
+    String tipoConta = 'Conta & Cartão';
+    String? mascara;
 
-      // Busca dados das contas associadas a este item para obter tipo e máscara
-      String tipoConta = 'Conta & Cartão';
-      String? mascara;
+    try {
+      final accResp = await _httpClient.get(
+        Uri.parse('$baseUrl/accounts?itemId=$itemId'),
+        headers: {'X-API-KEY': apiKey},
+      );
+      if (accResp.statusCode == 200) {
+        final accData = jsonDecode(accResp.body) as Map<String, dynamic>;
+        final accounts = (accData['results'] as List<dynamic>?) ?? [];
+        if (accounts.isNotEmpty) {
+          final accList = accounts.cast<Map<String, dynamic>>();
+          final tipos = accList
+              .map((a) => (a['type'] as String? ?? 'BANK') == 'CREDIT'
+                  ? 'Cartão'
+                  : 'Conta')
+              .toSet()
+              .toList();
+          tipoConta = tipos.join(' & ');
 
-      try {
-        final accResp = await _httpClient.get(
-          Uri.parse('$baseUrl/accounts?itemId=$itemId'),
-          headers: {'X-API-KEY': apiKey},
-        );
-        if (accResp.statusCode == 200) {
-          final accData = jsonDecode(accResp.body) as Map<String, dynamic>;
-          final accounts = (accData['results'] as List<dynamic>?) ?? [];
-          if (accounts.isNotEmpty) {
-            final accList = accounts.cast<Map<String, dynamic>>();
-            final tipos = accList
-                .map((a) => (a['type'] as String? ?? 'BANK') == 'CREDIT'
-                    ? 'Cartão'
-                    : 'Conta')
-                .toSet()
-                .toList();
-            tipoConta = tipos.join(' & ');
-
-            final firstWithNumber = accList.firstWhere(
-              (a) => a['number'] != null && a['number'].toString().isNotEmpty,
-              orElse: () => {},
-            );
-            if (firstWithNumber.isNotEmpty) {
-              final numStr = firstWithNumber['number'].toString();
-              mascara = numStr.length >= 4
-                  ? '•••• ${numStr.substring(numStr.length - 4)}'
-                  : '•••• $numStr';
-            }
+          final firstWithNumber = accList.firstWhere(
+            (a) => a['number'] != null && a['number'].toString().isNotEmpty,
+            orElse: () => {},
+          );
+          if (firstWithNumber.isNotEmpty) {
+            final numStr = firstWithNumber['number'].toString();
+            mascara = numStr.length >= 4
+                ? '•••• ${numStr.substring(numStr.length - 4)}'
+                : '•••• $numStr';
           }
         }
-      } catch (_) {
-        // Prossegue com valores padrão caso a listagem de sub-contas falhe
+      }
+    } catch (_) {}
+
+    return ContaBancariaConectada(
+      id: itemId,
+      nomeBanco: nomeBanco,
+      tipoConta: tipoConta,
+      corHex: corHex,
+      ultimoSync: lastSync,
+      status: status,
+      itemIdPluggy: itemId,
+      mascaraCartao: mascara,
+      capturaAutomaticaAtiva: true,
+    );
+  }
+
+  /// Busca todos os bancos conectados (Items) pelo usuário na Pluggy.
+  Future<List<ContaBancariaConectada>> buscarItensConectados(
+    PluggyCredentials creds, {
+    List<ContaBancariaConectada> contasExistentes = const [],
+  }) async {
+    final apiKey = await obterApiKey(creds);
+
+    // Tenta primeiro os endpoints de listagem (/v2/items ou /items)
+    http.Response? resp;
+    try {
+      resp = await _httpClient.get(
+        Uri.parse('$baseUrl/v2/items'),
+        headers: {
+          'X-API-KEY': apiKey,
+          'Content-Type': 'application/json',
+        },
+      );
+      if (resp.statusCode != 200) {
+        resp = await _httpClient.get(
+          Uri.parse('$baseUrl/items'),
+          headers: {
+            'X-API-KEY': apiKey,
+            'Content-Type': 'application/json',
+          },
+        );
+      }
+    } catch (_) {}
+
+    if (resp != null && resp.statusCode == 200) {
+      final data = jsonDecode(resp.body) as Map<String, dynamic>;
+      final results = (data['results'] as List<dynamic>?) ?? [];
+      final contas = <ContaBancariaConectada>[];
+
+      for (final rawItem in results) {
+        final item = rawItem as Map<String, dynamic>;
+        final itemId = item['id'] as String;
+        final connector = item['connector'] as Map<String, dynamic>? ?? {};
+        final nomeBanco = connector['name'] as String? ?? 'Banco';
+        final corHex = connector['primaryColor'] as String? ?? '#8A05BE';
+        final statusRaw = (item['status'] as String? ?? '').toUpperCase();
+
+        StatusConexaoBanco status;
+        if (statusRaw == 'UPDATED' || statusRaw == 'SUCCESS') {
+          status = StatusConexaoBanco.conectado;
+        } else if (statusRaw == 'UPDATING') {
+          status = StatusConexaoBanco.sincronizando;
+        } else if (statusRaw == 'LOGIN_ERROR' ||
+            statusRaw == 'WAITING_USER_INPUT') {
+          status = StatusConexaoBanco.requerReautenticacao;
+        } else {
+          status = StatusConexaoBanco.conectado;
+        }
+
+        final lastSyncStr = item['lastUpdatedAt'] as String?;
+        final lastSync = lastSyncStr != null
+            ? DateTime.tryParse(lastSyncStr)?.toLocal() ?? DateTime.now()
+            : DateTime.now();
+
+        // Busca dados das contas associadas a este item para obter tipo e máscara
+        String tipoConta = 'Conta & Cartão';
+        String? mascara;
+
+        try {
+          final accResp = await _httpClient.get(
+            Uri.parse('$baseUrl/accounts?itemId=$itemId'),
+            headers: {'X-API-KEY': apiKey},
+          );
+          if (accResp.statusCode == 200) {
+            final accData = jsonDecode(accResp.body) as Map<String, dynamic>;
+            final accounts = (accData['results'] as List<dynamic>?) ?? [];
+            if (accounts.isNotEmpty) {
+              final accList = accounts.cast<Map<String, dynamic>>();
+              final tipos = accList
+                  .map((a) => (a['type'] as String? ?? 'BANK') == 'CREDIT'
+                      ? 'Cartão'
+                      : 'Conta')
+                  .toSet()
+                  .toList();
+              tipoConta = tipos.join(' & ');
+
+              final firstWithNumber = accList.firstWhere(
+                (a) => a['number'] != null && a['number'].toString().isNotEmpty,
+                orElse: () => {},
+              );
+              if (firstWithNumber.isNotEmpty) {
+                final numStr = firstWithNumber['number'].toString();
+                mascara = numStr.length >= 4
+                    ? '•••• ${numStr.substring(numStr.length - 4)}'
+                    : '•••• $numStr';
+              }
+            }
+          }
+        } catch (_) {}
+
+        contas.add(
+          ContaBancariaConectada(
+            id: itemId,
+            nomeBanco: nomeBanco,
+            tipoConta: tipoConta,
+            corHex: corHex,
+            ultimoSync: lastSync,
+            status: status,
+            itemIdPluggy: itemId,
+            mascaraCartao: mascara,
+            capturaAutomaticaAtiva: true,
+          ),
+        );
       }
 
-      contas.add(
-        ContaBancariaConectada(
-          id: itemId,
-          nomeBanco: nomeBanco,
-          tipoConta: tipoConta,
-          corHex: corHex,
-          ultimoSync: lastSync,
-          status: status,
-          itemIdPluggy: itemId,
-          mascaraCartao: mascara,
-          capturaAutomaticaAtiva: true,
-        ),
-      );
+      return contas;
     }
 
-    return contas;
+    // Se o plano da Pluggy for auto-serviço/desenvolvedor (LIST_ITEMS_FEATURE_NOT_ENABLED):
+    // Atualiza individualmente as contas já conhecidas/salvas no dispositivo
+    if (contasExistentes.isNotEmpty) {
+      final atualizadas = <ContaBancariaConectada>[];
+      for (final conta in contasExistentes) {
+        if (conta.itemIdPluggy != null &&
+            !conta.itemIdPluggy!.startsWith('pluggy_item_') &&
+            !conta.itemIdPluggy!.startsWith('banco_')) {
+          try {
+            final atual = await buscarItemPorId(creds, conta.itemIdPluggy!);
+            atualizadas.add(atual);
+          } catch (_) {
+            atualizadas.add(conta);
+          }
+        } else {
+          atualizadas.add(conta);
+        }
+      }
+      return atualizadas;
+    }
+
+    return [];
   }
 
   /// Busca as transações bancárias reais de todas as contas associadas aos itens conectados.
   Future<List<TransacaoBancariaImportada>> buscarTodasTransacoes(
     PluggyCredentials creds, {
+    List<ContaBancariaConectada>? contas,
     DateTime? desde,
   }) async {
     final apiKey = await obterApiKey(creds);
-    final itens = await buscarItensConectados(creds);
+    final itens = contas ?? await buscarItensConectados(creds);
     final todasTransacoes = <TransacaoBancariaImportada>[];
 
     final dataDesdeStr = desde != null
@@ -241,9 +446,14 @@ class PluggyOpenFinanceService {
         : DateTime.now().subtract(const Duration(days: 30)).toIso8601String().substring(0, 10);
 
     for (final item in itens) {
+      final itemId = item.itemIdPluggy ?? item.id;
+      if (itemId.startsWith('pluggy_item_') || itemId.startsWith('banco_')) {
+        continue;
+      }
+
       try {
         final accResp = await _httpClient.get(
-          Uri.parse('$baseUrl/accounts?itemId=${item.id}'),
+          Uri.parse('$baseUrl/accounts?itemId=$itemId'),
           headers: {'X-API-KEY': apiKey},
         );
         if (accResp.statusCode != 200) continue;
@@ -330,8 +540,9 @@ class PluggyOpenFinanceService {
     required String nomeBanco,
     required String tipoConta,
     String? corHex,
+    String? itemIdPluggy,
   }) async {
-    final id = 'banco_${DateTime.now().millisecondsSinceEpoch}';
+    final id = itemIdPluggy ?? 'banco_${DateTime.now().millisecondsSinceEpoch}';
     final cor = corHex ??
         (bancosPrincipais
             .firstWhere((b) => b.nome.contains(nomeBanco),
@@ -345,7 +556,7 @@ class PluggyOpenFinanceService {
       corHex: cor,
       ultimoSync: DateTime.now(),
       status: StatusConexaoBanco.conectado,
-      itemIdPluggy: 'pluggy_item_$id',
+      itemIdPluggy: itemIdPluggy ?? 'pluggy_item_$id',
     );
   }
 

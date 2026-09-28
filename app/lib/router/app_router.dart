@@ -18,6 +18,7 @@ import '../features/lancamentos/presentation/lancamento_form_screen.dart';
 import '../features/lancamentos/presentation/proximos_vencimentos_screen.dart';
 import '../features/dashboard/presentation/historico_meses_screen.dart';
 import '../features/relatorios/presentation/relatorios_screen.dart';
+import '../features/open_finance/presentation/open_finance_screen.dart';
 import '../features/metas/presentation/metas_screen.dart';
 import '../features/investimentos/presentation/investimentos_screen.dart';
 import '../features/investimentos/presentation/investimento_detalhe_screen.dart';
@@ -101,6 +102,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.relatorios,
         builder: (_, _) => const RelatoriosScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.openFinance,
+        builder: (_, _) => const OpenFinanceScreen(),
       ),
       GoRoute(
         path: AppRoutes.investimentos,

@@ -75,6 +75,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 context.push(AppRoutes.historicoMeses);
               } else if (value == 'relatorios') {
                 context.push(AppRoutes.relatorios);
+              } else if (value == 'open_finance') {
+                context.push(AppRoutes.openFinance);
               } else if (value == 'investimentos') {
                 context.push(AppRoutes.investimentos);
               } else if (value == 'metas') {
@@ -107,6 +109,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 child: ListTile(
                   leading: Icon(Icons.bar_chart_outlined),
                   title: Text('Relatórios & Comparativos'),
+                  dense: true,
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'open_finance',
+                child: ListTile(
+                  leading: Icon(Icons.account_balance),
+                  title: Text('Open Finance & Bancos'),
                   dense: true,
                 ),
               ),

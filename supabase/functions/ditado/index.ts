@@ -12,6 +12,10 @@ const MODELOS_PERMITIDOS = new Set([
 // Áudio em base64 + prompt; ditados reais ficam bem abaixo disso.
 const TAMANHO_MAXIMO = 10 * 1024 * 1024;
 
+// Sem limite, uma resposta lenta do Gemini prendia a função até ela ser
+// encerrada e o app ficava "processando" para sempre.
+const TEMPO_MAXIMO_GEMINI_MS = 40_000;
+
 Deno.serve(async (req) => {
   const usuario = await preambulo(req, "ditado", 150);
   if (usuario instanceof Response) return usuario;
@@ -20,6 +24,7 @@ Deno.serve(async (req) => {
   if (!chave) return resposta(req, 503, { erro: "ia_nao_configurada" });
 
   const texto = await req.text();
+  console.log(JSON.stringify({ etapa: "corpo_recebido", bytes: texto.length }));
   if (texto.length > TAMANHO_MAXIMO) {
     return resposta(req, 413, { erro: "requisicao_grande_demais" });
   }
@@ -38,13 +43,44 @@ Deno.serve(async (req) => {
     return resposta(req, 400, { erro: "corpo_invalido" });
   }
 
-  const r = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": chave },
-      body: JSON.stringify(corpo),
-    },
-  );
-  return resposta(req, r.status, await r.text());
+  // Diagnóstico sem conteúdo do ditado: só tamanho, modelo, status e tempo.
+  const inicio = Date.now();
+  let r: Response;
+  try {
+    r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": chave },
+        body: JSON.stringify(corpo),
+        signal: AbortSignal.timeout(TEMPO_MAXIMO_GEMINI_MS),
+      },
+    );
+  } catch (e) {
+    console.warn(JSON.stringify({
+      modelo,
+      bytes: texto.length,
+      erro: e instanceof Error ? e.name : "desconhecido",
+      ms: Date.now() - inicio,
+    }));
+    // 504 é tratado pelo app como temporário (tenta de novo / outro modelo).
+    return resposta(req, 504, { erro: "ia_sem_resposta" });
+  }
+  const saida = await r.text();
+  let motivo: unknown;
+  if (!r.ok) {
+    try {
+      motivo = JSON.parse(saida)?.error?.status;
+    } catch {
+      // corpo não-JSON
+    }
+  }
+  console.log(JSON.stringify({
+    modelo,
+    bytes: texto.length,
+    status: r.status,
+    motivo,
+    ms: Date.now() - inicio,
+  }));
+  return resposta(req, r.status, saida);
 });

@@ -82,11 +82,30 @@ async function itemDaConta(accountId: string): Promise<string | null> {
   return typeof conta.itemId === "string" ? conta.itemId : null;
 }
 
+/** Log de diagnóstico sem dados financeiros: só rota e status. */
+function registrarFalha(rota: string, status: number) {
+  console.warn(JSON.stringify({ rota, status }));
+}
+
 function repassar(req: Request, r: Response, texto: string): Response {
+  if (!r.ok) {
+    const url = new URL(r.url);
+    let codigo: unknown;
+    try {
+      codigo = JSON.parse(texto)?.code;
+    } catch {
+      // corpo não-JSON
+    }
+    console.warn(JSON.stringify({
+      rota: url.pathname.split("/").slice(0, 2).join("/"),
+      status: r.status,
+      codigo,
+    }));
+  }
   return resposta(req, r.status, texto);
 }
 
-Deno.serve(async (req) => {
+async function atender(req: Request): Promise<Response> {
   const usuario = await preambulo(req, "pluggy", 500);
   if (usuario instanceof Response) return usuario;
   const uid = usuario.id;
@@ -170,6 +189,21 @@ Deno.serve(async (req) => {
 
   // Lista apenas os items do próprio usuário.
   if (metodo === "GET" && seg[0] === "items" && seg.length === 1) {
+    // Items criados pelo widget Connect vêm com clientUserId = usuário, mas o
+    // app não recebe o id deles; registra aqui os que forem deste usuário.
+    // (Items antigos sem clientUserId NÃO são reivindicados em massa: podem
+    // ser de outros clientes. Só via id explícito + OWNER_USER_ID.)
+    const lista = await pluggy("GET", "/items");
+    if (lista.ok) {
+      const { results: todos } = await lista.json();
+      for (const item of todos ?? []) {
+        if (item?.clientUserId === uid && typeof item.id === "string") {
+          await registrar(uid, item.id);
+        }
+      }
+    } else {
+      registrarFalha("GET /items (listagem)", lista.status);
+    }
     const { data } = await admin
       .from("pluggy_items")
       .select("item_id")
@@ -179,6 +213,14 @@ Deno.serve(async (req) => {
       const r = await pluggy("GET", `/items/${encodeURIComponent(item_id)}`);
       if (r.ok) results.push(await r.json());
     }
+    // Diagnóstico sem dados financeiros: situação de cada conexão.
+    console.log(JSON.stringify({
+      itens: results.map((i) => ({
+        status: i.status,
+        execucao: i.executionStatus,
+        conector: i.connector?.id,
+      })),
+    }));
     return resposta(req, 200, { results });
   }
 
@@ -230,4 +272,12 @@ Deno.serve(async (req) => {
   }
 
   return resposta(req, 403, { erro: "rota_nao_permitida" });
+}
+
+Deno.serve(async (req) => {
+  const r = await atender(req);
+  if (r.status >= 400 && r.status !== 401) {
+    registrarFalha(`resposta ${req.method}`, r.status);
+  }
+  return r;
 });

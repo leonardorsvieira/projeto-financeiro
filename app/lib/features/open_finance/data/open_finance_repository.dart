@@ -3,37 +3,65 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/conta_bancaria_conectada.dart';
 
+class PluggyCredentials {
+  final String? clientId;
+  final String? clientSecret;
+  final String? apiKey;
+
+  const PluggyCredentials({
+    this.clientId,
+    this.clientSecret,
+    this.apiKey,
+  });
+
+  bool get isPreenchido =>
+      (clientId != null && clientId!.trim().isNotEmpty && clientSecret != null && clientSecret!.trim().isNotEmpty) ||
+      (apiKey != null && apiKey!.trim().isNotEmpty);
+
+  Map<String, dynamic> toMap() => {
+        'client_id': clientId,
+        'client_secret': clientSecret,
+        'api_key': apiKey,
+      };
+
+  factory PluggyCredentials.fromMap(Map<String, dynamic> map) => PluggyCredentials(
+        clientId: map['client_id'] as String?,
+        clientSecret: map['client_secret'] as String?,
+        apiKey: map['api_key'] as String?,
+      );
+}
+
 class OpenFinanceRepository {
   static const _keyContas = 'open_finance_contas_v1';
   static const _keyCapturaNotificacoes = 'open_finance_captura_notif_v1';
+  static const _keyPluggyCreds = 'open_finance_pluggy_creds_v1';
+
+  Future<PluggyCredentials?> getPluggyCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_keyPluggyCreds);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      return PluggyCredentials.fromMap(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> salvarPluggyCredentials(PluggyCredentials creds) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyPluggyCreds, jsonEncode(creds.toMap()));
+  }
+
+  Future<void> limparPluggyCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyPluggyCreds);
+  }
 
   Future<List<ContaBancariaConectada>> getContasConectadas() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_keyContas);
     if (raw == null || raw.isEmpty) {
-      final padrao = [
-        ContaBancariaConectada(
-          id: 'nubank_default',
-          nomeBanco: 'Nubank',
-          tipoConta: 'Cartão & Conta',
-          corHex: '#8A05BE',
-          ultimoSync: DateTime.now().subtract(const Duration(minutes: 15)),
-          status: StatusConexaoBanco.conectado,
-          mascaraCartao: '•••• 4092',
-          capturaAutomaticaAtiva: true,
-        ),
-        ContaBancariaConectada(
-          id: 'inter_default',
-          nomeBanco: 'Banco Inter',
-          tipoConta: 'Conta Corrente & Pix',
-          corHex: '#FF7A00',
-          ultimoSync: DateTime.now().subtract(const Duration(hours: 2)),
-          status: StatusConexaoBanco.conectado,
-          capturaAutomaticaAtiva: true,
-        ),
-      ];
-      await salvarContasConectadas(padrao);
-      return padrao;
+      return [];
     }
 
     try {

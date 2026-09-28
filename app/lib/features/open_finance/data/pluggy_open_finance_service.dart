@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import '../domain/conta_bancaria_conectada.dart';
 import '../domain/transacao_bancaria_importada.dart';
+import 'open_finance_repository.dart';
 
 class BancoDisponivelOpenFinance {
   const BancoDisponivelOpenFinance({
@@ -16,7 +20,12 @@ class BancoDisponivelOpenFinance {
 }
 
 class PluggyOpenFinanceService {
-  PluggyOpenFinanceService();
+  final http.Client _httpClient;
+
+  PluggyOpenFinanceService({http.Client? httpClient})
+      : _httpClient = httpClient ?? http.Client();
+
+  static const String baseUrl = 'https://api.pluggy.ai';
 
   static const List<BancoDisponivelOpenFinance> bancosPrincipais = [
     BancoDisponivelOpenFinance(
@@ -61,14 +70,267 @@ class PluggyOpenFinanceService {
     ),
   ];
 
-  /// Simula ou executa a conexão Open Finance com o banco selecionado.
+  /// Obtém a API Key válida a partir do Client ID e Secret ou da chave direta informada.
+  Future<String> obterApiKey(PluggyCredentials creds) async {
+    // 1. Se tem API Key informada diretamente, valida-a
+    if (creds.apiKey != null && creds.apiKey!.trim().isNotEmpty) {
+      return creds.apiKey!.trim();
+    }
+
+    // 2. Se tem Client ID e Secret, faz o login via /auth
+    if (creds.clientId != null &&
+        creds.clientId!.trim().isNotEmpty &&
+        creds.clientSecret != null &&
+        creds.clientSecret!.trim().isNotEmpty) {
+      final resp = await _httpClient.post(
+        Uri.parse('$baseUrl/auth'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'clientId': creds.clientId!.trim(),
+          'clientSecret': creds.clientSecret!.trim(),
+        }),
+      );
+
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        final token = data['apiKey'] as String?;
+        if (token != null && token.isNotEmpty) {
+          return token;
+        }
+      }
+      throw Exception(
+        'Falha ao autenticar na Pluggy (Status ${resp.statusCode}). Verifique o Client ID e Client Secret.',
+      );
+    }
+
+    throw Exception('Credenciais da Pluggy não fornecidas.');
+  }
+
+  /// Testa se as credenciais fornecidas são válidas chamando a API da Pluggy.
+  Future<bool> testarConexao(PluggyCredentials creds) async {
+    try {
+      final apiKey = await obterApiKey(creds);
+      final resp = await _httpClient.get(
+        Uri.parse('$baseUrl/items?pageSize=1'),
+        headers: {
+          'X-API-KEY': apiKey,
+          'Content-Type': 'application/json',
+        },
+      );
+      return resp.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Busca todos os bancos conectados (Items) pelo usuário na Pluggy.
+  Future<List<ContaBancariaConectada>> buscarItensConectados(
+    PluggyCredentials creds,
+  ) async {
+    final apiKey = await obterApiKey(creds);
+    final resp = await _httpClient.get(
+      Uri.parse('$baseUrl/items'),
+      headers: {
+        'X-API-KEY': apiKey,
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (resp.statusCode != 200) {
+      throw Exception(
+        'Erro ao consultar conexões na Pluggy (Status ${resp.statusCode}).',
+      );
+    }
+
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    final results = (data['results'] as List<dynamic>?) ?? [];
+    final contas = <ContaBancariaConectada>[];
+
+    for (final rawItem in results) {
+      final item = rawItem as Map<String, dynamic>;
+      final itemId = item['id'] as String;
+      final connector = item['connector'] as Map<String, dynamic>? ?? {};
+      final nomeBanco = connector['name'] as String? ?? 'Banco';
+      final corHex = connector['primaryColor'] as String? ?? '#8A05BE';
+      final statusRaw = (item['status'] as String? ?? '').toUpperCase();
+
+      StatusConexaoBanco status;
+      if (statusRaw == 'UPDATED' || statusRaw == 'SUCCESS') {
+        status = StatusConexaoBanco.conectado;
+      } else if (statusRaw == 'UPDATING') {
+        status = StatusConexaoBanco.sincronizando;
+      } else if (statusRaw == 'LOGIN_ERROR' ||
+          statusRaw == 'WAITING_USER_INPUT') {
+        status = StatusConexaoBanco.requerReautenticacao;
+      } else {
+        status = StatusConexaoBanco.conectado;
+      }
+
+      final lastSyncStr = item['lastUpdatedAt'] as String?;
+      final lastSync = lastSyncStr != null
+          ? DateTime.tryParse(lastSyncStr)?.toLocal() ?? DateTime.now()
+          : DateTime.now();
+
+      // Busca dados das contas associadas a este item para obter tipo e máscara
+      String tipoConta = 'Conta & Cartão';
+      String? mascara;
+
+      try {
+        final accResp = await _httpClient.get(
+          Uri.parse('$baseUrl/accounts?itemId=$itemId'),
+          headers: {'X-API-KEY': apiKey},
+        );
+        if (accResp.statusCode == 200) {
+          final accData = jsonDecode(accResp.body) as Map<String, dynamic>;
+          final accounts = (accData['results'] as List<dynamic>?) ?? [];
+          if (accounts.isNotEmpty) {
+            final accList = accounts.cast<Map<String, dynamic>>();
+            final tipos = accList
+                .map((a) => (a['type'] as String? ?? 'BANK') == 'CREDIT'
+                    ? 'Cartão'
+                    : 'Conta')
+                .toSet()
+                .toList();
+            tipoConta = tipos.join(' & ');
+
+            final firstWithNumber = accList.firstWhere(
+              (a) => a['number'] != null && a['number'].toString().isNotEmpty,
+              orElse: () => {},
+            );
+            if (firstWithNumber.isNotEmpty) {
+              final numStr = firstWithNumber['number'].toString();
+              mascara = numStr.length >= 4
+                  ? '•••• ${numStr.substring(numStr.length - 4)}'
+                  : '•••• $numStr';
+            }
+          }
+        }
+      } catch (_) {
+        // Prossegue com valores padrão caso a listagem de sub-contas falhe
+      }
+
+      contas.add(
+        ContaBancariaConectada(
+          id: itemId,
+          nomeBanco: nomeBanco,
+          tipoConta: tipoConta,
+          corHex: corHex,
+          ultimoSync: lastSync,
+          status: status,
+          itemIdPluggy: itemId,
+          mascaraCartao: mascara,
+          capturaAutomaticaAtiva: true,
+        ),
+      );
+    }
+
+    return contas;
+  }
+
+  /// Busca as transações bancárias reais de todas as contas associadas aos itens conectados.
+  Future<List<TransacaoBancariaImportada>> buscarTodasTransacoes(
+    PluggyCredentials creds, {
+    DateTime? desde,
+  }) async {
+    final apiKey = await obterApiKey(creds);
+    final itens = await buscarItensConectados(creds);
+    final todasTransacoes = <TransacaoBancariaImportada>[];
+
+    final dataDesdeStr = desde != null
+        ? desde.toIso8601String().substring(0, 10)
+        : DateTime.now().subtract(const Duration(days: 30)).toIso8601String().substring(0, 10);
+
+    for (final item in itens) {
+      try {
+        final accResp = await _httpClient.get(
+          Uri.parse('$baseUrl/accounts?itemId=${item.id}'),
+          headers: {'X-API-KEY': apiKey},
+        );
+        if (accResp.statusCode != 200) continue;
+
+        final accData = jsonDecode(accResp.body) as Map<String, dynamic>;
+        final accounts = (accData['results'] as List<dynamic>?) ?? [];
+
+        for (final rawAcc in accounts) {
+          final acc = rawAcc as Map<String, dynamic>;
+          final accountId = acc['id'] as String;
+          final accType = (acc['type'] as String? ?? 'BANK').toUpperCase();
+          final isCreditCard = accType == 'CREDIT';
+
+          final txResp = await _httpClient.get(
+            Uri.parse('$baseUrl/transactions?accountId=$accountId&from=$dataDesdeStr&pageSize=100'),
+            headers: {'X-API-KEY': apiKey},
+          );
+
+          if (txResp.statusCode != 200) continue;
+
+          final txData = jsonDecode(txResp.body) as Map<String, dynamic>;
+          final txList = (txData['results'] as List<dynamic>?) ?? [];
+
+          for (final rawTx in txList) {
+            final tx = rawTx as Map<String, dynamic>;
+            final txId = tx['id'] as String;
+            final amount = (tx['amount'] as num?)?.toDouble() ?? 0.0;
+            final typeStr = (tx['type'] as String? ?? '').toUpperCase();
+            final isReceita = amount > 0 || typeStr == 'CREDIT';
+            final valorCents = (amount.abs() * 100).round();
+
+            if (valorCents == 0) continue;
+
+            final desc = (tx['description'] as String?) ??
+                (tx['descriptionRaw'] as String?) ??
+                'Transação ${item.nomeBanco}';
+
+            final dateStr = tx['date'] as String?;
+            final data = dateStr != null
+                ? DateTime.tryParse(dateStr)?.toLocal() ?? DateTime.now()
+                : DateTime.now();
+
+            final paymentData = tx['paymentData'] as Map<String, dynamic>?;
+            final paymentMethod =
+                (paymentData?['paymentMethod'] as String? ?? '').toUpperCase();
+            final isPix = paymentMethod == 'PIX' ||
+                desc.toLowerCase().contains('pix');
+
+            final formaPagamento = isPix
+                ? 'Pix'
+                : (isCreditCard
+                    ? 'Cartão: ${item.nomeBanco}'
+                    : 'Conta: ${item.nomeBanco}');
+
+            final categoriaRaw = tx['category'] as String?;
+            final categoria = _mapearCategoria(categoriaRaw, desc);
+
+            todasTransacoes.add(
+              TransacaoBancariaImportada(
+                id: txId,
+                nomeBanco: item.nomeBanco,
+                descricao: desc,
+                valorCents: valorCents,
+                isReceita: isReceita,
+                formaPagamento: formaPagamento,
+                data: data,
+                origem: OrigemTransacaoBancaria.openFinance,
+                categoriaSugerida: categoria,
+                estabelecimento: desc,
+              ),
+            );
+          }
+        }
+      } catch (_) {
+        // Continua com os demais itens caso ocorra falha em uma conta específica
+      }
+    }
+
+    return todasTransacoes;
+  }
+
+  /// Conecta uma nova instituição bancária localmente ou via Pluggy.
   Future<ContaBancariaConectada> conectarBanco({
     required String nomeBanco,
     required String tipoConta,
     String? corHex,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 1200));
-
     final id = 'banco_${DateTime.now().millisecondsSinceEpoch}';
     final cor = corHex ??
         (bancosPrincipais
@@ -87,38 +349,70 @@ class PluggyOpenFinanceService {
     );
   }
 
-  /// Puxa transações recentes da conta conectada via Open Finance.
-  Future<List<TransacaoBancariaImportada>> buscarTransacoesRecentes(
-    ContaBancariaConectada conta,
-  ) async {
-    await Future.delayed(const Duration(milliseconds: 800));
-    final agora = DateTime.now();
+  String _mapearCategoria(String? categoriaPluggy, String descricao) {
+    if (categoriaPluggy != null && categoriaPluggy.isNotEmpty) {
+      final cat = categoriaPluggy.toLowerCase();
+      if (cat.contains('food') ||
+          cat.contains('restauran') ||
+          cat.contains('refeição') ||
+          cat.contains('alimenta')) {
+        return 'Alimentação';
+      }
+      if (cat.contains('transport') ||
+          cat.contains('gas') ||
+          cat.contains('combust') ||
+          cat.contains('uber')) {
+        return 'Transporte';
+      }
+      if (cat.contains('health') ||
+          cat.contains('saude') ||
+          cat.contains('saúde') ||
+          cat.contains('pharmacy') ||
+          cat.contains('farm')) {
+        return 'Saúde';
+      }
+      if (cat.contains('entertainment') ||
+          cat.contains('lazer') ||
+          cat.contains('stream') ||
+          cat.contains('cinema')) {
+        return 'Lazer';
+      }
+      if (cat.contains('shopping') ||
+          cat.contains('compra') ||
+          cat.contains('loja')) {
+        return 'Compras';
+      }
+      if (cat.contains('educat') || cat.contains('educa')) {
+        return 'Educação';
+      }
+      if (cat.contains('home') ||
+          cat.contains('moradia') ||
+          cat.contains('aluguel') ||
+          cat.contains('luz') ||
+          cat.contains('água')) {
+        return 'Moradia';
+      }
+    }
 
-    return [
-      TransacaoBancariaImportada(
-        id: 'of_${conta.id}_1',
-        nomeBanco: conta.nomeBanco,
-        descricao: 'Supermercado e Feira',
-        valorCents: 14590,
-        isReceita: false,
-        formaPagamento: 'Cartão: ${conta.nomeBanco}',
-        data: agora.subtract(const Duration(hours: 3)),
-        origem: OrigemTransacaoBancaria.openFinance,
-        categoriaSugerida: 'Alimentação',
-        estabelecimento: 'Supermercado Exemplo',
-      ),
-      TransacaoBancariaImportada(
-        id: 'of_${conta.id}_2',
-        nomeBanco: conta.nomeBanco,
-        descricao: 'Transferência Pix',
-        valorCents: 5000,
-        isReceita: false,
-        formaPagamento: 'Pix',
-        data: agora.subtract(const Duration(days: 1)),
-        origem: OrigemTransacaoBancaria.openFinance,
-        categoriaSugerida: 'Outros',
-        estabelecimento: 'Pix - Fornecedor',
-      ),
-    ];
+    final lowerDesc = descricao.toLowerCase();
+    if (lowerDesc.contains('ifood') ||
+        lowerDesc.contains('mercado') ||
+        lowerDesc.contains('supermercado') ||
+        lowerDesc.contains('restaurante') ||
+        lowerDesc.contains('padaria')) {
+      return 'Alimentação';
+    }
+    if (lowerDesc.contains('uber') ||
+        lowerDesc.contains('99') ||
+        lowerDesc.contains('posto') ||
+        lowerDesc.contains('gasolina')) {
+      return 'Transporte';
+    }
+    if (lowerDesc.contains('farmacia') ||
+        lowerDesc.contains('drogaria') ||
+        lowerDesc.contains('hospital')) {
+      return 'Saúde';
+    }
+    return 'Outros';
   }
 }

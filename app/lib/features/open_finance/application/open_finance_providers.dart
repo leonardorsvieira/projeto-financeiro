@@ -17,6 +17,44 @@ final pluggyOpenFinanceServiceProvider = Provider<PluggyOpenFinanceService>(
   (ref) => PluggyOpenFinanceService(),
 );
 
+/// Provider para gerenciamento das credenciais da Pluggy.
+final pluggyCredentialsProvider =
+    NotifierProvider<PluggyCredentialsNotifier, AsyncValue<PluggyCredentials?>>(
+  PluggyCredentialsNotifier.new,
+);
+
+class PluggyCredentialsNotifier
+    extends Notifier<AsyncValue<PluggyCredentials?>> {
+  @override
+  AsyncValue<PluggyCredentials?> build() {
+    _carregar();
+    return const AsyncValue.loading();
+  }
+
+  Future<void> _carregar() async {
+    state = const AsyncValue.loading();
+    try {
+      final repo = ref.read(openFinanceRepositoryProvider);
+      final creds = await repo.getPluggyCredentials();
+      state = AsyncValue.data(creds);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> salvar(PluggyCredentials creds) async {
+    final repo = ref.read(openFinanceRepositoryProvider);
+    await repo.salvarPluggyCredentials(creds);
+    state = AsyncValue.data(creds);
+  }
+
+  Future<void> limpar() async {
+    final repo = ref.read(openFinanceRepositoryProvider);
+    await repo.limparPluggyCredentials();
+    state = const AsyncValue.data(null);
+  }
+}
+
 /// Provider que gerencia a lista de contas bancárias vinculadas.
 final contasConectadasProvider =
     NotifierProvider<ContasConectadasNotifier, AsyncValue<List<ContaBancariaConectada>>>(
@@ -53,6 +91,12 @@ class ContasConectadasNotifier
     await repo.removerConta(id);
     await _carregarContas();
   }
+
+  Future<void> salvarTodas(List<ContaBancariaConectada> contas) async {
+    final repo = ref.read(openFinanceRepositoryProvider);
+    await repo.salvarContasConectadas(contas);
+    state = AsyncValue.data(contas);
+  }
 }
 
 /// Controla o estado de ativação da captura automática por notificações de bancos.
@@ -80,13 +124,80 @@ class CapturaNotificacoesNotifier extends Notifier<bool> {
   }
 }
 
+/// Resultado retornado pela sincronização com a Pluggy.
+class ResultadoSincronizacaoPluggy {
+  final int contasSincronizadas;
+  final int transacoesNovas;
+
+  const ResultadoSincronizacaoPluggy({
+    required this.contasSincronizadas,
+    required this.transacoesNovas,
+  });
+}
+
+/// Sincroniza todas as contas e transações da Pluggy em um só clique.
+Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) async {
+  final credsAsync = ref.read(pluggyCredentialsProvider);
+  final creds = credsAsync.value;
+
+  if (creds == null || !creds.isPreenchido) {
+    throw Exception(
+      'Configure suas credenciais da Pluggy para sincronizar suas contas reais.',
+    );
+  }
+
+  final service = ref.read(pluggyOpenFinanceServiceProvider);
+  final contasNotifier = ref.read(contasConectadasProvider.notifier);
+
+  // 1. Busca os bancos conectados no Pluggy
+  final contas = await service.buscarItensConectados(creds);
+  await contasNotifier.salvarTodas(contas);
+
+  // 2. Busca todas as transações das contas conectadas
+  final transacoes = await service.buscarTodasTransacoes(creds);
+
+  // 3. Importa transações sem duplicar (baseado em obs: 'pluggy_id:{id}')
+  final lancamentoRepo = ref.read(lancamentosRepositoryProvider);
+  final lancamentosExistentes =
+      ref.read(lancamentosStreamProvider).value ?? [];
+  final idsExistentes = lancamentosExistentes
+      .where((l) => l.obs != null && l.obs!.startsWith('pluggy_id:'))
+      .map((l) => l.obs!)
+      .toSet();
+
+  var transacoesImportadas = 0;
+  for (final t in transacoes) {
+    final obsTag = 'pluggy_id:${t.id}';
+    if (idsExistentes.contains(obsTag)) continue;
+
+    await lancamentoRepo.create(
+      descricao: t.descricao,
+      valorCents: t.valorCents,
+      categoria: t.categoriaSugerida,
+      formaPagamento: t.formaPagamento,
+      data: t.data,
+      tipo: t.isReceita ? TipoLancamento.receita : TipoLancamento.despesa,
+      obs: obsTag,
+    );
+    idsExistentes.add(obsTag);
+    transacoesImportadas++;
+  }
+
+  // Atualiza os streams
+  ref.invalidate(lancamentosStreamProvider);
+
+  return ResultadoSincronizacaoPluggy(
+    contasSincronizadas: contas.length,
+    transacoesNovas: transacoesImportadas,
+  );
+}
+
 /// Função utilitária para converter uma transação importada em um Lançamento do Meu Bolso.
 Future<void> importarTransacaoParaLancamentos(
   WidgetRef ref,
   TransacaoBancariaImportada t,
 ) async {
   final lancamentoRepo = ref.read(lancamentosRepositoryProvider);
-  final agora = DateTime.now();
 
   await lancamentoRepo.create(
     descricao: t.descricao,
@@ -95,6 +206,7 @@ Future<void> importarTransacaoParaLancamentos(
     formaPagamento: t.formaPagamento,
     data: t.data,
     tipo: t.isReceita ? TipoLancamento.receita : TipoLancamento.despesa,
+    obs: 'pluggy_id:${t.id}',
   );
 }
 

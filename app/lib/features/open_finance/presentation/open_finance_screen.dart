@@ -129,15 +129,16 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
         children: [
           // Banner de Integração Pluggy
           Card(
-            color: pluggyConfigurado
-                ? Colors.purple.shade50
-                : Colors.amber.shade50,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(
                 color: pluggyConfigurado
-                    ? Colors.purple.shade200
-                    : Colors.amber.shade300,
+                    ? (theme.brightness == Brightness.dark
+                        ? Colors.purple.shade400.withValues(alpha: 0.4)
+                        : Colors.purple.shade200)
+                    : (theme.brightness == Brightness.dark
+                        ? Colors.amber.shade400.withValues(alpha: 0.4)
+                        : Colors.amber.shade300),
               ),
             ),
             child: Padding(
@@ -149,13 +150,17 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                     children: [
                       CircleAvatar(
                         backgroundColor: pluggyConfigurado
-                            ? Colors.purple.shade100
-                            : Colors.amber.shade100,
+                            ? Colors.purple.withValues(alpha: 0.2)
+                            : Colors.amber.withValues(alpha: 0.2),
                         child: Icon(
                           pluggyConfigurado ? Icons.link : Icons.link_off,
                           color: pluggyConfigurado
-                              ? Colors.purple.shade900
-                              : Colors.amber.shade900,
+                              ? (theme.brightness == Brightness.dark
+                                  ? Colors.purple.shade200
+                                  : Colors.purple.shade900)
+                              : (theme.brightness == Brightness.dark
+                                  ? Colors.amber.shade200
+                                  : Colors.amber.shade900),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -170,16 +175,22 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: pluggyConfigurado
-                                    ? Colors.purple.shade900
-                                    : Colors.amber.shade900,
+                                    ? (theme.brightness == Brightness.dark
+                                        ? Colors.purple.shade200
+                                        : Colors.purple.shade900)
+                                    : (theme.brightness == Brightness.dark
+                                        ? Colors.amber.shade200
+                                        : Colors.amber.shade900),
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 4),
                             Text(
                               pluggyConfigurado
                                   ? 'Conectado à API oficial com suas credenciais. Vincule o meu.pluggy.ai ou outros bancos para sincronizar compras e Pix automaticamente.'
                                   : 'Conecte sua conta do meu.pluggy.ai para puxar suas compras no cartão e Pix automaticamente.',
-                              style: theme.textTheme.bodySmall,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
@@ -550,13 +561,13 @@ class _CardContaBancaria extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: conta.status == StatusConexaoBanco.conectado
-                    ? Colors.green.shade50
-                    : Colors.amber.shade50,
+                    ? Colors.green.withValues(alpha: 0.15)
+                    : Colors.amber.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: conta.status == StatusConexaoBanco.conectado
-                    ? Colors.green.shade300
-                    : Colors.amber.shade300,
+                      ? Colors.green.withValues(alpha: 0.4)
+                      : Colors.amber.withValues(alpha: 0.4),
                 ),
               ),
               child: Text(
@@ -565,8 +576,12 @@ class _CardContaBancaria extends StatelessWidget {
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                   color: conta.status == StatusConexaoBanco.conectado
-                      ? Colors.green.shade900
-                      : Colors.amber.shade900,
+                      ? (Theme.of(context).brightness == Brightness.dark
+                          ? Colors.green.shade300
+                          : Colors.green.shade900)
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? Colors.amber.shade300
+                          : Colors.amber.shade900),
                 ),
               ),
             ),

@@ -226,10 +226,13 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
         children: [
           // Banner de Destaque: Conexão direta com meu.pluggy.ai
           Card(
-            color: Colors.purple.shade50,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.purple.shade200),
+              side: BorderSide(
+                color: theme.brightness == Brightness.dark
+                    ? Colors.purple.shade400.withValues(alpha: 0.4)
+                    : Colors.purple.shade200,
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -252,13 +255,17 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                               'Vincular com meu.pluggy.ai',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.purple.shade900,
+                                color: theme.brightness == Brightness.dark
+                                    ? Colors.purple.shade200
+                                    : Colors.purple.shade900,
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 4),
                             Text(
                               'Conecte o Meu Bolso diretamente ao painel meu.pluggy.ai onde suas contas já estão vinculadas.',
-                              style: TextStyle(fontSize: 12, color: Colors.purple.shade900),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),

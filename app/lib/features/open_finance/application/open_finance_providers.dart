@@ -17,43 +17,10 @@ final pluggyOpenFinanceServiceProvider = Provider<PluggyOpenFinanceService>(
   (ref) => PluggyOpenFinanceService(),
 );
 
-/// Provider para gerenciamento das credenciais da Pluggy.
-final pluggyCredentialsProvider =
-    NotifierProvider<PluggyCredentialsNotifier, AsyncValue<PluggyCredentials?>>(
-  PluggyCredentialsNotifier.new,
+/// Se o servidor tem o Open Finance (Pluggy) configurado.
+final pluggyConfiguradoProvider = FutureProvider<bool>(
+  (ref) => ref.watch(pluggyOpenFinanceServiceProvider).verificarConfiguracao(),
 );
-
-class PluggyCredentialsNotifier
-    extends Notifier<AsyncValue<PluggyCredentials?>> {
-  @override
-  AsyncValue<PluggyCredentials?> build() {
-    _carregar();
-    return const AsyncValue.loading();
-  }
-
-  Future<void> _carregar() async {
-    state = const AsyncValue.loading();
-    try {
-      final repo = ref.read(openFinanceRepositoryProvider);
-      final creds = await repo.getPluggyCredentials();
-      state = AsyncValue.data(creds);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
-  }
-
-  Future<void> salvar(PluggyCredentials creds) async {
-    final repo = ref.read(openFinanceRepositoryProvider);
-    await repo.salvarPluggyCredentials(creds);
-    state = AsyncValue.data(creds);
-  }
-
-  Future<void> limpar() async {
-    final repo = ref.read(openFinanceRepositoryProvider);
-    await repo.limparPluggyCredentials();
-    state = const AsyncValue.data(null);
-  }
-}
 
 /// Provider que gerencia a lista de contas bancárias vinculadas.
 final contasConectadasProvider =
@@ -137,22 +104,12 @@ class ResultadoSincronizacaoPluggy {
 
 /// Sincroniza todas as contas e transações da Pluggy em um só clique.
 Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) async {
-  final credsAsync = ref.read(pluggyCredentialsProvider);
-  final creds = credsAsync.value;
-
-  if (creds == null || !creds.isPreenchido) {
-    throw Exception(
-      'Configure suas credenciais da Pluggy para sincronizar suas contas reais.',
-    );
-  }
-
   final service = ref.read(pluggyOpenFinanceServiceProvider);
   final contasNotifier = ref.read(contasConectadasProvider.notifier);
   final contasAtuais = ref.read(contasConectadasProvider).value ?? [];
 
   // 1. Busca ou atualiza os bancos conectados no Pluggy
   final contas = await service.buscarItensConectados(
-    creds,
     contasExistentes: contasAtuais,
   );
   if (contas.isNotEmpty) {
@@ -163,7 +120,6 @@ Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) async {
 
   // 2. Busca todas as transações das contas conectadas
   final transacoes = await service.buscarTodasTransacoes(
-    creds,
     contas: listaParaBuscarTransacoes,
   );
 

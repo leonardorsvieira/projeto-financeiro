@@ -1,46 +1,82 @@
-<!-- GSD:project-start source:PROJECT.md -->
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 ## Project
 
 **Meu Bolso**
 
-Aplicativo financeiro pessoal para **um único usuário** (Leonardo) usado no celular (Android e iPhone) e no navegador do PC, acessível de qualquer lugar. Registra gastos, recebimentos e investimentos — principalmente **falando**: o usuário dita o lançamento e a IA transcreve, classifica e preenche (valor, categoria, forma de pagamento, vencimento e itens detalhados). Lembra de faturas e contas a vencer, mostra um dashboard com saldo do mês, gastos por categoria e próximos vencimentos, e permite metas de gasto por categoria.
+Aplicativo financeiro pessoal do Leonardo, **usado também por convidados/clientes** (cada um com a própria conta e dados isolados), usado no celular (Android e iPhone) e no navegador do PC, acessível de qualquer lugar. Registra gastos, recebimentos e investimentos — principalmente **falando**: o usuário dita o lançamento e a IA transcreve, classifica e preenche (valor, categoria, forma de pagamento, vencimento e itens detalhados). Lembra de faturas e contas a vencer, mostra um dashboard com saldo do mês, gastos por categoria e próximos vencimentos, e permite metas de gasto por categoria.
 
 **Core Value:** O usuário pode ditar um gasto, recebimento ou investimento com a voz e ele é registrado corretamente, no lugar certo, pronto para acompanhar — sem digitação manual.
 
 ### Constraints
 
-- **Mobile multiplataforma**: precisa rodar em Android e iPhone + web — exige stack cross-platform (ex.: Flutter ou React Native) + backend e web
-- **IA gratuita**: a captura de voz deve usar serviço/API com tier gratuito viável
-- **Departamento de dados**: dados financeiros pessoais são sensíveis — criptografia e privacidade
-- **Acesso de qualquer lugar**: exige backend em nuvem com API
+- **Mobile multiplataforma**: Android, iPhone e web a partir de um único código Flutter
+- **IA gratuita**: a captura de voz deve usar serviço/API com tier gratuito viável (hoje: Gemini via Google AI Studio)
+- **Dados sensíveis**: dados financeiros pessoais — criptografia e privacidade. O repositório GitHub é **público** e o bundle web também: nenhum segredo no código nem em `--dart-define`; nenhum usuário pode ver dados de outro
+- **Acesso de qualquer lugar**: backend em nuvem (Supabase)
 - **Custo**: projeto pessoal — hospedagem e serviços o mais baratos possíveis
-<!-- GSD:project-end -->
 
-<!-- GSD:stack-start source:STACK.md -->
-## Technology Stack
+## Commands
 
-Technology stack not yet documented. Will populate after codebase mapping or first phase.
-<!-- GSD:stack-end -->
+O app Flutter fica em `app/`; rode os comandos `flutter` a partir de lá. Scripts de build ficam na raiz. O README do projeto é `app/README.md` (não existe README na raiz).
 
-<!-- GSD:conventions-start source:CONVENTIONS.md -->
-## Conventions
+```bash
+cd app
+flutter pub get
+flutter analyze                     # lint (flutter_lints; build/android/ios/web excluídos)
+flutter test                        # suíte inteira
+flutter test test/features/ditado/data/gemini_prompt_test.dart   # um arquivo
+flutter test --plain-name "trecho do nome do teste"               # um teste pelo nome
+flutter run -d chrome --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
+```
 
-Conventions not yet established. Will populate as patterns emerge during development.
-<!-- GSD:conventions-end -->
+- **APK Android:** na raiz, `.\build_apk.ps1` (debug) ou `.\build_apk.ps1 -Mode release [-OutDir <pasta>]`. Lê as chaves do `.env` da raiz (modelo em `.env.example`). O APK pode sair em `C:\build\meubolso\...` em vez de `app\build\...` — o script verifica os dois.
+- **Web:** push na `main` que toque `app/**` publica no GitHub Pages (`.github/workflows/deploy.yml`, `--base-href=/projeto-financeiro/`, chaves vindas dos secrets do repositório; `404.html` é cópia do `index.html` para o fallback da SPA).
+- **iOS:** `.github/workflows/build-ios.yml`.
+- **Banco:** migrations SQL em `supabase/migrations/` (projeto Supabase `tkfhthotspehsgvmpsjm`, região `sa-east-1`). O nome do arquivo deve casar com a versão registrada no projeto remoto.
+- **Edge Functions:** `supabase/functions/{ditado,pluggy}` + `_shared/seguranca.ts` (Deno). Deploy com `supabase functions deploy <nome>` (ou MCP), sempre com verificação de JWT.
+- **CI:** `.github/workflows/secret-scan.yml` roda gitleaks em todo push/PR.
 
-<!-- GSD:architecture-start source:ARCHITECTURE.md -->
+## Configuração / segredos
+
+Não existe leitura de `.env` em runtime: `SUPABASE_URL`/`SUPABASE_ANON_KEY` (públicas) entram em **tempo de compilação** via `--dart-define` (`app/lib/core/env.dart`). Sem elas o app sobe, mas não inicializa o Supabase (só um aviso no log).
+
+**Nunca** coloque chave secreta no app nem em `--dart-define`: o repo e o bundle web são públicos. Segredos (`GEMINI_API_KEY`, `PLUGGY_CLIENT_ID`, `PLUGGY_CLIENT_SECRET`, opcionais `OWNER_USER_ID`, `ALLOWED_ORIGINS`, `LIMITE_DIARIO_*`) ficam em `supabase secrets` e só as Edge Functions os leem.
+
 ## Architecture
 
-Architecture not yet mapped. Follow existing patterns found in the codebase.
-<!-- GSD:architecture-end -->
+**Feature-first + camadas.** Cada pasta em `app/lib/features/<feature>/` segue `domain/` (modelos + interfaces de repositório) → `data/` (implementações: Supabase, HTTP, SharedPreferences) → `application/` (providers/Notifiers Riverpod, serviços) → `presentation/` (telas e widgets). Código e nomes em **português** (ex.: `lancamentos`, `rascunho`, `reconhecer`, `vencimento`).
 
-<!-- GSD:skills-start source:skills/ -->
-## Project Skills
+**Estado e injeção de dependência: Riverpod 3.** Todo repositório é exposto por um `Provider` (ex.: `lancamentosRepositoryProvider`, `ditadoRepositoryProvider`, `audioRecorderServiceProvider`), e os testes trocam essas implementações por fakes via `ProviderScope(overrides: [...])`. Até o relógio é injetável (`ditadoRelogioProvider`). Ao criar um repositório/serviço novo, exponha-o por provider para manter isso testável. Não há geração de código (sem `build_runner`, `riverpod_generator`, `freezed` ou `json_serializable`): providers, modelos e `fromJson`/`toJson` são escritos à mão — siga esse padrão em vez de adicionar anotações `@riverpod`.
 
-No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `.github/skills/`, or `.codex/skills/` with a `SKILL.md` index file.
-<!-- GSD:skills-end -->
+**Inicialização e isolamento de sessão** (`app/lib/main.dart`): `_SessaoIsolada` cria o `ProviderContainer` (`UncontrolledProviderScope`) e inicia o `lembretesControllerProvider` (notificações locais, só Android/iOS). Quando o usuário sai, a sessão expira ou outra conta entra, ela chama `limparDadosLocais()` (SharedPreferences, notificações agendadas, widget) e **recria o container inteiro** — os providers de dados não dependem do usuário, então é isso que impede dados de uma conta aparecerem para outra no mesmo aparelho. O `BiometricLockWrapper` envolve todo o app via `MaterialApp.router(builder:)`. Locale fixo `pt_BR`.
 
-<!-- GSD:workflow-start source:GSD defaults -->
+**Navegação** (`app/lib/router/app_router.dart`): `GoRouter` num provider, com `refreshListenable` ligado ao `authControllerProvider` para redirecionar login/logout. Constantes de rota em `features/home/domain/app_routes.dart`. As telas de confirmação do ditado recebem o rascunho por `state.extra` (`RascunhoLancamento` / `RascunhoInvestimento`), não pela URL.
+
+**Fluxo de voz (núcleo do produto)** — `features/ditado/`:
+`DitadoController` (máquina de estados selada: `Idle → Gravando → Processando → Sucesso|Erro`) grava via `AudioRecorderService` (pacote `record`; leitura do arquivo tem implementações condicionais `_io`/`_web`/`_stub`), descarta gravações < 500 ms, e envia o áudio ao `GeminiDitadoRepository`, que manda `{modelo, corpo}` para a Edge Function `ditado` (via `core/edge_function.dart`, com o JWT do usuário); a função confere login + e-mail confirmado, aplica cota diária (`consumir_cota`), valida o modelo numa allowlist e repassa ao `generateContent` do Gemini com o prompt de `gemini_prompt.dart`. O cliente tem retry em 429/5xx e **fallback por uma lista de modelos candidatos** (o 429 `limite_diario` da função não é repetido). O resultado vira um rascunho que o usuário revisa numa tela de confirmação antes de salvar em `lancamentos`/`investimentos`.
+
+**Onde os dados moram — dois lugares diferentes:**
+- **Supabase (Postgres, RLS por `auth.uid() = user_id` em todas as tabelas):** `lancamentos` (despesa/receita via coluna `tipo`, itens e recorrência), `metas`, `investimentos`, `movimentos_investimento`, `rendimentos_investimento`. `user_id` tem default `auth.uid()`. Tabelas só de servidor: `pluggy_items` (dono de cada conexão Pluggy; cliente só lê as próprias) e `uso_diario` (cotas; sem acesso do cliente). O papel `anon` não tem privilégio nenhum no schema `public`.
+- **Local no dispositivo (`SharedPreferences`), não sincronizado:** cartões de crédito (`cartoes`), contas conectadas do Open Finance (só metadados, sem credenciais), preferências de lembrete, biometria, tema e partes de investimentos. Tudo é apagado no logout. Mudar isso para o Supabase exige migration nova.
+
+**Open Finance (Pluggy) — isolamento entre usuários:** a conta Pluggy é única e compartilhada, então o isolamento é feito pela Edge Function `pluggy`: o `PluggyOpenFinanceService` manda `{metodo, caminho, corpo}` e a função só repassa rotas de uma allowlist, injeta `clientUserId = auth.uid()` em connect tokens/items e só devolve items/contas/transações cujo item está em `pluggy_items` para aquele usuário. Nunca chame `api.pluggy.ai` direto do app.
+
+**Integrações HTTP externas:** Gemini e Pluggy só via Edge Functions; cotações (AwesomeAPI, Yahoo Finance, brapi.dev, com fallback em `investimentos/data/cotacoes_service.dart`) direto do cliente. A web tem CSP em `app/web/index.html` — um domínio novo chamado pelo app precisa entrar no `connect-src`.
+
+**Dashboard/relatórios** derivam tudo dos streams de `lancamentos` e `investimentos` via providers (`dashboard_providers.dart`, `relatorios_providers.dart`); gráficos com `fl_chart`, PDF com `pdf`/`printing`, widget de tela inicial com `home_widget`. Donut, metas e próximos vencimentos consideram só `tipo = despesa`.
+
+## Testes
+
+`app/test/` espelha `lib/features/`. Fakes reutilizáveis em `app/test/support/` (`fake_*_repository.dart`, `fake_auth.dart`, `fake_ditado_providers.dart`); `wrapWithFakes(...)` em `fake_wrappers.dart` monta o `ProviderScope` com overrides para testes de widget. Testes de repositórios HTTP (Gemini, Pluggy, cotações) injetam um `http.Client` falso pelo construtor.
+
+## Conventions
+
+- Mensagens de commit no estilo Conventional Commits, em português, com escopo opcional: `feat(open-finance): ...`, `fix(ui): ...`, `docs: ...`, `chore: ...`.
+- Planejamento GSD vive em `.planning/` (`STATE.md`, `ROADMAP.md`, `phases/`); `docs:` commits geralmente atualizam esses arquivos.
+
 ## GSD Workflow Enforcement
 
 Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
@@ -51,13 +87,8 @@ Use these entry points:
 - `/gsd-execute-phase` for planned phase work
 
 Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
-<!-- GSD:workflow-end -->
 
-
-
-<!-- GSD:profile-start -->
 ## Developer Profile
 
 > Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
 > This section is managed by `generate-claude-profile` -- do not edit manually.
-<!-- GSD:profile-end -->

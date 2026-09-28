@@ -2,18 +2,22 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../../../core/edge_function.dart';
 import '../domain/ditado_repository.dart';
 import '../domain/rascunho_lancamento.dart';
 import 'gemini_prompt.dart';
 
+/// Chama o Gemini através da Edge Function `ditado` (a GEMINI_API_KEY fica só
+/// no servidor). Cada tentativa envia `{modelo, corpo}`; a função valida o
+/// usuário, aplica a cota diária e repassa o `generateContent`.
 class GeminiDitadoRepository implements DitadoRepository {
   GeminiDitadoRepository({
     http.Client? cliente,
-    String? apiKey,
+    EdgeFunction? funcao,
     String? modelo,
     List<Duration>? esperasRetry,
   })  : _cliente = cliente ?? http.Client(),
-        _apiKey = apiKey ?? const String.fromEnvironment('GEMINI_API_KEY'),
+        _funcao = funcao ?? EdgeFunction.supabase('ditado'),
         _modelo = modelo ?? GeminiPrompt.modelo,
         _esperasRetry =
             esperasRetry ??
@@ -22,13 +26,11 @@ class GeminiDitadoRepository implements DitadoRepository {
               Duration(milliseconds: 1600),
             ];
 
-  static const String _baseUrl = 'generativelanguage.googleapis.com';
-  static const String _caminho = '/v1beta/models/';
   static const int _maxTentativas = 3;
   static const Set<int> _errosTemporarios = {429, 500, 502, 503};
 
   final http.Client _cliente;
-  final String _apiKey;
+  final EdgeFunction _funcao;
   final String _modelo;
   final List<Duration> _esperasRetry;
 
@@ -40,10 +42,9 @@ class GeminiDitadoRepository implements DitadoRepository {
   ];
 
   Future<Map<String, dynamic>> _post(Map<String, dynamic> corpo) async {
-    if (_apiKey.isEmpty) {
-      throw const DitadoException(
-        'IA não configurada. Adicione a GEMINI_API_KEY no deploy.',
-      );
+    final cabecalhos = await _funcao.cabecalhos();
+    if (cabecalhos == null) {
+      throw const DitadoException('Entre na sua conta para usar o ditado.');
     }
 
     Object? ultimoErro;
@@ -57,34 +58,32 @@ class GeminiDitadoRepository implements DitadoRepository {
         if (tentativa > 0 && tentativa - 1 < _esperasRetry.length) {
           await Future<void>.delayed(_esperasRetry[tentativa - 1]);
         }
-        final uri = Uri.https(
-          _baseUrl,
-          '$_caminho$mod:generateContent',
-          {'key': _apiKey},
-        );
+        final http.Response resposta;
         try {
-          final resposta = await _cliente.post(
-            uri,
-            headers: const {'Content-Type': 'application/json'},
-            body: jsonEncode(corpo),
+          resposta = await _cliente.post(
+            _funcao.url,
+            headers: cabecalhos,
+            body: jsonEncode({'modelo': mod, 'corpo': corpo}),
           );
-          if (resposta.statusCode == 200) {
-            final decodificado = jsonDecode(resposta.body);
-            if (decodificado is! Map<String, dynamic>) {
-              throw const DitadoException(
-                'A resposta da IA veio em um formato inesperado.',
-              );
-            }
-            return decodificado;
-          }
-          final ultimaTentativa = tentativa == _maxTentativas - 1;
-          if (!ultimaTentativa &&
-              _errosTemporarios.contains(resposta.statusCode)) {
-            continue;
-          }
-          ultimoErro = 'HTTP ${resposta.statusCode}';
         } catch (e) {
           ultimoErro = e;
+          continue;
+        }
+        _falhaDefinitiva(resposta);
+        if (resposta.statusCode == 200) {
+          final decodificado = jsonDecode(resposta.body);
+          if (decodificado is! Map<String, dynamic>) {
+            throw const DitadoException(
+              'A resposta da IA veio em um formato inesperado.',
+            );
+          }
+          return decodificado;
+        }
+        ultimoErro = 'HTTP ${resposta.statusCode}';
+        final ultimaTentativa = tentativa == _maxTentativas - 1;
+        if (ultimaTentativa ||
+            !_errosTemporarios.contains(resposta.statusCode)) {
+          break;
         }
       }
     }
@@ -92,6 +91,24 @@ class GeminiDitadoRepository implements DitadoRepository {
     throw DitadoException(
       'IA indisponível no momento ($ultimoErro). Tente de novo.',
     );
+  }
+
+  /// Erros da própria Edge Function: não adianta repetir nem trocar de modelo.
+  static void _falhaDefinitiva(http.Response resposta) {
+    final corpo = resposta.body;
+    if (resposta.statusCode == 401) {
+      throw const DitadoException(
+        'Sessão expirada ou e-mail não confirmado. Entre de novo.',
+      );
+    }
+    if (resposta.statusCode == 429 && corpo.contains('limite_diario')) {
+      throw const DitadoException(
+        'Você atingiu o limite diário de uso da IA. Tente amanhã.',
+      );
+    }
+    if (resposta.statusCode == 503 && corpo.contains('ia_nao_configurada')) {
+      throw const DitadoException('IA não configurada no servidor.');
+    }
   }
 
   @override

@@ -4,10 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../application/open_finance_providers.dart';
-import '../data/pluggy_open_finance_service.dart';
 import '../domain/conta_bancaria_conectada.dart';
 import 'widgets/conectar_banco_dialog.dart';
-import 'widgets/configurar_pluggy_dialog.dart';
+import 'widgets/status_pluggy_dialog.dart';
 
 class OpenFinanceScreen extends ConsumerStatefulWidget {
   const OpenFinanceScreen({super.key});
@@ -21,15 +20,16 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
   bool _abrindoMeuPluggy = false;
 
   Future<void> _abrirMeuPluggyConnect() async {
-    final creds = ref.read(pluggyCredentialsProvider).value;
-    if (creds == null || !creds.isPreenchido) {
-      mostrarDialogoConfigurarPluggy(context);
+    final configurado = await ref.read(pluggyConfiguradoProvider.future);
+    if (!mounted) return;
+    if (!configurado) {
+      mostrarDialogoStatusPluggy(context);
       return;
     }
     setState(() => _abrindoMeuPluggy = true);
     try {
       final service = ref.read(pluggyOpenFinanceServiceProvider);
-      final resultado = await service.iniciarConexaoMeuPluggyDireta(creds);
+      final resultado = await service.iniciarConexaoMeuPluggyDireta();
 
       // Salva ou adiciona a conta Meu Pluggy com o Item ID real gerado
       final contaMeuPluggy = ContaBancariaConectada(
@@ -97,9 +97,9 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
           content: Text('Falha na sincronização: $e'),
           backgroundColor: Colors.red.shade700,
           action: SnackBarAction(
-            label: 'Configurar',
+            label: 'Detalhes',
             textColor: Colors.white,
-            onPressed: () => mostrarDialogoConfigurarPluggy(context),
+            onPressed: () => mostrarDialogoStatusPluggy(context),
           ),
         ),
       );
@@ -112,12 +112,10 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final contasAsync = ref.watch(contasConectadasProvider);
-    final credsAsync = ref.watch(pluggyCredentialsProvider);
-    final capturaNotifAtiva = ref.watch(capturaNotificacoesAtivaProvider);
+        final capturaNotifAtiva = ref.watch(capturaNotificacoesAtivaProvider);
     final fmtData = DateFormat('dd/MM/yyyy HH:mm');
-
-    final creds = credsAsync.value;
-    final pluggyConfigurado = creds?.isPreenchido ?? false;
+    final pluggyConfigurado =
+        ref.watch(pluggyConfiguradoProvider).value ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -136,8 +134,8 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Configurações do Pluggy',
-            onPressed: () => mostrarDialogoConfigurarPluggy(context),
+            tooltip: 'Status do Open Finance',
+            onPressed: () => mostrarDialogoStatusPluggy(context),
           ),
         ],
       ),
@@ -188,7 +186,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                             Text(
                               pluggyConfigurado
                                   ? 'Integração Pluggy Ativa'
-                                  : 'Vincular Conta Pluggy (meu.pluggy.ai)',
+                                  : 'Open Finance indisponível',
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: pluggyConfigurado
@@ -203,8 +201,8 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                             const SizedBox(height: 4),
                             Text(
                               pluggyConfigurado
-                                  ? 'Conectado à API oficial com suas credenciais. Vincule o meu.pluggy.ai ou outros bancos para sincronizar compras e Pix automaticamente.'
-                                  : 'Conecte sua conta do meu.pluggy.ai para puxar suas compras no cartão e Pix automaticamente.',
+                                  ? 'Conexão segura com a Pluggy: só você vê os seus bancos. Vincule o meu.pluggy.ai ou outros bancos para sincronizar compras e Pix automaticamente.'
+                                  : 'O servidor ainda não está configurado para o Open Finance. Toque em Status para verificar de novo.',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -254,14 +252,14 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                               : 'Sincronizar Agora'),
                         ),
                         OutlinedButton(
-                          onPressed: () => mostrarDialogoConfigurarPluggy(context),
-                          child: const Text('Credenciais'),
+                          onPressed: () => mostrarDialogoStatusPluggy(context),
+                          child: const Text('Status'),
                         ),
                       ] else ...[
                         FilledButton.icon(
-                          onPressed: () => mostrarDialogoConfigurarPluggy(context),
+                          onPressed: () => mostrarDialogoStatusPluggy(context),
                           icon: const Icon(Icons.vpn_key_outlined, size: 18),
-                          label: const Text('Vincular Conta Pluggy'),
+                          label: const Text('Verificar Open Finance'),
                         ),
                       ],
                     ],
@@ -357,14 +355,14 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                         Text(
                           pluggyConfigurado
                               ? 'Nenhuma instituição sincronizada ainda.'
-                              : 'Vincule seu Pluggy para listar seus bancos.',
+                              : 'Open Finance indisponível no momento.',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           pluggyConfigurado
                               ? 'Clique no botão abaixo para autorizar o meu.pluggy.ai ou conectar qualquer banco diretamente via Open Finance.'
-                              : 'Conecte suas credenciais do meu.pluggy.ai para importar suas contas e movimentações de forma automática.',
+                              : 'Tente novamente mais tarde.',
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 12),
                         ),
@@ -394,9 +392,9 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                             ] else ...[
                               FilledButton.icon(
                                 onPressed: () =>
-                                    mostrarDialogoConfigurarPluggy(context),
+                                    mostrarDialogoStatusPluggy(context),
                                 icon: const Icon(Icons.vpn_key_outlined),
-                                label: const Text('Vincular Conta Pluggy'),
+                                label: const Text('Verificar Open Finance'),
                               ),
                             ],
                           ],

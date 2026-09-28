@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/edge_function.dart';
 import '../domain/conta_bancaria_conectada.dart';
 import '../domain/transacao_bancaria_importada.dart';
-import 'open_finance_repository.dart';
 
 class BancoDisponivelOpenFinance {
   const BancoDisponivelOpenFinance({
@@ -32,13 +32,19 @@ class ConexaoMeuPluggyResult {
   });
 }
 
+/// Acesso à Pluggy através da Edge Function `pluggy`.
+///
+/// As credenciais da Pluggy ficam só no servidor, e a função só devolve
+/// items/contas/transações que pertencem ao usuário logado — a conta Pluggy é
+/// compartilhada entre todos os usuários do app.
 class PluggyOpenFinanceService {
   final http.Client _httpClient;
+  final EdgeFunction _funcao;
 
-  PluggyOpenFinanceService({http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client();
+  PluggyOpenFinanceService({http.Client? httpClient, EdgeFunction? funcao})
+      : _httpClient = httpClient ?? http.Client(),
+        _funcao = funcao ?? EdgeFunction.supabase('pluggy');
 
-  static const String baseUrl = 'https://api.pluggy.ai';
   static const int connectorMeuPluggy = 200;
 
   static const List<BancoDisponivelOpenFinance> bancosPrincipais = [
@@ -95,74 +101,51 @@ class PluggyOpenFinanceService {
     ),
   ];
 
-  /// Obtém a API Key válida a partir do Client ID e Secret ou da chave direta informada.
-  Future<String> obterApiKey(PluggyCredentials creds) async {
-    // 1. Se tem API Key informada diretamente, valida-a
-    if (creds.apiKey != null && creds.apiKey!.trim().isNotEmpty) {
-      return creds.apiKey!.trim();
+  /// Repassa `metodo caminho` da API da Pluggy pela Edge Function.
+  Future<http.Response> _chamar(
+    String metodo,
+    String caminho, {
+    Map<String, dynamic>? corpo,
+  }) async {
+    final cabecalhos = await _funcao.cabecalhos();
+    if (cabecalhos == null) {
+      throw Exception('Entre na sua conta para usar o Open Finance.');
     }
-
-    // 2. Se tem Client ID e Secret, faz o login via /auth
-    if (creds.clientId != null &&
-        creds.clientId!.trim().isNotEmpty &&
-        creds.clientSecret != null &&
-        creds.clientSecret!.trim().isNotEmpty) {
-      final resp = await _httpClient.post(
-        Uri.parse('$baseUrl/auth'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'clientId': creds.clientId!.trim(),
-          'clientSecret': creds.clientSecret!.trim(),
-        }),
-      );
-
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body) as Map<String, dynamic>;
-        final token = data['apiKey'] as String?;
-        if (token != null && token.isNotEmpty) {
-          return token;
-        }
-      }
-      throw Exception(
-        'Falha ao autenticar na Pluggy (Status ${resp.statusCode}). Verifique o Client ID e Client Secret.',
-      );
+    final resp = await _httpClient.post(
+      _funcao.url,
+      headers: cabecalhos,
+      body: jsonEncode({
+        'metodo': metodo,
+        'caminho': caminho,
+        'corpo': ?corpo,
+      }),
+    );
+    if (resp.statusCode == 401) {
+      throw Exception('Sessão expirada ou e-mail não confirmado. Entre de novo.');
     }
-
-    throw Exception('Credenciais da Pluggy não fornecidas.');
+    if (resp.statusCode == 429 && resp.body.contains('limite_diario')) {
+      throw Exception('Limite diário do Open Finance atingido. Tente amanhã.');
+    }
+    return resp;
   }
 
-  /// Testa se as credenciais fornecidas são válidas chamando a API da Pluggy.
-  Future<bool> testarConexao(PluggyCredentials creds) async {
+  /// Indica se o servidor tem as credenciais da Pluggy configuradas.
+  Future<bool> verificarConfiguracao() async {
     try {
-      final apiKey = await obterApiKey(creds);
-      // Tenta listar conectores (disponível em todas as contas)
-      final resp = await _httpClient.get(
-        Uri.parse('$baseUrl/connectors?pageSize=1'),
-        headers: {
-          'X-API-KEY': apiKey,
-          'Content-Type': 'application/json',
-        },
-      );
-      if (resp.statusCode == 200) return true;
-
-      // Fallback para mock/outras configurações
-      final fallback = await _httpClient.get(
-        Uri.parse('$baseUrl/items?pageSize=1'),
-        headers: {'X-API-KEY': apiKey},
-      );
-      return fallback.statusCode == 200;
+      final resp = await _chamar('GET', '/status');
+      if (resp.statusCode != 200) return false;
+      final data = jsonDecode(resp.body) as Map<String, dynamic>;
+      return data['configurado'] == true;
     } catch (_) {
       return false;
     }
   }
 
   /// Gera um Connect Token temporário para carregar o widget oficial da Pluggy.
-  Future<String> gerarConnectToken(
-    PluggyCredentials creds, {
+  Future<String> gerarConnectToken({
     int? connectorId,
     String? oauthRedirectUri,
   }) async {
-    final apiKey = await obterApiKey(creds);
     final Map<String, dynamic> options = {};
     if (connectorId != null) {
       options['connectorId'] = connectorId;
@@ -171,15 +154,10 @@ class PluggyOpenFinanceService {
       options['oauthRedirectUri'] = oauthRedirectUri;
     }
 
-    final body = options.isNotEmpty ? {'options': options} : <String, dynamic>{};
-
-    final resp = await _httpClient.post(
-      Uri.parse('$baseUrl/connect_token'),
-      headers: {
-        'X-API-KEY': apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(body),
+    final resp = await _chamar(
+      'POST',
+      '/connect_token',
+      corpo: {'options': options},
     );
 
     if (resp.statusCode == 200) {
@@ -196,13 +174,11 @@ class PluggyOpenFinanceService {
   }
 
   /// Abre a interface oficial de autenticação da Pluggy (Widget Connect) no navegador.
-  Future<void> abrirWidgetConexao(
-    PluggyCredentials creds, {
+  Future<void> abrirWidgetConexao({
     int? connectorId,
     String? oauthRedirectUri,
   }) async {
     final connectToken = await gerarConnectToken(
-      creds,
       connectorId: connectorId,
       oauthRedirectUri: oauthRedirectUri,
     );
@@ -214,22 +190,15 @@ class PluggyOpenFinanceService {
 
   /// Inicia a conexão direta com o meu.pluggy.ai via API, retornando a URL direta de autorização OAuth
   /// sem exigir passos redundantes de seleção de conector no widget.
-  Future<ConexaoMeuPluggyResult> iniciarConexaoMeuPluggyDireta(
-    PluggyCredentials creds,
-  ) async {
-    final apiKey = await obterApiKey(creds);
-
+  Future<ConexaoMeuPluggyResult> iniciarConexaoMeuPluggyDireta() async {
     try {
-      final resp = await _httpClient.post(
-        Uri.parse('$baseUrl/items'),
-        headers: {
-          'X-API-KEY': apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
+      final resp = await _chamar(
+        'POST',
+        '/items',
+        corpo: {
           'connectorId': connectorMeuPluggy,
           'parameters': <String, dynamic>{},
-        }),
+        },
       );
 
       if (resp.statusCode == 200 || resp.statusCode == 201) {
@@ -244,25 +213,19 @@ class PluggyOpenFinanceService {
       }
     } catch (_) {}
 
-    final token = await gerarConnectToken(creds, connectorId: connectorMeuPluggy);
+    final token = await gerarConnectToken(connectorId: connectorMeuPluggy);
     return ConexaoMeuPluggyResult(
       itemId: 'meu_pluggy_${DateTime.now().millisecondsSinceEpoch}',
       oauthUrl: 'https://connect.pluggy.ai/?connect_token=$token',
     );
   }
 
-  /// Busca um item específico da Pluggy pelo seu ID.
-  Future<ContaBancariaConectada> buscarItemPorId(
-    PluggyCredentials creds,
-    String itemId,
-  ) async {
-    final apiKey = await obterApiKey(creds);
-    final resp = await _httpClient.get(
-      Uri.parse('$baseUrl/items/$itemId'),
-      headers: {
-        'X-API-KEY': apiKey,
-        'Content-Type': 'application/json',
-      },
+  /// Busca um item específico da Pluggy pelo seu ID. O servidor só o devolve se
+  /// pertencer ao usuário logado.
+  Future<ContaBancariaConectada> buscarItemPorId(String itemId) async {
+    final resp = await _chamar(
+      'GET',
+      '/items/${Uri.encodeComponent(itemId)}',
     );
 
     if (resp.statusCode != 200) {
@@ -272,8 +235,16 @@ class PluggyOpenFinanceService {
     }
 
     final item = jsonDecode(resp.body) as Map<String, dynamic>;
+    return _mapearItem(item, nomePadrao: 'Banco Conectado');
+  }
+
+  Future<ContaBancariaConectada> _mapearItem(
+    Map<String, dynamic> item, {
+    String nomePadrao = 'Banco',
+  }) async {
+    final itemId = item['id'] as String;
     final connector = item['connector'] as Map<String, dynamic>? ?? {};
-    final nomeBanco = connector['name'] as String? ?? 'Banco Conectado';
+    final nomeBanco = connector['name'] as String? ?? nomePadrao;
     final corHex = connector['primaryColor'] as String? ?? '#8A05BE';
     final statusRaw = (item['status'] as String? ?? '').toUpperCase();
 
@@ -294,13 +265,14 @@ class PluggyOpenFinanceService {
         ? DateTime.tryParse(lastSyncStr)?.toLocal() ?? DateTime.now()
         : DateTime.now();
 
+    // Busca dados das contas associadas a este item para obter tipo e máscara
     String tipoConta = 'Conta & Cartão';
     String? mascara;
 
     try {
-      final accResp = await _httpClient.get(
-        Uri.parse('$baseUrl/accounts?itemId=$itemId'),
-        headers: {'X-API-KEY': apiKey},
+      final accResp = await _chamar(
+        'GET',
+        '/accounts?itemId=${Uri.encodeQueryComponent(itemId)}',
       );
       if (accResp.statusCode == 200) {
         final accData = jsonDecode(accResp.body) as Map<String, dynamic>;
@@ -342,120 +314,27 @@ class PluggyOpenFinanceService {
     );
   }
 
-  /// Busca todos os bancos conectados (Items) pelo usuário na Pluggy.
-  Future<List<ContaBancariaConectada>> buscarItensConectados(
-    PluggyCredentials creds, {
+  /// Busca os bancos conectados (Items) do usuário logado.
+  Future<List<ContaBancariaConectada>> buscarItensConectados({
     List<ContaBancariaConectada> contasExistentes = const [],
   }) async {
-    final apiKey = await obterApiKey(creds);
-
-    // Tenta primeiro os endpoints de listagem (/v2/items ou /items)
     http.Response? resp;
     try {
-      resp = await _httpClient.get(
-        Uri.parse('$baseUrl/v2/items'),
-        headers: {
-          'X-API-KEY': apiKey,
-          'Content-Type': 'application/json',
-        },
-      );
-      if (resp.statusCode != 200) {
-        resp = await _httpClient.get(
-          Uri.parse('$baseUrl/items'),
-          headers: {
-            'X-API-KEY': apiKey,
-            'Content-Type': 'application/json',
-          },
-        );
-      }
+      resp = await _chamar('GET', '/items');
     } catch (_) {}
 
     if (resp != null && resp.statusCode == 200) {
       final data = jsonDecode(resp.body) as Map<String, dynamic>;
       final results = (data['results'] as List<dynamic>?) ?? [];
       final contas = <ContaBancariaConectada>[];
-
       for (final rawItem in results) {
-        final item = rawItem as Map<String, dynamic>;
-        final itemId = item['id'] as String;
-        final connector = item['connector'] as Map<String, dynamic>? ?? {};
-        final nomeBanco = connector['name'] as String? ?? 'Banco';
-        final corHex = connector['primaryColor'] as String? ?? '#8A05BE';
-        final statusRaw = (item['status'] as String? ?? '').toUpperCase();
-
-        StatusConexaoBanco status;
-        if (statusRaw == 'UPDATED' || statusRaw == 'SUCCESS') {
-          status = StatusConexaoBanco.conectado;
-        } else if (statusRaw == 'UPDATING') {
-          status = StatusConexaoBanco.sincronizando;
-        } else if (statusRaw == 'LOGIN_ERROR' ||
-            statusRaw == 'WAITING_USER_INPUT') {
-          status = StatusConexaoBanco.requerReautenticacao;
-        } else {
-          status = StatusConexaoBanco.conectado;
-        }
-
-        final lastSyncStr = item['lastUpdatedAt'] as String?;
-        final lastSync = lastSyncStr != null
-            ? DateTime.tryParse(lastSyncStr)?.toLocal() ?? DateTime.now()
-            : DateTime.now();
-
-        // Busca dados das contas associadas a este item para obter tipo e máscara
-        String tipoConta = 'Conta & Cartão';
-        String? mascara;
-
-        try {
-          final accResp = await _httpClient.get(
-            Uri.parse('$baseUrl/accounts?itemId=$itemId'),
-            headers: {'X-API-KEY': apiKey},
-          );
-          if (accResp.statusCode == 200) {
-            final accData = jsonDecode(accResp.body) as Map<String, dynamic>;
-            final accounts = (accData['results'] as List<dynamic>?) ?? [];
-            if (accounts.isNotEmpty) {
-              final accList = accounts.cast<Map<String, dynamic>>();
-              final tipos = accList
-                  .map((a) => (a['type'] as String? ?? 'BANK') == 'CREDIT'
-                      ? 'Cartão'
-                      : 'Conta')
-                  .toSet()
-                  .toList();
-              tipoConta = tipos.join(' & ');
-
-              final firstWithNumber = accList.firstWhere(
-                (a) => a['number'] != null && a['number'].toString().isNotEmpty,
-                orElse: () => {},
-              );
-              if (firstWithNumber.isNotEmpty) {
-                final numStr = firstWithNumber['number'].toString();
-                mascara = numStr.length >= 4
-                    ? '•••• ${numStr.substring(numStr.length - 4)}'
-                    : '•••• $numStr';
-              }
-            }
-          }
-        } catch (_) {}
-
-        contas.add(
-          ContaBancariaConectada(
-            id: itemId,
-            nomeBanco: nomeBanco,
-            tipoConta: tipoConta,
-            corHex: corHex,
-            ultimoSync: lastSync,
-            status: status,
-            itemIdPluggy: itemId,
-            mascaraCartao: mascara,
-            capturaAutomaticaAtiva: true,
-          ),
-        );
+        contas.add(await _mapearItem(rawItem as Map<String, dynamic>));
       }
-
-      return contas;
+      if (contas.isNotEmpty) return contas;
     }
 
-    // Se o plano da Pluggy for auto-serviço/desenvolvedor (LIST_ITEMS_FEATURE_NOT_ENABLED):
-    // Atualiza individualmente as contas já conhecidas/salvas no dispositivo
+    // Items conectados neste aparelho que ainda não constam no servidor:
+    // buscarItemPorId os registra para o usuário (se forem dele).
     if (contasExistentes.isNotEmpty) {
       final atualizadas = <ContaBancariaConectada>[];
       for (final conta in contasExistentes) {
@@ -463,7 +342,7 @@ class PluggyOpenFinanceService {
             !conta.itemIdPluggy!.startsWith('pluggy_item_') &&
             !conta.itemIdPluggy!.startsWith('banco_')) {
           try {
-            final atual = await buscarItemPorId(creds, conta.itemIdPluggy!);
+            final atual = await buscarItemPorId(conta.itemIdPluggy!);
             atualizadas.add(atual);
           } catch (_) {
             atualizadas.add(conta);
@@ -479,13 +358,11 @@ class PluggyOpenFinanceService {
   }
 
   /// Busca as transações bancárias reais de todas as contas associadas aos itens conectados.
-  Future<List<TransacaoBancariaImportada>> buscarTodasTransacoes(
-    PluggyCredentials creds, {
+  Future<List<TransacaoBancariaImportada>> buscarTodasTransacoes({
     List<ContaBancariaConectada>? contas,
     DateTime? desde,
   }) async {
-    final apiKey = await obterApiKey(creds);
-    final itens = contas ?? await buscarItensConectados(creds);
+    final itens = contas ?? await buscarItensConectados();
     final todasTransacoes = <TransacaoBancariaImportada>[];
 
     final dataDesdeStr = desde != null
@@ -499,9 +376,9 @@ class PluggyOpenFinanceService {
       }
 
       try {
-        final accResp = await _httpClient.get(
-          Uri.parse('$baseUrl/accounts?itemId=$itemId'),
-          headers: {'X-API-KEY': apiKey},
+        final accResp = await _chamar(
+          'GET',
+          '/accounts?itemId=${Uri.encodeQueryComponent(itemId)}',
         );
         if (accResp.statusCode != 200) continue;
 
@@ -520,9 +397,10 @@ class PluggyOpenFinanceService {
               ? accName
               : item.nomeBanco;
 
-          final txResp = await _httpClient.get(
-            Uri.parse('$baseUrl/transactions?accountId=$accountId&from=$dataDesdeStr&pageSize=100'),
-            headers: {'X-API-KEY': apiKey},
+          final txResp = await _chamar(
+            'GET',
+            '/transactions?accountId=${Uri.encodeQueryComponent(accountId)}'
+                '&from=$dataDesdeStr&pageSize=100',
           );
 
           if (txResp.statusCode != 200) continue;

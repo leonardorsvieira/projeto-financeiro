@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Aplicativo financeiro pessoal para **um único usuário** (Leonardo) usado no celular (Android e iPhone) e no navegador do PC, acessível de qualquer lugar. **v1.0 no ar:** registra despesas manualmente (valor, categoria, forma de pagamento, data) sincronizadas via nuvem e — o Core — registra gastos **falando**: o usuário dita o lançamento e a IA transcreve, classifica e preenche, com confirmação antes de salvar e correção por voz campo-a-campo. Próximas versões: vencimentos/agendamento e itens, lembretes push, dashboard com metas, receitas e investimentos por voz.
+Aplicativo financeiro pessoal do Leonardo, **usado também por convidados/clientes** (contas isoladas; desde 2026-09-28), usado no celular (Android e iPhone) e no navegador do PC, acessível de qualquer lugar. **v1.0 no ar:** registra despesas manualmente (valor, categoria, forma de pagamento, data) sincronizadas via nuvem e — o Core — registra gastos **falando**: o usuário dita o lançamento e a IA transcreve, classifica e preenche, com confirmação antes de salvar e correção por voz campo-a-campo. Próximas versões: vencimentos/agendamento e itens, lembretes push, dashboard com metas, receitas e investimentos por voz.
 
 ## Core Value
 

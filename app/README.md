@@ -27,7 +27,18 @@ As chaves são injetadas em tempo de compilação via `--dart-define`
 | ------------------- | ---------------------------------- |
 | `SUPABASE_URL`      | URL do projeto Supabase            |
 | `SUPABASE_ANON_KEY` | Chave anon do Supabase             |
-| `GEMINI_API_KEY`    | Chave de API do Google AI Studio   |
+
+Tudo que entra via `--dart-define` fica legível no bundle web publicado, então
+**nenhuma chave secreta vai para o app**. As chaves do Gemini e da Pluggy ficam
+nas Edge Functions (`supabase/functions/ditado` e `supabase/functions/pluggy`):
+
+```bash
+supabase secrets set GEMINI_API_KEY=... PLUGGY_CLIENT_ID=... PLUGGY_CLIENT_SECRET=...
+```
+
+Opcionais: `OWNER_USER_ID` (uuid que pode reivindicar items Pluggy criados antes
+do proxy), `ALLOWED_ORIGINS` (origens web extras para CORS),
+`LIMITE_DIARIO_DITADO` (padrão 150) e `LIMITE_DIARIO_PLUGGY` (padrão 500).
 
 ## Como rodar
 
@@ -36,8 +47,7 @@ cd app
 flutter pub get
 flutter run \
   --dart-define=SUPABASE_URL=... \
-  --dart-define=SUPABASE_ANON_KEY=... \
-  --dart-define=GEMINI_API_KEY=...
+  --dart-define=SUPABASE_ANON_KEY=...
 ```
 
 ## Testes

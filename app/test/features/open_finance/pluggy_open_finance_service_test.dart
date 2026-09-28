@@ -3,59 +3,75 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-import 'package:meubolso/features/open_finance/data/open_finance_repository.dart';
+import 'package:meubolso/core/edge_function.dart';
 import 'package:meubolso/features/open_finance/data/pluggy_open_finance_service.dart';
+
+final _funcao = EdgeFunction(
+  url: Uri.parse('https://exemplo.supabase.co/functions/v1/pluggy'),
+  anonKey: 'anon-teste',
+  tokenDeAcesso: () async => 'token-usuario',
+);
+
+/// Simula a Edge Function `pluggy`: decodifica `{metodo, caminho, corpo}` e
+/// entrega ao [handler] como se fosse a API da Pluggy.
+MockClient _proxy(
+  Future<http.Response> Function(
+    String metodo,
+    Uri caminho,
+    Map<String, dynamic>? corpo,
+  ) handler,
+) {
+  return MockClient((request) async {
+    expect(request.url, _funcao.url);
+    expect(request.headers['Authorization'], 'Bearer token-usuario');
+    expect(request.headers.containsKey('X-API-KEY'), isFalse);
+    final env = jsonDecode(request.body) as Map<String, dynamic>;
+    return handler(
+      env['metodo'] as String,
+      Uri.parse(env['caminho'] as String),
+      env['corpo'] as Map<String, dynamic>?,
+    );
+  });
+}
+
+PluggyOpenFinanceService _service(MockClient cliente) =>
+    PluggyOpenFinanceService(httpClient: cliente, funcao: _funcao);
 
 void main() {
   group('PluggyOpenFinanceService', () {
-    test('obterApiKey retorna a apiKey direta quando fornecida', () async {
-      final service = PluggyOpenFinanceService();
-      const creds = PluggyCredentials(apiKey: 'meu_token_direto_123');
+    test('verificarConfiguracao lê /status do servidor', () async {
+      final service = _service(_proxy((metodo, caminho, _) async {
+        if (metodo == 'GET' && caminho.path == '/status') {
+          return http.Response(jsonEncode({'configurado': true}), 200);
+        }
+        return http.Response('', 404);
+      }));
 
-      final key = await service.obterApiKey(creds);
-      expect(key, equals('meu_token_direto_123'));
+      expect(await service.verificarConfiguracao(), isTrue);
     });
 
-    test('obterApiKey faz POST /auth com clientId e secret', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.path == '/auth' && request.method == 'POST') {
-          final body = jsonDecode(request.body) as Map<String, dynamic>;
-          if (body['clientId'] == 'cid_123' && body['clientSecret'] == 'sec_456') {
-            return http.Response(jsonEncode({'apiKey': 'jwt_gerado_789'}), 200);
-          }
-        }
-        return http.Response('Unauthorized', 401);
-      });
-
-      final service = PluggyOpenFinanceService(httpClient: mockClient);
-      const creds = PluggyCredentials(
-        clientId: 'cid_123',
-        clientSecret: 'sec_456',
+    test('sem usuário logado não chama o servidor', () async {
+      var chamadas = 0;
+      final service = PluggyOpenFinanceService(
+        httpClient: MockClient((_) async {
+          chamadas++;
+          return http.Response('', 200);
+        }),
+        funcao: EdgeFunction(
+          url: _funcao.url,
+          anonKey: 'anon-teste',
+          tokenDeAcesso: () async => null,
+        ),
       );
 
-      final key = await service.obterApiKey(creds);
-      expect(key, equals('jwt_gerado_789'));
-    });
-
-    test('testarConexao retorna true quando /items responde 200', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.path == '/items' &&
-            request.headers['X-API-KEY'] == 'token_valido') {
-          return http.Response(jsonEncode({'results': []}), 200);
-        }
-        return http.Response('Unauthorized', 401);
-      });
-
-      final service = PluggyOpenFinanceService(httpClient: mockClient);
-      const creds = PluggyCredentials(apiKey: 'token_valido');
-
-      final ok = await service.testarConexao(creds);
-      expect(ok, isTrue);
+      expect(await service.verificarConfiguracao(), isFalse);
+      await expectLater(service.buscarItemPorId('x'), throwsException);
+      expect(chamadas, 0);
     });
 
     test('buscarItensConectados mapeia itens e contas da Pluggy corretamente', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.path == '/items') {
+      final service = _service(_proxy((metodo, caminho, _) async {
+        if (caminho.path == '/items') {
           return http.Response(
             jsonEncode({
               'results': [
@@ -73,7 +89,8 @@ void main() {
             200,
           );
         }
-        if (request.url.path == '/accounts') {
+        if (caminho.path == '/accounts') {
+          expect(caminho.queryParameters['itemId'], 'item_nubank_1');
           return http.Response(
             jsonEncode({
               'results': [
@@ -88,21 +105,32 @@ void main() {
           );
         }
         return http.Response('Not found', 404);
-      });
+      }));
 
-      final service = PluggyOpenFinanceService(httpClient: mockClient);
-      const creds = PluggyCredentials(apiKey: 'token_valido');
-
-      final contas = await service.buscarItensConectados(creds);
+      final contas = await service.buscarItensConectados();
       expect(contas.length, equals(1));
       expect(contas.first.nomeBanco, equals('Nubank'));
       expect(contas.first.corHex, equals('#8A05BE'));
       expect(contas.first.mascaraCartao, equals('•••• 5678'));
     });
 
+    test('item de outro usuário (404 do servidor) mantém a conta local sem dados', () async {
+      final service = _service(_proxy((_, caminho, _) async {
+        if (caminho.path == '/items') {
+          return http.Response(jsonEncode({'results': []}), 200);
+        }
+        return http.Response('{"erro":"item_nao_encontrado"}', 404);
+      }));
+
+      await expectLater(
+        service.buscarItemPorId('item_de_outra_pessoa'),
+        throwsException,
+      );
+    });
+
     test('buscarTodasTransacoes extrai e mapeia transações reais', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.path == '/items') {
+      final service = _service(_proxy((_, caminho, _) async {
+        if (caminho.path == '/items') {
           return http.Response(
             jsonEncode({
               'results': [
@@ -119,7 +147,7 @@ void main() {
             200,
           );
         }
-        if (request.url.path == '/accounts') {
+        if (caminho.path == '/accounts') {
           return http.Response(
             jsonEncode({
               'results': [
@@ -132,7 +160,8 @@ void main() {
             200,
           );
         }
-        if (request.url.path == '/transactions') {
+        if (caminho.path == '/transactions') {
+          expect(caminho.queryParameters['accountId'], 'acc_inter_1');
           return http.Response(
             jsonEncode({
               'results': [
@@ -158,12 +187,9 @@ void main() {
           );
         }
         return http.Response('Not found', 404);
-      });
+      }));
 
-      final service = PluggyOpenFinanceService(httpClient: mockClient);
-      const creds = PluggyCredentials(apiKey: 'token_valido');
-
-      final transacoes = await service.buscarTodasTransacoes(creds);
+      final transacoes = await service.buscarTodasTransacoes();
       expect(transacoes.length, equals(2));
 
       final pix = transacoes.firstWhere((t) => t.id == 'tx_pix_001');
@@ -178,27 +204,21 @@ void main() {
     });
 
     test('gerarConnectToken faz POST /connect_token e retorna token', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.path == '/connect_token' &&
-            request.method == 'POST' &&
-            request.headers['X-API-KEY'] == 'token_valido') {
-          final body = jsonDecode(request.body) as Map<String, dynamic>;
-          expect(body['options']['connectorId'], equals(200));
+      final service = _service(_proxy((metodo, caminho, corpo) async {
+        if (caminho.path == '/connect_token' && metodo == 'POST') {
+          expect(corpo!['options']['connectorId'], equals(200));
           return http.Response(jsonEncode({'accessToken': 'connect_token_12345'}), 200);
         }
         return http.Response('Error', 400);
-      });
+      }));
 
-      final service = PluggyOpenFinanceService(httpClient: mockClient);
-      const creds = PluggyCredentials(apiKey: 'token_valido');
-
-      final token = await service.gerarConnectToken(creds, connectorId: 200);
+      final token = await service.gerarConnectToken(connectorId: 200);
       expect(token, equals('connect_token_12345'));
     });
 
     test('buscarItemPorId busca dados de um item específico', () async {
-      final mockClient = MockClient((request) async {
-        if (request.url.path == '/items/item_meu_pluggy') {
+      final service = _service(_proxy((_, caminho, _) async {
+        if (caminho.path == '/items/item_meu_pluggy') {
           return http.Response(
             jsonEncode({
               'id': 'item_meu_pluggy',
@@ -212,7 +232,7 @@ void main() {
             200,
           );
         }
-        if (request.url.path == '/accounts') {
+        if (caminho.path == '/accounts') {
           return http.Response(
             jsonEncode({
               'results': [
@@ -227,16 +247,24 @@ void main() {
           );
         }
         return http.Response('Not found', 404);
-      });
+      }));
 
-      final service = PluggyOpenFinanceService(httpClient: mockClient);
-      const creds = PluggyCredentials(apiKey: 'token_valido');
-
-      final item = await service.buscarItemPorId(creds, 'item_meu_pluggy');
+      final item = await service.buscarItemPorId('item_meu_pluggy');
       expect(item.id, equals('item_meu_pluggy'));
       expect(item.nomeBanco, equals('MeuPluggy'));
       expect(item.corHex, equals('#EF294B'));
       expect(item.mascaraCartao, equals('•••• 5432'));
+    });
+
+    test('limite diário vira mensagem clara', () async {
+      final service = _service(_proxy(
+        (_, _, _) async => http.Response('{"erro":"limite_diario"}', 429),
+      ));
+
+      await expectLater(
+        service.gerarConnectToken(),
+        throwsA(predicate((e) => e.toString().contains('Limite diário'))),
+      );
     });
   });
 }

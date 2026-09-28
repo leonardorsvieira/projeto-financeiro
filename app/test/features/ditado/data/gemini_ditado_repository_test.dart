@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:meubolso/core/edge_function.dart';
 import 'package:meubolso/features/ditado/data/gemini_ditado_repository.dart';
 import 'package:meubolso/features/ditado/domain/ditado_repository.dart';
 import 'package:meubolso/features/ditado/domain/rascunho_lancamento.dart';
@@ -13,6 +14,12 @@ void main() {
     bytes: Uint8List.fromList([1, 2, 3]),
     mimeType: 'audio/webm',
   );
+
+  EdgeFunction funcaoTeste({String? token = 'token-teste'}) => EdgeFunction(
+        url: Uri.parse('https://exemplo.supabase.co/functions/v1/ditado'),
+        anonKey: 'anon-teste',
+        tokenDeAcesso: () async => token,
+      );
 
   http.Response corpoResposta(Map<String, dynamic> objeto) => http.Response(
         jsonEncode({
@@ -31,12 +38,39 @@ void main() {
       );
 
   group('GeminiDitadoRepository.reconhecer', () {
+    test('não repete nem troca de modelo ao atingir o limite diário', () async {
+      var chamadas = 0;
+      final cliente = MockClient((_) async {
+        chamadas++;
+        return http.Response('{"erro":"limite_diario"}', 429);
+      });
+      final repo = GeminiDitadoRepository(
+        cliente: cliente,
+        funcao: funcaoTeste(),
+        esperasRetry: const [],
+      );
+
+      await expectLater(
+        repo.reconhecer(audio),
+        throwsA(
+          isA<DitadoException>().having(
+            (e) => e.mensagem,
+            'mensagem',
+            contains('limite diário'),
+          ),
+        ),
+      );
+      expect(chamadas, 1);
+    });
+
     test('faz POST para generateContent e devolve rascunho', () async {
       Uri? uriEnviada;
       String? corpoEnviado;
+      Map<String, String>? cabecalhosEnviados;
 
       final cliente = MockClient((request) async {
         uriEnviada = request.url;
+        cabecalhosEnviados = request.headers;
         corpoEnviado = request.body;
         return corpoResposta({
           'descricao': 'Almoço',
@@ -49,14 +83,17 @@ void main() {
 
       final repo = GeminiDitadoRepository(
         cliente: cliente,
-        apiKey: 'chave-teste',
+        funcao: funcaoTeste(),
       );
 
       final rascunho = await repo.reconhecer(audio);
 
-      expect(uriEnviada!.path, contains('gemini-3.5-flash-lite:generateContent'));
-      expect(uriEnviada!.queryParameters['key'], 'chave-teste');
+      expect(uriEnviada, funcaoTeste().url);
+      expect(cabecalhosEnviados!['Authorization'], 'Bearer token-teste');
+      final enviado = jsonDecode(corpoEnviado!) as Map<String, dynamic>;
+      expect(enviado['modelo'], 'gemini-3.5-flash-lite');
       expect(corpoEnviado, contains('audio/webm'));
+      expect(corpoEnviado, isNot(contains('key=')));
       expect(rascunho.descricao, 'Almoço');
       expect(rascunho.valorTexto, '42,90');
       expect(rascunho.categoria, 'Alimentação');
@@ -69,7 +106,7 @@ void main() {
       );
       final repo = GeminiDitadoRepository(
         cliente: cliente,
-        apiKey: 'x',
+        funcao: funcaoTeste(),
         esperasRetry: const [],
       );
 
@@ -93,7 +130,7 @@ void main() {
       });
       final repo = GeminiDitadoRepository(
         cliente: cliente,
-        apiKey: 'x',
+        funcao: funcaoTeste(),
         esperasRetry: const [],
       );
 
@@ -104,10 +141,10 @@ void main() {
       expect(rascunho.valorTexto, '42,90');
     });
 
-    test('lança DitadoException sem chave configurada', () {
+    test('lança DitadoException sem usuário logado', () {
       final repo = GeminiDitadoRepository(cliente: MockClient((_) async {
         return http.Response('', 200);
-      }), apiKey: '');
+      }), funcao: funcaoTeste(token: null));
 
       expect(
         () => repo.reconhecer(audio),
@@ -122,7 +159,7 @@ void main() {
           200,
         ),
       );
-      final repo = GeminiDitadoRepository(cliente: cliente, apiKey: 'x');
+      final repo = GeminiDitadoRepository(cliente: cliente, funcao: funcaoTeste());
 
       expect(
         () => repo.reconhecer(audio),
@@ -138,7 +175,7 @@ void main() {
         corpoEnviado = request.body;
         return corpoResposta({'valor': '30,00'});
       });
-      final repo = GeminiDitadoRepository(cliente: cliente, apiKey: 'x');
+      final repo = GeminiDitadoRepository(cliente: cliente, funcao: funcaoTeste());
 
       const rascunho = RascunhoLancamento(
         descricao: 'Uber',

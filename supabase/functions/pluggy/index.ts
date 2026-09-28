@@ -1,0 +1,233 @@
+// Proxy autenticado para a API da Pluggy.
+//
+// A conta Pluggy (client id/secret) é compartilhada por todos os usuários do app,
+// então este proxy é quem garante o isolamento: cada item (conexão bancária) tem
+// dono em `public.pluggy_items`, e só rotas de uma allowlist são repassadas —
+// sempre verificando que o item/conta pertence ao usuário do JWT.
+import { admin, preambulo, resposta } from "../_shared/seguranca.ts";
+
+const PLUGGY = "https://api.pluggy.ai";
+
+let apiKeyCache: { chave: string; expiraEm: number } | null = null;
+
+async function apiKey(): Promise<string | null> {
+  if (apiKeyCache && apiKeyCache.expiraEm > Date.now()) return apiKeyCache.chave;
+  const clientId = Deno.env.get("PLUGGY_CLIENT_ID");
+  const clientSecret = Deno.env.get("PLUGGY_CLIENT_SECRET");
+  if (!clientId || !clientSecret) return null;
+  const r = await fetch(`${PLUGGY}/auth`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ clientId, clientSecret }),
+  });
+  if (!r.ok) throw new Error(`Pluggy /auth ${r.status}`);
+  const { apiKey } = await r.json();
+  // A apiKey da Pluggy vale 2h; renova antes.
+  apiKeyCache = { chave: apiKey, expiraEm: Date.now() + 90 * 60 * 1000 };
+  return apiKey;
+}
+
+async function pluggy(
+  metodo: string,
+  caminho: string,
+  corpo?: unknown,
+): Promise<Response> {
+  const chave = await apiKey();
+  return fetch(`${PLUGGY}${caminho}`, {
+    method: metodo,
+    headers: { "X-API-KEY": chave!, "Content-Type": "application/json" },
+    body: corpo === undefined ? undefined : JSON.stringify(corpo),
+  });
+}
+
+async function ehDono(userId: string, itemId: string): Promise<boolean> {
+  const { data } = await admin
+    .from("pluggy_items")
+    .select("user_id")
+    .eq("item_id", itemId)
+    .maybeSingle();
+  return data?.user_id === userId;
+}
+
+/** Registra o item para o usuário; false se já pertence a outra pessoa. */
+async function registrar(userId: string, itemId: string): Promise<boolean> {
+  await admin
+    .from("pluggy_items")
+    .upsert({ item_id: itemId, user_id: userId }, {
+      onConflict: "item_id",
+      ignoreDuplicates: true,
+    });
+  return ehDono(userId, itemId);
+}
+
+/**
+ * Um item ainda não registrado só pode ser reivindicado por quem o criou
+ * (clientUserId definido por este proxy). Items antigos, criados antes do proxy
+ * e sem clientUserId, só podem ser reivindicados pelo OWNER_USER_ID.
+ */
+async function podeAcessarItem(userId: string, itemId: string): Promise<boolean> {
+  if (await ehDono(userId, itemId)) return true;
+  const r = await pluggy("GET", `/items/${encodeURIComponent(itemId)}`);
+  if (!r.ok) return false;
+  const item = await r.json();
+  const legado = !item.clientUserId && userId === Deno.env.get("OWNER_USER_ID");
+  if (item.clientUserId !== userId && !legado) return false;
+  return registrar(userId, itemId);
+}
+
+async function itemDaConta(accountId: string): Promise<string | null> {
+  const r = await pluggy("GET", `/accounts/${encodeURIComponent(accountId)}`);
+  if (!r.ok) return null;
+  const conta = await r.json();
+  return typeof conta.itemId === "string" ? conta.itemId : null;
+}
+
+function repassar(req: Request, r: Response, texto: string): Response {
+  return resposta(req, r.status, texto);
+}
+
+Deno.serve(async (req) => {
+  const usuario = await preambulo(req, "pluggy", 500);
+  if (usuario instanceof Response) return usuario;
+  const uid = usuario.id;
+
+  let metodo: string;
+  let caminho: string;
+  let corpo: Record<string, unknown> | undefined;
+  try {
+    ({ metodo, caminho, corpo } = await req.json());
+  } catch {
+    return resposta(req, 400, { erro: "json_invalido" });
+  }
+  if (typeof metodo !== "string" || typeof caminho !== "string") {
+    return resposta(req, 400, { erro: "requisicao_invalida" });
+  }
+
+  // Normaliza e impede qualquer destino que não seja a própria API da Pluggy.
+  const url = new URL(caminho, PLUGGY);
+  if (url.origin !== PLUGGY) return resposta(req, 400, { erro: "destino_invalido" });
+  const seg = url.pathname.split("/").filter(Boolean);
+  const q = url.searchParams;
+
+  if (metodo === "GET" && seg[0] === "status" && seg.length === 1) {
+    const configurado = !!Deno.env.get("PLUGGY_CLIENT_ID") &&
+      !!Deno.env.get("PLUGGY_CLIENT_SECRET");
+    return resposta(req, 200, { configurado });
+  }
+
+  try {
+    if (!(await apiKey())) {
+      return resposta(req, 503, { erro: "pluggy_nao_configurada" });
+    }
+  } catch {
+    return resposta(req, 502, { erro: "pluggy_auth_falhou" });
+  }
+
+  // Catálogo público de conectores (bancos).
+  if (metodo === "GET" && seg[0] === "connectors") {
+    const r = await pluggy("GET", url.pathname + url.search);
+    return repassar(req, r, await r.text());
+  }
+
+  // Connect Token: sempre amarrado ao usuário via clientUserId.
+  if (metodo === "POST" && seg[0] === "connect_token" && seg.length === 1) {
+    const opcoesCliente = (corpo?.options ?? {}) as Record<string, unknown>;
+    const options: Record<string, unknown> = { clientUserId: uid };
+    if (typeof opcoesCliente.connectorId === "number") {
+      options.connectorId = opcoesCliente.connectorId;
+    }
+    if (typeof opcoesCliente.oauthRedirectUri === "string") {
+      options.oauthRedirectUri = opcoesCliente.oauthRedirectUri;
+    }
+    const body: Record<string, unknown> = { options };
+    if (typeof corpo?.itemId === "string") {
+      if (!(await ehDono(uid, corpo.itemId))) {
+        return resposta(req, 404, { erro: "item_nao_encontrado" });
+      }
+      body.itemId = corpo.itemId;
+    }
+    const r = await pluggy("POST", "/connect_token", body);
+    return repassar(req, r, await r.text());
+  }
+
+  // Criação direta de item (ex.: Meu Pluggy via OAuth).
+  if (metodo === "POST" && seg[0] === "items" && seg.length === 1) {
+    if (typeof corpo?.connectorId !== "number") {
+      return resposta(req, 400, { erro: "connector_invalido" });
+    }
+    const r = await pluggy("POST", "/items", {
+      connectorId: corpo.connectorId,
+      parameters: corpo.parameters ?? {},
+      clientUserId: uid,
+    });
+    const texto = await r.text();
+    if (r.ok) {
+      const item = JSON.parse(texto);
+      if (typeof item.id === "string") await registrar(uid, item.id);
+    }
+    return repassar(req, r, texto);
+  }
+
+  // Lista apenas os items do próprio usuário.
+  if (metodo === "GET" && seg[0] === "items" && seg.length === 1) {
+    const { data } = await admin
+      .from("pluggy_items")
+      .select("item_id")
+      .eq("user_id", uid);
+    const results = [];
+    for (const { item_id } of data ?? []) {
+      const r = await pluggy("GET", `/items/${encodeURIComponent(item_id)}`);
+      if (r.ok) results.push(await r.json());
+    }
+    return resposta(req, 200, { results });
+  }
+
+  if (seg[0] === "items" && seg.length === 2) {
+    let itemId: string;
+    try {
+      itemId = decodeURIComponent(seg[1]);
+    } catch {
+      return resposta(req, 400, { erro: "item_invalido" });
+    }
+    if (!(await podeAcessarItem(uid, itemId))) {
+      return resposta(req, 404, { erro: "item_nao_encontrado" });
+    }
+    if (metodo === "GET") {
+      const r = await pluggy("GET", `/items/${encodeURIComponent(itemId)}`);
+      return repassar(req, r, await r.text());
+    }
+    if (metodo === "DELETE") {
+      const r = await pluggy("DELETE", `/items/${encodeURIComponent(itemId)}`);
+      if (r.ok) await admin.from("pluggy_items").delete().eq("item_id", itemId);
+      return repassar(req, r, await r.text());
+    }
+  }
+
+  if (metodo === "GET" && seg[0] === "accounts" && seg.length === 1) {
+    const itemId = q.get("itemId");
+    if (!itemId || !(await ehDono(uid, itemId))) {
+      return resposta(req, 404, { erro: "item_nao_encontrado" });
+    }
+    const params = new URLSearchParams({ itemId });
+    if (q.get("type")) params.set("type", q.get("type")!);
+    const r = await pluggy("GET", `/accounts?${params}`);
+    return repassar(req, r, await r.text());
+  }
+
+  if (metodo === "GET" && seg[0] === "transactions" && seg.length === 1) {
+    const accountId = q.get("accountId");
+    const itemId = accountId ? await itemDaConta(accountId) : null;
+    if (!itemId || !(await ehDono(uid, itemId))) {
+      return resposta(req, 404, { erro: "conta_nao_encontrada" });
+    }
+    const params = new URLSearchParams({ accountId: accountId! });
+    for (const k of ["from", "to", "pageSize", "page"]) {
+      const v = q.get(k);
+      if (v) params.set(k, v);
+    }
+    const r = await pluggy("GET", `/transactions?${params}`);
+    return repassar(req, r, await r.text());
+  }
+
+  return resposta(req, 403, { erro: "rota_nao_permitida" });
+});

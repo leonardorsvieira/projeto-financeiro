@@ -27,7 +27,6 @@ function Read-Env([string]$key) {
 
 $supabaseUrl = Read-Env "SUPABASE_URL"
 $supabaseAnonKey = Read-Env "SUPABASE_ANON_KEY"
-$geminiKey = Read-Env "GEMINI_API_KEY"
 
 if ([string]::IsNullOrWhiteSpace($supabaseUrl) -or [string]::IsNullOrWhiteSpace($supabaseAnonKey)) {
   Write-Host "ERRO: SUPABASE_URL/SUPABASE_ANON_KEY em branco no .env." -ForegroundColor Red
@@ -37,9 +36,6 @@ if ([string]::IsNullOrWhiteSpace($supabaseUrl) -or [string]::IsNullOrWhiteSpace(
 Write-Host "==> Meu Bolso: build $Mode APK" -ForegroundColor Cyan
 Write-Host "    SUPABASE_URL  : $supabaseUrl"
 Write-Host "    SUPABASE_ANON : $($supabaseAnonKey.Substring(0, 12))..."
-if (-not [string]::IsNullOrWhiteSpace($geminiKey)) {
-  Write-Host "    GEMINI_API_KEY: $($geminiKey.Substring(0, 8))..."
-}
 
 Push-Location (Join-Path $root "app")
 try {
@@ -48,9 +44,6 @@ try {
     "--dart-define=SUPABASE_URL=$supabaseUrl",
     "--dart-define=SUPABASE_ANON_KEY=$supabaseAnonKey"
   )
-  if (-not [string]::IsNullOrWhiteSpace($geminiKey)) {
-    $flutterArgs += "--dart-define=GEMINI_API_KEY=$geminiKey"
-  }
 
   # flutter é um .bat; cmd /c evita que o stderr (warnings nativos do Gradle)
   # seja tratado como erro pelo $ErrorActionPreference = "Stop".

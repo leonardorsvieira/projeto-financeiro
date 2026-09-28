@@ -4,8 +4,8 @@ milestone: v1.1
 milestone_name: milestone
 status: In progress
 stopped_at: Fase 7 completa (07-01 07-02); receitas por voz + saldo do mês com entradas/saídas
-last_updated: "2026-09-07T18:00:00Z"
-last_activity: 2026-09-07 — Fase 7 (VOZ-02) implementada: coluna `tipo`, ditado/form com toggle despesa/receita, saldo do mês com entradas − saídas; 133 testes passam; analyze 0 issues; web + APK OK
+last_updated: "2026-09-28T20:05:00Z"
+last_activity: 2026-09-28 — Quick 260928-n3q endurecimento de segurança multiusuário (Edge Functions ditado/pluggy, isolamento Pluggy por usuário, logout limpa sessão, CSP, gitleaks); 231 testes passam
 progress:
   total_phases: 8
   completed_phases: 7
@@ -96,6 +96,12 @@ Items acknowledged and carried forward from previous milestone close:
 |----------|------|--------|-------------|
 | *(none)* | | | |
 
+## Quick Tasks Completed
+
+| ID | Descrição | Data | Resumo |
+|----|-----------|------|--------|
+| 260928-n3q | Endurecimento de segurança multiusuário | 2026-09-28 | [SUMMARY](quick/260928-n3q-endurecimento-de-seguranca-multiusuario/260928-n3q-SUMMARY.md) |
+
 ## Session Continuity
 
 Last session: 2026-09-07 (3ª sessão do dia)
@@ -103,6 +109,8 @@ Stopped at: Fase 7 (VOZ-02) completa — receitas por voz + saldo do mês com en
 Resume file: None
 
 ## Operator Next Steps
+
+- **SEGURANÇA (260928-n3q) — ações do usuário pendentes:** gerar novo client secret na Pluggy (o antigo vazou no repo público e no site); `supabase secrets set GEMINI_API_KEY PLUGGY_CLIENT_ID PLUGGY_CLIENT_SECRET [OWNER_USER_ID]`; Supabase Auth: exigir confirmação de e-mail, ligar leaked password protection, revisar as 3 contas existentes; remover secret `GEMINI_API_KEY` do GitHub.
 
 - **Executar Fase 8** — Investimentos (INV-01..07 + VOZ-03) por voz e manual; planejar 08-xx.
 - **_Nota segurança:_** PAT do Supabase exposto no chat — **revogar** em Account Settings → Access Tokens. (O token usado foi aplicado e deve ser revogado agora.)

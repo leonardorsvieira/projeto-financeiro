@@ -42,11 +42,12 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
   }
 
   Future<void> _conectarMeuPluggy() async {
-    final creds = ref.read(pluggyCredentialsProvider).value;
-    if (creds == null || !creds.isPreenchido) {
+    final configurado = await ref.read(pluggyConfiguradoProvider.future);
+    if (!mounted) return;
+    if (!configurado) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Configure primeiro suas credenciais da Pluggy.'),
+          content: Text('O Open Finance ainda não foi configurado no servidor.'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -56,7 +57,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
     setState(() => _conectando = true);
     try {
       final service = ref.read(pluggyOpenFinanceServiceProvider);
-      final resultado = await service.iniciarConexaoMeuPluggyDireta(creds);
+      final resultado = await service.iniciarConexaoMeuPluggyDireta();
 
       final contaMeuPluggy = ContaBancariaConectada(
         id: resultado.itemId,
@@ -100,11 +101,12 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
   }
 
   Future<void> _abrirPluggyConnectGeral({int? connectorId}) async {
-    final creds = ref.read(pluggyCredentialsProvider).value;
-    if (creds == null || !creds.isPreenchido) {
+    final configurado = await ref.read(pluggyConfiguradoProvider.future);
+    if (!mounted) return;
+    if (!configurado) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Configure primeiro suas credenciais da Pluggy.'),
+          content: Text('O Open Finance ainda não foi configurado no servidor.'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -114,7 +116,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
     setState(() => _conectando = true);
     try {
       final service = ref.read(pluggyOpenFinanceServiceProvider);
-      await service.abrirWidgetConexao(creds, connectorId: connectorId);
+      await service.abrirWidgetConexao(connectorId: connectorId);
 
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -149,10 +151,11 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
       return;
     }
 
-    final creds = ref.read(pluggyCredentialsProvider).value;
-    if (creds == null || !creds.isPreenchido) {
+    final configurado = await ref.read(pluggyConfiguradoProvider.future);
+    if (!mounted) return;
+    if (!configurado) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Credenciais da Pluggy não configuradas.')),
+        const SnackBar(content: Text('O Open Finance ainda não foi configurado no servidor.')),
       );
       return;
     }
@@ -160,7 +163,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
     setState(() => _vinculandoItemId = true);
     try {
       final service = ref.read(pluggyOpenFinanceServiceProvider);
-      final conta = await service.buscarItemPorId(creds, itemId);
+      final conta = await service.buscarItemPorId(itemId);
 
       await ref.read(contasConectadasProvider.notifier).adicionarConta(conta);
 

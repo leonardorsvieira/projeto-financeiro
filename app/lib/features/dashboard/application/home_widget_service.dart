@@ -6,6 +6,10 @@ class HomeWidgetService {
 
   static const String _androidProvider = 'MeuBolsoWidgetProvider';
 
+  /// Remove o saldo e os vencimentos do widget (usado ao sair da conta).
+  static Future<void> limpar() =>
+      atualizarWidget(saldoFormatado: '—', vencimentosTexto: '');
+
   /// Atualiza as informações exibidas no Widget da tela inicial do Android.
   static Future<void> atualizarWidget({
     required String saldoFormatado,

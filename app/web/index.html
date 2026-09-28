@@ -18,6 +18,24 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <!-- Política de segurança: só carrega código do próprio site e do CanvasKit
+       (gstatic) e só conversa com o Supabase e as APIs de cotação. Bloqueia
+       scripts injetados e envio de dados para outros domínios. -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'wasm-unsafe-eval' https://www.gstatic.com;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data: blob:;
+    font-src 'self' data: https://fonts.gstatic.com;
+    media-src 'self' blob:;
+    worker-src 'self' blob:;
+    frame-src 'self' blob:;
+    connect-src 'self' https://tkfhthotspehsgvmpsjm.supabase.co wss://tkfhthotspehsgvmpsjm.supabase.co https://www.gstatic.com https://fonts.gstatic.com https://economia.awesomeapi.com.br https://query1.finance.yahoo.com https://brapi.dev;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'none';
+  ">
+  <meta name="referrer" content="no-referrer">
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->

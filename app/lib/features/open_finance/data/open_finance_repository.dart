@@ -3,68 +3,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/conta_bancaria_conectada.dart';
 
-class PluggyCredentials {
-  final String? clientId;
-  final String? clientSecret;
-  final String? apiKey;
-
-  const PluggyCredentials({
-    this.clientId,
-    this.clientSecret,
-    this.apiKey,
-  });
-
-  bool get isPreenchido =>
-      (clientId != null && clientId!.trim().isNotEmpty && clientSecret != null && clientSecret!.trim().isNotEmpty) ||
-      (apiKey != null && apiKey!.trim().isNotEmpty);
-
-  Map<String, dynamic> toMap() => {
-        'client_id': clientId,
-        'client_secret': clientSecret,
-        'api_key': apiKey,
-      };
-
-  factory PluggyCredentials.fromMap(Map<String, dynamic> map) => PluggyCredentials(
-        clientId: map['client_id'] as String?,
-        clientSecret: map['client_secret'] as String?,
-        apiKey: map['api_key'] as String?,
-      );
-}
-
 class OpenFinanceRepository {
   static const _keyContas = 'open_finance_contas_v1';
   static const _keyCapturaNotificacoes = 'open_finance_captura_notif_v1';
-  static const _keyPluggyCreds = 'open_finance_pluggy_creds_v1';
-
-  static const defaultCreds = PluggyCredentials(
-    clientId: '1c5530f7-de34-45d4-9562-16b949469d0f',
-    clientSecret: '1n5geQSKSLLSxnz0CY0vKADVoKRGrEzmp0tptIfdXoM',
-  );
-
-  Future<PluggyCredentials?> getPluggyCredentials() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_keyPluggyCreds);
-    if (raw == null || raw.isEmpty) return defaultCreds;
-    try {
-      final creds = PluggyCredentials.fromMap(jsonDecode(raw) as Map<String, dynamic>);
-      return creds.isPreenchido ? creds : defaultCreds;
-    } catch (_) {
-      return defaultCreds;
-    }
-  }
-
-  Future<void> salvarPluggyCredentials(PluggyCredentials creds) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyPluggyCreds, jsonEncode(creds.toMap()));
-  }
-
-  Future<void> limparPluggyCredentials() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_keyPluggyCreds);
-  }
+  // Versões antigas guardavam credenciais da Pluggy no aparelho; hoje elas
+  // ficam só na Edge Function. A chave é apagada na primeira leitura.
+  static const _keyPluggyCredsLegado = 'open_finance_pluggy_creds_v1';
 
   Future<List<ContaBancariaConectada>> getContasConectadas() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyPluggyCredsLegado);
     final raw = prefs.getString(_keyContas);
     if (raw == null || raw.isEmpty) {
       return [];

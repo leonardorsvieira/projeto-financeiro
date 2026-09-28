@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../application/open_finance_providers.dart';
 import '../data/pluggy_open_finance_service.dart';
@@ -28,18 +29,34 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
     setState(() => _abrindoMeuPluggy = true);
     try {
       final service = ref.read(pluggyOpenFinanceServiceProvider);
-      await service.abrirWidgetConexao(
-        creds,
-        connectorId: PluggyOpenFinanceService.connectorMeuPluggy,
+      final resultado = await service.iniciarConexaoMeuPluggyDireta(creds);
+
+      // Salva ou adiciona a conta Meu Pluggy com o Item ID real gerado
+      final contaMeuPluggy = ContaBancariaConectada(
+        id: resultado.itemId,
+        nomeBanco: 'Meu Pluggy (meu.pluggy.ai)',
+        tipoConta: 'Contas & Cartões vinculados',
+        corHex: '#EF294B',
+        ultimoSync: DateTime.now(),
+        status: StatusConexaoBanco.conectado,
+        itemIdPluggy: resultado.itemId,
+        capturaAutomaticaAtiva: true,
       );
+      await ref.read(contasConectadasProvider.notifier).adicionarConta(contaMeuPluggy);
+
+      final url = Uri.parse(resultado.oauthUrl);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      }
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Navegador aberto para conectar ao meu.pluggy.ai! Conclua a autorização e depois clique em "Sincronizar Agora".',
+            'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar Agora".',
           ),
           backgroundColor: Colors.purple.shade700,
-          duration: const Duration(seconds: 8),
+          duration: const Duration(seconds: 10),
           action: SnackBarAction(
             label: 'Sincronizar',
             textColor: Colors.white,

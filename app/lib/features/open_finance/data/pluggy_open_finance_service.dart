@@ -22,6 +22,16 @@ class BancoDisponivelOpenFinance {
   final List<String> tiposSuportados;
 }
 
+class ConexaoMeuPluggyResult {
+  final String itemId;
+  final String oauthUrl;
+
+  const ConexaoMeuPluggyResult({
+    required this.itemId,
+    required this.oauthUrl,
+  });
+}
+
 class PluggyOpenFinanceService {
   final http.Client _httpClient;
 
@@ -199,9 +209,46 @@ class PluggyOpenFinanceService {
     final url = Uri.parse('https://connect.pluggy.ai/?connect_token=$connectToken');
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      throw Exception('Não foi possível abrir o navegador para autenticação.');
     }
+  }
+
+  /// Inicia a conexão direta com o meu.pluggy.ai via API, retornando a URL direta de autorização OAuth
+  /// sem exigir passos redundantes de seleção de conector no widget.
+  Future<ConexaoMeuPluggyResult> iniciarConexaoMeuPluggyDireta(
+    PluggyCredentials creds,
+  ) async {
+    final apiKey = await obterApiKey(creds);
+
+    try {
+      final resp = await _httpClient.post(
+        Uri.parse('$baseUrl/items'),
+        headers: {
+          'X-API-KEY': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'connectorId': connectorMeuPluggy,
+          'parameters': <String, dynamic>{},
+        }),
+      );
+
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        final itemId = data['id'] as String;
+        final parameter = data['parameter'] as Map<String, dynamic>?;
+        final oauthUrl = parameter?['data'] as String?;
+
+        if (oauthUrl != null && oauthUrl.isNotEmpty) {
+          return ConexaoMeuPluggyResult(itemId: itemId, oauthUrl: oauthUrl);
+        }
+      }
+    } catch (_) {}
+
+    final token = await gerarConnectToken(creds, connectorId: connectorMeuPluggy);
+    return ConexaoMeuPluggyResult(
+      itemId: 'meu_pluggy_${DateTime.now().millisecondsSinceEpoch}',
+      oauthUrl: 'https://connect.pluggy.ai/?connect_token=$token',
+    );
   }
 
   /// Busca um item específico da Pluggy pelo seu ID.
@@ -466,6 +513,12 @@ class PluggyOpenFinanceService {
           final accountId = acc['id'] as String;
           final accType = (acc['type'] as String? ?? 'BANK').toUpperCase();
           final isCreditCard = accType == 'CREDIT';
+          final accName = (acc['name'] as String?)?.trim();
+          final nomeRealBanco = (accName != null &&
+                  accName.isNotEmpty &&
+                  (item.nomeBanco.contains('Pluggy') || item.nomeBanco == 'Banco'))
+              ? accName
+              : item.nomeBanco;
 
           final txResp = await _httpClient.get(
             Uri.parse('$baseUrl/transactions?accountId=$accountId&from=$dataDesdeStr&pageSize=100'),
@@ -489,7 +542,7 @@ class PluggyOpenFinanceService {
 
             final desc = (tx['description'] as String?) ??
                 (tx['descriptionRaw'] as String?) ??
-                'Transação ${item.nomeBanco}';
+                'Transação $nomeRealBanco';
 
             final dateStr = tx['date'] as String?;
             final data = dateStr != null
@@ -505,8 +558,8 @@ class PluggyOpenFinanceService {
             final formaPagamento = isPix
                 ? 'Pix'
                 : (isCreditCard
-                    ? 'Cartão: ${item.nomeBanco}'
-                    : 'Conta: ${item.nomeBanco}');
+                    ? 'Cartão: $nomeRealBanco'
+                    : 'Conta: $nomeRealBanco');
 
             final categoriaRaw = tx['category'] as String?;
             final categoria = _mapearCategoria(categoriaRaw, desc);
@@ -514,7 +567,7 @@ class PluggyOpenFinanceService {
             todasTransacoes.add(
               TransacaoBancariaImportada(
                 id: txId,
-                nomeBanco: item.nomeBanco,
+                nomeBanco: nomeRealBanco,
                 descricao: desc,
                 valorCents: valorCents,
                 isReceita: isReceita,

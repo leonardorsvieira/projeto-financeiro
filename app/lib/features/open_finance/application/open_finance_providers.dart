@@ -59,10 +59,26 @@ class ContasConectadasNotifier
     await _carregarContas();
   }
 
+  /// Remove a conexão de verdade (Pluggy + servidor) e depois do aparelho.
   Future<void> removerConta(String id) async {
+    final conta = state.value?.where((c) => c.id == id).firstOrNull;
+    final itemId = conta?.itemIdPluggy ?? id;
+    if (!itemId.startsWith('banco_') && !itemId.startsWith('pluggy_item_')) {
+      await ref.read(pluggyOpenFinanceServiceProvider).removerConexao(itemId);
+    }
     final repo = ref.read(openFinanceRepositoryProvider);
     await repo.removerConta(id);
     await _carregarContas();
+  }
+
+  /// Remove todas as conexões do usuário (Pluggy + servidor + aparelho).
+  /// Os lançamentos já importados continuam.
+  Future<int> removerTodas() async {
+    final removidas = await ref
+        .read(pluggyOpenFinanceServiceProvider)
+        .removerTodasConexoes();
+    await salvarTodas(const []);
+    return removidas;
   }
 
   Future<void> salvarTodas(List<ContaBancariaConectada> contas) async {

@@ -162,6 +162,27 @@ async function atender(req: Request): Promise<Response> {
     return repassar(req, r, texto);
   }
 
+  // Remove TODAS as conexões do próprio usuário (na Pluggy e no registro).
+  if (metodo === "DELETE" && seg[0] === "items" && seg.length === 1) {
+    const { data } = await admin
+      .from("pluggy_items")
+      .select("item_id")
+      .eq("user_id", uid);
+    let removidas = 0;
+    for (const { item_id } of data ?? []) {
+      const r = await pluggy("DELETE", `/items/${encodeURIComponent(item_id)}`);
+      // 404: já não existe na Pluggy; só falta limpar o registro.
+      if (r.ok || r.status === 404) {
+        await admin.from("pluggy_items").delete()
+          .eq("item_id", item_id).eq("user_id", uid);
+        removidas++;
+      } else {
+        registrarFalha("DELETE /items/:id", r.status);
+      }
+    }
+    return resposta(req, 200, { removidas, total: data?.length ?? 0 });
+  }
+
   // Lista apenas os items do próprio usuário.
   if (metodo === "GET" && seg[0] === "items" && seg.length === 1) {
     // Items criados pelo widget Connect vêm com clientUserId = usuário, mas o
@@ -216,7 +237,10 @@ async function atender(req: Request): Promise<Response> {
     }
     if (metodo === "DELETE") {
       const r = await pluggy("DELETE", `/items/${encodeURIComponent(itemId)}`);
-      if (r.ok) await admin.from("pluggy_items").delete().eq("item_id", itemId);
+      if (r.ok || r.status === 404) {
+        await admin.from("pluggy_items").delete()
+          .eq("item_id", itemId).eq("user_id", uid);
+      }
       return repassar(req, r, await r.text());
     }
   }

@@ -326,6 +326,20 @@ void main() {
       expect(corpoToken!['itemId'], 'item_mp');
     });
 
+    test('removerTodasConexoes pede DELETE /items ao servidor', () async {
+      String? metodoEnviado;
+      final service = _service(_proxy((metodo, caminho, _) async {
+        if (caminho.path == '/items') {
+          metodoEnviado = metodo;
+          return http.Response(jsonEncode({'removidas': 3, 'total': 3}), 200);
+        }
+        return http.Response('', 404);
+      }));
+
+      expect(await service.removerTodasConexoes(), 3);
+      expect(metodoEnviado, 'DELETE');
+    });
+
     test('limite diário vira mensagem clara', () async {
       final service = _service(_proxy(
         (_, _, _) async => http.Response('{"erro":"limite_diario"}', 429),

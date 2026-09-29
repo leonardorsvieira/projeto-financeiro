@@ -77,6 +77,49 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
     }
   }
 
+  Future<void> _removerTodasConexoes() async {
+    final confirmou = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remover todas as conexões?'),
+        content: const Text(
+          'Todos os bancos conectados serão desconectados da Pluggy. '
+          'Os lançamentos já importados continuam no app. '
+          'Depois você pode conectar de novo.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Remover'),
+          ),
+        ],
+      ),
+    );
+    if (confirmou != true || !mounted) return;
+    try {
+      final n = await ref.read(contasConectadasProvider.notifier).removerTodas();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$n conexão(ões) removida(s).')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao remover conexões: $e'),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
+  }
+
   Future<void> _executarSincronizacao() async {
     setState(() => _sincronizando = true);
     try {
@@ -418,6 +461,17 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                     ),
                     const SizedBox(height: 8),
                   ],
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.colorScheme.error,
+                      ),
+                      onPressed: _removerTodasConexoes,
+                      icon: const Icon(Icons.link_off, size: 18),
+                      label: const Text('Remover todas as conexões'),
+                    ),
+                  ),
                 ],
               );
             },

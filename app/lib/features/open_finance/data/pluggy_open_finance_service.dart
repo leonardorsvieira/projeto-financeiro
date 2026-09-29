@@ -391,6 +391,29 @@ class PluggyOpenFinanceService {
     return [];
   }
 
+  /// Apaga a conexão na Pluggy e no registro do servidor (não só no aparelho).
+  Future<void> removerConexao(String itemId) async {
+    final resp = await _chamar(
+      'DELETE',
+      '/items/${Uri.encodeComponent(itemId)}',
+    );
+    if (resp.statusCode >= 400 && resp.statusCode != 404) {
+      throw Exception('Não foi possível remover a conexão '
+          '(Status ${resp.statusCode}).');
+    }
+  }
+
+  /// Apaga todas as conexões do usuário logado. Devolve quantas saíram.
+  Future<int> removerTodasConexoes() async {
+    final resp = await _chamar('DELETE', '/items');
+    if (resp.statusCode != 200) {
+      throw Exception('Não foi possível remover as conexões '
+          '(Status ${resp.statusCode}).');
+    }
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    return (data['removidas'] as num?)?.toInt() ?? 0;
+  }
+
   static const int _maxPaginasTransacoes = 20;
 
   /// Transações de uma conta via `GET /v2/transactions` (paginação por cursor:

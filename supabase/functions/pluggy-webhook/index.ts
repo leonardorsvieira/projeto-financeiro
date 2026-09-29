@@ -59,6 +59,18 @@ function categoria(catPluggy: string | undefined, descricao: string): string {
   return "Outros";
 }
 
+// Mesma regra do app (ehPagamentoDeFatura): o pagamento da fatura sai da
+// conta e entra no cartão, mas as compras já vêm pelo cartão.
+function ehPagamentoDeFatura(categoria: string | undefined, descricao: string): boolean {
+  const cat = (categoria ?? "").toLowerCase();
+  if (
+    cat.includes("credit card payment") || cat.includes("pagamento de cartão") ||
+    cat.includes("pagamento de fatura")
+  ) return true;
+  return /pagamento (de |da )?fatura|pagto\.? fatura|pagamento recebido|pagamento efetuado|pgto fatura/
+    .test(descricao.toLowerCase());
+}
+
 async function contasDoItem(itemId: string, accountId?: string): Promise<Conta[]> {
   if (accountId) {
     const r = await pluggy("GET", `/accounts/${encodeURIComponent(accountId)}`);
@@ -118,8 +130,11 @@ async function importar(
       if (!tx.id || valor === 0) continue;
       const descricao = (tx.description ?? tx.descriptionRaw ?? `Transação ${nomeBanco}`)
         .trim().slice(0, 200) || `Transação ${nomeBanco}`;
+      if (ehPagamentoDeFatura(tx.category, descricao)) continue;
       const pix = (tx.paymentData?.paymentMethod ?? "").toUpperCase() === "PIX" ||
         descricao.toLowerCase().includes("pix");
+      // No cartão de crédito o sinal é invertido: positivo = compra (saída).
+      const entrada = credito ? (tx.amount ?? 0) < 0 : (tx.amount ?? 0) > 0;
       const { error } = await admin.from("lancamentos").insert({
         user_id: userId,
         descricao,
@@ -127,9 +142,7 @@ async function importar(
         categoria: categoria(tx.category, descricao),
         forma_pagamento: pix ? "Pix" : credito ? `Cartão: ${nomeBanco}` : `Conta: ${nomeBanco}`,
         data: dataLocal(tx.date),
-        tipo: (tx.amount ?? 0) > 0 || (tx.type ?? "").toUpperCase() === "CREDIT"
-          ? "receita"
-          : "despesa",
+        tipo: entrada ? "receita" : "despesa",
         obs: `pluggy_id:${tx.id}`,
       });
       if (!error) novas++;

@@ -5,6 +5,7 @@ import 'package:http/testing.dart';
 
 import 'package:meubolso/core/edge_function.dart';
 import 'package:meubolso/features/open_finance/data/pluggy_open_finance_service.dart';
+import 'package:meubolso/features/open_finance/domain/conta_bancaria_conectada.dart';
 
 final _funcao = EdgeFunction(
   url: Uri.parse('https://exemplo.supabase.co/functions/v1/pluggy'),
@@ -215,6 +216,57 @@ void main() {
       final deposito = transacoes.firstWhere((t) => t.id == 'tx_cred_002');
       expect(deposito.valorCents, equals(50000));
       expect(deposito.isReceita, isTrue);
+    });
+
+    test('cartão: compra é saída, estorno é entrada e pagamento de fatura é ignorado',
+        () async {
+      final service = _service(_proxy((_, caminho, _) async {
+        if (caminho.path == '/accounts') {
+          return http.Response(
+            jsonEncode({
+              'results': [
+                {'id': 'cc_1', 'type': 'CREDIT', 'name': 'Nubank'},
+              ],
+            }),
+            200,
+          );
+        }
+        if (caminho.path == '/v2/transactions') {
+          return http.Response(
+            jsonEncode({
+              'results': [
+                {'id': 'compra', 'description': 'Mercado', 'amount': 120.0,
+                  'type': 'CREDIT', 'date': '2026-09-20T10:00:00Z'},
+                {'id': 'estorno', 'description': 'Estorno loja', 'amount': -50.0,
+                  'type': 'DEBIT', 'date': '2026-09-21T10:00:00Z'},
+                {'id': 'fatura', 'description': 'Pagamento recebido',
+                  'amount': -900.0, 'date': '2026-09-22T10:00:00Z'},
+              ],
+              'next': null,
+            }),
+            200,
+          );
+        }
+        return http.Response('', 404);
+      }));
+
+      final transacoes = await service.buscarTodasTransacoes(
+        contas: [
+          ContaBancariaConectada(
+            id: 'item_cc',
+            nomeBanco: 'Nubank',
+            tipoConta: 'Cartão',
+            corHex: '#8A05BE',
+            ultimoSync: DateTime(2026, 9, 28),
+            status: StatusConexaoBanco.conectado,
+            itemIdPluggy: 'item_cc',
+          ),
+        ],
+      );
+
+      expect(transacoes.map((t) => t.id), ['compra', 'estorno']);
+      expect(transacoes.firstWhere((t) => t.id == 'compra').isReceita, isFalse);
+      expect(transacoes.firstWhere((t) => t.id == 'estorno').isReceita, isTrue);
     });
 
     test('gerarConnectToken faz POST /connect_token e retorna token', () async {

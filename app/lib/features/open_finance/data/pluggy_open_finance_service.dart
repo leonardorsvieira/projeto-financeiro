@@ -22,6 +22,28 @@ class BancoDisponivelOpenFinance {
   final List<String> tiposSuportados;
 }
 
+/// Sinal do valor na Pluggy: em conta corrente, positivo = entrada; no
+/// CARTÃO DE CRÉDITO é o contrário — positivo = compra (saída) e negativo =
+/// estorno/crédito na fatura.
+bool ehEntrada({required double amount, required bool cartaoDeCredito}) =>
+    cartaoDeCredito ? amount < 0 : amount > 0;
+
+/// Pagamento de fatura aparece como saída na conta corrente E como crédito no
+/// cartão, enquanto as compras já entram pelo cartão: importar o pagamento
+/// contaria o gasto duas vezes.
+bool ehPagamentoDeFatura(String? categoria, String descricao) {
+  final cat = (categoria ?? '').toLowerCase();
+  if (cat.contains('credit card payment') ||
+      cat.contains('pagamento de cartão') ||
+      cat.contains('pagamento de fatura')) {
+    return true;
+  }
+  final d = descricao.toLowerCase();
+  return RegExp(r'pagamento (de |da )?fatura|pagto\.? fatura|'
+          r'pagamento recebido|pagamento efetuado|pgto fatura')
+      .hasMatch(d);
+}
+
 class ConexaoMeuPluggyResult {
   final String itemId;
   final String oauthUrl;
@@ -513,8 +535,6 @@ class PluggyOpenFinanceService {
             final tx = rawTx as Map<String, dynamic>;
             final txId = tx['id'] as String;
             final amount = (tx['amount'] as num?)?.toDouble() ?? 0.0;
-            final typeStr = (tx['type'] as String? ?? '').toUpperCase();
-            final isReceita = amount > 0 || typeStr == 'CREDIT';
             final valorCents = (amount.abs() * 100).round();
 
             if (valorCents == 0) continue;
@@ -522,6 +542,9 @@ class PluggyOpenFinanceService {
             final desc = (tx['description'] as String?) ??
                 (tx['descriptionRaw'] as String?) ??
                 'Transação $nomeRealBanco';
+
+            if (ehPagamentoDeFatura(tx['category'] as String?, desc)) continue;
+            final isReceita = ehEntrada(amount: amount, cartaoDeCredito: isCreditCard);
 
             final dateStr = tx['date'] as String?;
             final data = dateStr != null

@@ -160,20 +160,33 @@ void main() {
             200,
           );
         }
-        if (caminho.path == '/transactions') {
+        if (caminho.path == '/v2/transactions') {
           expect(caminho.queryParameters['accountId'], 'acc_inter_1');
+          // Paginação por cursor: 1ª página aponta a 2ª em `next`.
+          if (caminho.queryParameters['after'] == null) {
+            expect(caminho.queryParameters['dateFrom'], isNotNull);
+            return http.Response(
+              jsonEncode({
+                'results': [
+                  {
+                    'id': 'tx_pix_001',
+                    'description': 'Pix enviado para Maria',
+                    'amount': -35.50,
+                    'type': 'DEBIT',
+                    'date': '2026-09-28T10:30:00Z',
+                    'category': 'Food & Beverage',
+                    'paymentData': {'paymentMethod': 'PIX'},
+                  },
+                ],
+                'next': 'accountId=acc_inter_1&after=cursor_2',
+              }),
+              200,
+            );
+          }
+          expect(caminho.queryParameters['after'], 'cursor_2');
           return http.Response(
             jsonEncode({
               'results': [
-                {
-                  'id': 'tx_pix_001',
-                  'description': 'Pix enviado para Maria',
-                  'amount': -35.50,
-                  'type': 'DEBIT',
-                  'date': '2026-09-28T10:30:00Z',
-                  'category': 'Food & Beverage',
-                  'paymentData': {'paymentMethod': 'PIX'},
-                },
                 {
                   'id': 'tx_cred_002',
                   'description': 'Depósito recebido',
@@ -181,7 +194,8 @@ void main() {
                   'type': 'CREDIT',
                   'date': '2026-09-28T11:00:00Z',
                 }
-              ]
+              ],
+              'next': null,
             }),
             200,
           );

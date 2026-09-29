@@ -391,6 +391,36 @@ class PluggyOpenFinanceService {
     return [];
   }
 
+  static const int _maxPaginasTransacoes = 20;
+
+  /// Transações de uma conta via `GET /v2/transactions` (paginação por cursor:
+  /// cada resposta traz em `next` a query string da próxima página, ou null).
+  Future<List<dynamic>> _transacoesDaConta(
+    String accountId,
+    String dataDesde,
+  ) async {
+    final todas = <dynamic>[];
+    var query = Uri(queryParameters: {
+      'accountId': accountId,
+      'dateFrom': dataDesde,
+    }).query;
+    for (var pagina = 0; pagina < _maxPaginasTransacoes; pagina++) {
+      final resp = await _chamar('GET', '/v2/transactions?$query');
+      if (resp.statusCode != 200) break;
+      final data = jsonDecode(resp.body) as Map<String, dynamic>;
+      todas.addAll((data['results'] as List<dynamic>?) ?? const []);
+      final proxima = data['next'] as String?;
+      if (proxima == null || proxima.isEmpty) break;
+      final params = Map<String, String>.of(
+        Uri.splitQueryString(
+          proxima.startsWith('?') ? proxima.substring(1) : proxima,
+        ),
+      )..putIfAbsent('accountId', () => accountId);
+      query = Uri(queryParameters: params).query;
+    }
+    return todas;
+  }
+
   /// Busca as transações bancárias reais de todas as contas associadas aos itens conectados.
   Future<List<TransacaoBancariaImportada>> buscarTodasTransacoes({
     List<ContaBancariaConectada>? contas,
@@ -431,16 +461,7 @@ class PluggyOpenFinanceService {
               ? accName
               : item.nomeBanco;
 
-          final txResp = await _chamar(
-            'GET',
-            '/transactions?accountId=${Uri.encodeQueryComponent(accountId)}'
-                '&from=$dataDesdeStr&pageSize=100',
-          );
-
-          if (txResp.statusCode != 200) continue;
-
-          final txData = jsonDecode(txResp.body) as Map<String, dynamic>;
-          final txList = (txData['results'] as List<dynamic>?) ?? [];
+          final txList = await _transacoesDaConta(accountId, dataDesdeStr);
 
           for (final rawTx in txList) {
             final tx = rawTx as Map<String, dynamic>;

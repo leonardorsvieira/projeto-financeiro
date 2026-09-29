@@ -97,7 +97,7 @@ function repassar(req: Request, r: Response, texto: string): Response {
       // corpo não-JSON
     }
     console.warn(JSON.stringify({
-      rota: url.pathname.split("/").slice(0, 2).join("/"),
+      rota: url.pathname.split("/").slice(0, 3).join("/"),
       status: r.status,
       codigo,
     }));
@@ -256,18 +256,23 @@ async function atender(req: Request): Promise<Response> {
     return repassar(req, r, await r.text());
   }
 
-  if (metodo === "GET" && seg[0] === "transactions" && seg.length === 1) {
+  // Transações: /v2/transactions (cursor). O /transactions antigo responde 410
+  // para aplicações novas da Pluggy.
+  if (
+    metodo === "GET" && seg.length === 2 && seg[0] === "v2" &&
+    seg[1] === "transactions"
+  ) {
     const accountId = q.get("accountId");
     const itemId = accountId ? await itemDaConta(accountId) : null;
     if (!itemId || !(await ehDono(uid, itemId))) {
       return resposta(req, 404, { erro: "conta_nao_encontrada" });
     }
     const params = new URLSearchParams({ accountId: accountId! });
-    for (const k of ["from", "to", "pageSize", "page"]) {
+    for (const k of ["dateFrom", "dateTo", "createdAtFrom", "after"]) {
       const v = q.get(k);
       if (v) params.set(k, v);
     }
-    const r = await pluggy("GET", `/transactions?${params}`);
+    const r = await pluggy("GET", `/v2/transactions?${params}`);
     return repassar(req, r, await r.text());
   }
 

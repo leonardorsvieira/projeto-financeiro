@@ -125,8 +125,12 @@ TipoClasseInvestimento classeDoInvestimentoPluggy(
   return TipoClasseInvestimento.rendaFixa;
 }
 
-int _centavos(Object? valor) =>
-    (((valor as num?) ?? 0).toDouble() * 100).round().clamp(0, 1 << 52);
+/// Reais → centavos, sem negativos. (Nada de `1 << 52` como limite: na web o
+/// shift é de 32 bits e vira 0, zerando todos os valores.)
+int _centavos(Object? valor) {
+  final cents = (((valor as num?) ?? 0).toDouble() * 100).round();
+  return cents < 0 ? 0 : cents;
+}
 
 /// Converte um investimento da Pluggy em posição do Patrimônio, ou null se já
 /// foi resgatado (status TOTAL_WITHDRAWAL ou saldo zerado).

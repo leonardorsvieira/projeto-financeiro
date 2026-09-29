@@ -5,40 +5,11 @@
 // dono em `public.pluggy_items`, e só rotas de uma allowlist são repassadas —
 // sempre verificando que o item/conta pertence ao usuário do JWT.
 import { admin, preambulo, resposta } from "../_shared/seguranca.ts";
+import { apiKey, pluggy, PLUGGY } from "../_shared/pluggy.ts";
 
-const PLUGGY = "https://api.pluggy.ai";
-
-let apiKeyCache: { chave: string; expiraEm: number } | null = null;
-
-async function apiKey(): Promise<string | null> {
-  if (apiKeyCache && apiKeyCache.expiraEm > Date.now()) return apiKeyCache.chave;
-  const clientId = Deno.env.get("PLUGGY_CLIENT_ID");
-  const clientSecret = Deno.env.get("PLUGGY_CLIENT_SECRET");
-  if (!clientId || !clientSecret) return null;
-  const r = await fetch(`${PLUGGY}/auth`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ clientId, clientSecret }),
-  });
-  if (!r.ok) throw new Error(`Pluggy /auth ${r.status}`);
-  const { apiKey } = await r.json();
-  // A apiKey da Pluggy vale 2h; renova antes.
-  apiKeyCache = { chave: apiKey, expiraEm: Date.now() + 90 * 60 * 1000 };
-  return apiKey;
-}
-
-async function pluggy(
-  metodo: string,
-  caminho: string,
-  corpo?: unknown,
-): Promise<Response> {
-  const chave = await apiKey();
-  return fetch(`${PLUGGY}${caminho}`, {
-    method: metodo,
-    headers: { "X-API-KEY": chave!, "Content-Type": "application/json" },
-    body: corpo === undefined ? undefined : JSON.stringify(corpo),
-  });
-}
+// Cada conexão nasce com o webhook que importa transações com o app fechado
+// (a Pluggy não tem cadastro de webhook no painel, só via API/parâmetro).
+const WEBHOOK_URL = `${Deno.env.get("SUPABASE_URL")}/functions/v1/pluggy-webhook`;
 
 async function ehDono(userId: string, itemId: string): Promise<boolean> {
   const { data } = await admin
@@ -151,7 +122,10 @@ async function atender(req: Request): Promise<Response> {
   // Connect Token: sempre amarrado ao usuário via clientUserId.
   if (metodo === "POST" && seg[0] === "connect_token" && seg.length === 1) {
     const opcoesCliente = (corpo?.options ?? {}) as Record<string, unknown>;
-    const options: Record<string, unknown> = { clientUserId: uid };
+    const options: Record<string, unknown> = {
+      clientUserId: uid,
+      webhookUrl: WEBHOOK_URL,
+    };
     if (typeof opcoesCliente.connectorId === "number") {
       options.connectorId = opcoesCliente.connectorId;
     }
@@ -178,6 +152,7 @@ async function atender(req: Request): Promise<Response> {
       connectorId: corpo.connectorId,
       parameters: corpo.parameters ?? {},
       clientUserId: uid,
+      webhookUrl: WEBHOOK_URL,
     });
     const texto = await r.text();
     if (r.ok) {
@@ -219,6 +194,7 @@ async function atender(req: Request): Promise<Response> {
         status: i.status,
         execucao: i.executionStatus,
         conector: i.connector?.id,
+        webhook: i.webhookUrl === WEBHOOK_URL,
       })),
     }));
     return resposta(req, 200, { results });

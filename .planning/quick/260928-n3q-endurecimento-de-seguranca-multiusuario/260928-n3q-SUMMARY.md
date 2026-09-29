@@ -24,3 +24,12 @@ date: 2026-09-28
 ## Pendente (usuário)
 
 Rotacionar secret da Pluggy; `supabase secrets set ...`; exigir confirmação de e-mail + leaked password protection; revisar as 3 contas; apagar secret `GEMINI_API_KEY` do GitHub; revogar PAT do Supabase citado no STATE (sessão de 2026-09-07).
+
+## Continuação (2026-09-29) — Open Finance
+
+- Proxy/webhook: `/v2/transactions` (o `/transactions` antigo dá 410), webhook por conexão (`webhookUrl`), remoção real de conexões, cota Pluggy 3000/dia.
+- Sincronização automática (app aberto) + `pluggy-webhook` (app fechado); índice único `lancamentos_pluggy_unico` contra duplicação.
+- Regras de dinheiro: sinal invertido no cartão, pagamento de fatura ignorado, categorias neutras (transferência entre contas / investimento) fora do saldo (`lancamentosContabeisProvider`).
+- Dados: importações erradas movidas para `lancamentos_backup_pluggy` (só servidor) e reimportadas; 26 repetidos (data+valor+tipo+descrição) movidos para a reserva.
+- UI: "Gastos por Meio de Pagamento" só do mês selecionado; cartão "Captura em Tempo Real" escondido (nunca foi implementado).
+- Pendente (usuário): decidir sobre 78 lançamentos manuais com gêmeo importado; apagar a reserva depois de conferir.

@@ -8,6 +8,7 @@ import '../../cartoes/domain/cartao_credito.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
 import '../../lancamentos/domain/lancamento.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
+import '../application/dashboard_providers.dart';
 
 class RelatorioCartoesWidget extends ConsumerWidget {
   const RelatorioCartoesWidget({super.key});
@@ -15,15 +16,22 @@ class RelatorioCartoesWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final lancamentosState = ref.watch(lancamentosStreamProvider);
+    final lancamentos = ref.watch(lancamentosContabeisProvider);
+    final mesAno = ref.watch(mesSelecionadoProvider);
     final cartoesState = ref.watch(cartoesControllerProvider);
 
-    final List<Lancamento> lancamentos =
-        lancamentosState.value?.where((l) => !l.ehMovimentacaoNeutra).toList() ?? [];
-    final List<CartaoCredito> cartoes = cartoesState.value ?? CartoesRepository.cartoesPadrao;
+    final List<CartaoCredito> cartoes =
+        cartoesState.value ?? CartoesRepository.cartoesPadrao;
 
-    final despesas =
-        lancamentos.where((l) => l.tipo == TipoLancamento.despesa).toList();
+    // Só o mês selecionado no painel (antes somava todos os meses).
+    final despesas = lancamentos
+        .where(
+          (l) =>
+              l.tipo == TipoLancamento.despesa &&
+              l.data.year == mesAno.year &&
+              l.data.month == mesAno.month,
+        )
+        .toList();
 
     int totalPixCents = 0;
     final Map<String, int> totaisPorCartao = {};
@@ -35,7 +43,9 @@ class RelatorioCartoesWidget extends ConsumerWidget {
     for (final d in despesas) {
       final fp = d.formaPagamento.toLowerCase();
       final int valCents = d.valorCents;
-      if (fp.contains('pix') || fp.contains('débito') || fp.contains('dinheiro')) {
+      if (fp.contains('pix') ||
+          fp.contains('débito') ||
+          fp.contains('dinheiro')) {
         totalPixCents = totalPixCents + valCents;
       } else {
         bool mapeado = false;
@@ -47,14 +57,17 @@ class RelatorioCartoesWidget extends ConsumerWidget {
           }
         }
         if (!mapeado) {
-          final primeiroNome = cartoes.isNotEmpty ? cartoes.first.nome : 'Cartão';
+          final primeiroNome = cartoes.isNotEmpty
+              ? cartoes.first.nome
+              : 'Cartão';
           totaisPorCartao[primeiroNome] =
               (totaisPorCartao[primeiroNome] ?? 0) + valCents;
         }
       }
     }
 
-    final totalGasto = totalPixCents +
+    final totalGasto =
+        totalPixCents +
         totaisPorCartao.values.fold<int>(0, (sum, val) => sum + val);
 
     return Card(
@@ -105,9 +118,9 @@ class RelatorioCartoesWidget extends ConsumerWidget {
                             color: Colors.white,
                           ),
                         ),
-                      ...totaisPorCartao.entries
-                          .where((e) => e.value > 0)
-                          .map((e) {
+                      ...totaisPorCartao.entries.where((e) => e.value > 0).map((
+                        e,
+                      ) {
                         final c = cartoes.firstWhere(
                           (element) => element.nome == e.key,
                           orElse: () => cartoes.first,
@@ -115,7 +128,8 @@ class RelatorioCartoesWidget extends ConsumerWidget {
                         Color color;
                         try {
                           color = Color(
-                              int.parse(c.corHex.replaceFirst('#', '0xFF')));
+                            int.parse(c.corHex.replaceFirst('#', '0xFF')),
+                          );
                         } catch (_) {
                           color = theme.colorScheme.primary;
                         }
@@ -162,18 +176,23 @@ class RelatorioCartoesWidget extends ConsumerWidget {
                       backgroundColor: () {
                         try {
                           return Color(
-                              int.parse(c.corHex.replaceFirst('#', '0xFF')));
+                            int.parse(c.corHex.replaceFirst('#', '0xFF')),
+                          );
                         } catch (_) {
                           return theme.colorScheme.primary;
                         }
                       }(),
                       radius: 12,
-                      child:
-                          const Icon(Icons.credit_card, size: 14, color: Colors.white),
+                      child: const Icon(
+                        Icons.credit_card,
+                        size: 14,
+                        color: Colors.white,
+                      ),
                     ),
                     title: Text('Fatura ${c.nome}'),
                     subtitle: Text(
-                        'Fecha dia ${c.diaFechamento} | Vence dia ${c.diaVencimento}'),
+                      'Fecha dia ${c.diaFechamento} | Vence dia ${c.diaVencimento}',
+                    ),
                     trailing: Text(
                       formatoBRL(totaisPorCartao[c.nome] ?? 0),
                       style: const TextStyle(fontWeight: FontWeight.bold),

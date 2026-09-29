@@ -8,6 +8,10 @@ import 'widgets/abrir_autorizacao.dart';
 import 'widgets/conectar_banco_dialog.dart';
 import 'widgets/status_pluggy_dialog.dart';
 
+/// Liga o cartão "Captura em Tempo Real" quando o leitor de notificações
+/// bancárias existir de fato.
+const _capturaNotificacoesImplementada = false;
+
 class OpenFinanceScreen extends ConsumerStatefulWidget {
   const OpenFinanceScreen({super.key});
 
@@ -42,7 +46,9 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
         itemIdPluggy: resultado.itemId,
         capturaAutomaticaAtiva: true,
       );
-      await ref.read(contasConectadasProvider.notifier).adicionarConta(contaMeuPluggy);
+      await ref
+          .read(contasConectadasProvider.notifier)
+          .adicionarConta(contaMeuPluggy);
 
       final url = Uri.parse(resultado.oauthUrl);
       final abriu = await abrirAutorizacaoPluggy(url);
@@ -104,11 +110,13 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
     );
     if (confirmou != true || !mounted) return;
     try {
-      final n = await ref.read(contasConectadasProvider.notifier).removerTodas();
+      final n = await ref
+          .read(contasConectadasProvider.notifier)
+          .removerTodas();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$n conexão(ões) removida(s).')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$n conexão(ões) removida(s).')));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -157,7 +165,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final contasAsync = ref.watch(contasConectadasProvider);
-        final capturaNotifAtiva = ref.watch(capturaNotificacoesAtivaProvider);
+    final capturaNotifAtiva = ref.watch(capturaNotificacoesAtivaProvider);
     final fmtData = DateFormat('dd/MM/yyyy HH:mm');
     final pluggyConfigurado =
         ref.watch(pluggyConfiguradoProvider).value ?? false;
@@ -194,11 +202,11 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
               side: BorderSide(
                 color: pluggyConfigurado
                     ? (theme.brightness == Brightness.dark
-                        ? Colors.purple.shade400.withValues(alpha: 0.4)
-                        : Colors.purple.shade200)
+                          ? Colors.purple.shade400.withValues(alpha: 0.4)
+                          : Colors.purple.shade200)
                     : (theme.brightness == Brightness.dark
-                        ? Colors.amber.shade400.withValues(alpha: 0.4)
-                        : Colors.amber.shade300),
+                          ? Colors.amber.shade400.withValues(alpha: 0.4)
+                          : Colors.amber.shade300),
               ),
             ),
             child: Padding(
@@ -216,11 +224,11 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                           pluggyConfigurado ? Icons.link : Icons.link_off,
                           color: pluggyConfigurado
                               ? (theme.brightness == Brightness.dark
-                                  ? Colors.purple.shade200
-                                  : Colors.purple.shade900)
+                                    ? Colors.purple.shade200
+                                    : Colors.purple.shade900)
                               : (theme.brightness == Brightness.dark
-                                  ? Colors.amber.shade200
-                                  : Colors.amber.shade900),
+                                    ? Colors.amber.shade200
+                                    : Colors.amber.shade900),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -236,11 +244,11 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                                 fontWeight: FontWeight.bold,
                                 color: pluggyConfigurado
                                     ? (theme.brightness == Brightness.dark
-                                        ? Colors.purple.shade200
-                                        : Colors.purple.shade900)
+                                          ? Colors.purple.shade200
+                                          : Colors.purple.shade900)
                                     : (theme.brightness == Brightness.dark
-                                        ? Colors.amber.shade200
-                                        : Colors.amber.shade900),
+                                          ? Colors.amber.shade200
+                                          : Colors.amber.shade900),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -267,7 +275,9 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                           style: FilledButton.styleFrom(
                             backgroundColor: Colors.purple.shade700,
                           ),
-                          onPressed: _abrindoMeuPluggy ? null : _abrirMeuPluggyConnect,
+                          onPressed: _abrindoMeuPluggy
+                              ? null
+                              : _abrirMeuPluggyConnect,
                           icon: _abrindoMeuPluggy
                               ? const SizedBox(
                                   width: 16,
@@ -281,7 +291,9 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                           label: const Text('Conectar meu.pluggy.ai'),
                         ),
                         FilledButton.icon(
-                          onPressed: _sincronizando ? null : _executarSincronizacao,
+                          onPressed: _sincronizando
+                              ? null
+                              : _executarSincronizacao,
                           icon: _sincronizando
                               ? const SizedBox(
                                   width: 16,
@@ -292,9 +304,11 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                                   ),
                                 )
                               : const Icon(Icons.sync, size: 18),
-                          label: Text(_sincronizando
-                              ? 'Sincronizando...'
-                              : 'Sincronizar Agora'),
+                          label: Text(
+                            _sincronizando
+                                ? 'Sincronizando...'
+                                : 'Sincronizar Agora',
+                          ),
                         ),
                         OutlinedButton.icon(
                           onPressed: _sincronizando
@@ -322,48 +336,52 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Seção: Captura Automática em Tempo Real (Leitor Push)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.bolt, color: Colors.amber),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Captura em Tempo Real (Notificações)',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
+          // Seção: Captura Automática em Tempo Real (Leitor Push). Escondida:
+          // o leitor de notificações nunca foi ligado (não há serviço
+          // Android nem chamada a processarNotificacaoBancariaEmTempoReal).
+          if (_capturaNotificacoesImplementada) ...[
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.bolt, color: Colors.amber),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Captura em Tempo Real (Notificações)',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      Switch(
-                        value: capturaNotifAtiva,
-                        onChanged: (val) {
-                          ref
-                              .read(capturaNotificacoesAtivaProvider.notifier)
-                              .setAtivo(val);
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Ao fazer uma compra no Cartão de Crédito ou enviar/receber um Pix, o Meu Bolso reconhece o valor da notificação bancária e lança instantaneamente.',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
+                          ],
+                        ),
+                        Switch(
+                          value: capturaNotifAtiva,
+                          onChanged: (val) {
+                            ref
+                                .read(capturaNotificacoesAtivaProvider.notifier)
+                                .setAtivo(val);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Ao fazer uma compra no Cartão de Crédito ou enviar/receber um Pix, o Meu Bolso reconhece o valor da notificação bancária e lança instantaneamente.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
+          ],
 
           // Seção: Instituições Conectadas
           Row(
@@ -387,13 +405,10 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
           contasAsync.when(
             loading: () => const Padding(
               padding: EdgeInsets.all(24),
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: Center(child: CircularProgressIndicator()),
             ),
-            error: (err, _) => Center(
-              child: Text('Erro ao carregar bancos: $err'),
-            ),
+            error: (err, _) =>
+                Center(child: Text('Erro ao carregar bancos: $err')),
             data: (contas) {
               if (contas.isEmpty) {
                 return Card(
@@ -401,8 +416,11 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       children: [
-                        const Icon(Icons.account_balance_outlined,
-                            size: 48, color: Colors.grey),
+                        const Icon(
+                          Icons.account_balance_outlined,
+                          size: 48,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           pluggyConfigurado
@@ -655,11 +673,11 @@ class _CardContaBancaria extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: conta.status == StatusConexaoBanco.conectado
                       ? (Theme.of(context).brightness == Brightness.dark
-                          ? Colors.green.shade300
-                          : Colors.green.shade900)
+                            ? Colors.green.shade300
+                            : Colors.green.shade900)
                       : (Theme.of(context).brightness == Brightness.dark
-                          ? Colors.amber.shade300
-                          : Colors.amber.shade900),
+                            ? Colors.amber.shade300
+                            : Colors.amber.shade900),
                 ),
               ),
             ),

@@ -66,7 +66,9 @@ Não existe leitura de `.env` em runtime: `SUPABASE_URL`/`SUPABASE_ANON_KEY` (p�
 
 **Integrações HTTP externas:** Gemini e Pluggy só via Edge Functions; cotações (AwesomeAPI, Yahoo Finance, brapi.dev, com fallback em `investimentos/data/cotacoes_service.dart`) direto do cliente. A web tem CSP em `app/web/index.html` — um domínio novo chamado pelo app precisa entrar no `connect-src`.
 
-**Dashboard/relatórios** derivam tudo dos streams de `lancamentos` e `investimentos` via providers (`dashboard_providers.dart`, `relatorios_providers.dart`); gráficos com `fl_chart`, PDF com `pdf`/`printing`, widget de tela inicial com `home_widget`. Donut, metas e próximos vencimentos consideram só `tipo = despesa`.
+**Importação Pluggy — regras de dinheiro:** no **cartão de crédito** o sinal é invertido (positivo = compra/saída, negativo = estorno); pagamento de fatura é ignorado (as compras já vêm pelo cartão). Transferências entre contas do próprio titular (categoria "mesma titularidade" ou contraparte com CPF/nome do titular) e aplicação/resgate de investimento viram as **categorias neutras** `Transferência entre contas` / `Investimento (aplicação/resgate)` (`categoriasNeutras` em `lancamento.dart`), que aparecem na lista mas não contam como entrada/saída. Regras duplicadas em `pluggy_open_finance_service.dart` (`ehEntrada`, `ehPagamentoDeFatura`, `categoriaNeutra`) e em `supabase/functions/pluggy-webhook` — mude os dois juntos.
+
+**Dashboard/relatórios** derivam tudo de `lancamentosContabeisProvider` (lançamentos sem as categorias neutras) e do stream de `investimentos` via providers (`dashboard_providers.dart`, `relatorios_providers.dart`); gráficos com `fl_chart`, PDF com `pdf`/`printing`, widget de tela inicial com `home_widget`. Donut, metas e próximos vencimentos consideram só `tipo = despesa`.
 
 ## Testes
 

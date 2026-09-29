@@ -60,8 +60,7 @@ void main() {
     expect(estado(), isA<DitadoSucesso>());
     final sucesso = estado() as DitadoSucesso;
     final rascunho = sucesso.lancamento;
-    expect(rascunho, isNotNull);
-    expect(rascunho!.descricao, 'Almoço');
+    expect(rascunho.descricao, 'Almoço');
     expect(rascunho.valorTexto, '42,90');
 
     expect(gravador.iniciarCount, 1);

@@ -10,130 +10,13 @@ import '../domain/investimento.dart';
 
 import 'rebalanceamento_dialog.dart';
 
-class InvestimentosScreen extends ConsumerStatefulWidget {
+/// Patrimônio: só leitura. Os ativos e valores vêm do Open Finance e são
+/// atualizados pela sincronização da Pluggy.
+class InvestimentosScreen extends ConsumerWidget {
   const InvestimentosScreen({super.key});
 
   @override
-  ConsumerState<InvestimentosScreen> createState() => _InvestimentosScreenState();
-}
-
-class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
-  bool _isRefreshing = false;
-
-  Future<void> _atualizarCotacoes() async {
-    setState(() => _isRefreshing = true);
-    try {
-      final atualizados = await ref.read(atualizarCotacoesProvider.future);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            atualizados > 0
-                ? '$atualizados cotação(ões) atualizada(s) da internet.'
-                : 'Todas as cotações já estão atualizadas.',
-          ),
-        ),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro ao buscar cotações da internet.')),
-      );
-    } finally {
-      if (mounted) setState(() => _isRefreshing = false);
-    }
-  }
-
-  Future<void> _salvar({
-    Investimento? investimento,
-    required TipoClasseInvestimento classe,
-    required String nome,
-    required double quantidade,
-    required int precoAtualCents,
-    required int saldoCents,
-  }) async {
-    final repo = ref.read(investimentosRepositoryProvider);
-    if (investimento == null) {
-      await repo.create(
-        Investimento(
-          id: '',
-          classe: classe,
-          nome: nome,
-          quantidade: quantidade,
-          precoAtualCents: precoAtualCents,
-          saldoCents: saldoCents,
-        ),
-      );
-    } else {
-      await repo.update(
-        Investimento(
-          id: investimento.id,
-          classe: classe,
-          nome: nome,
-          quantidade: quantidade,
-          precoAtualCents: precoAtualCents,
-          saldoCents: saldoCents,
-        ),
-      );
-    }
-  }
-
-  Future<void> _abrirDialog({Investimento? investimento}) async {
-    final resultado = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (_) => _InvestimentoFormDialog(investimento: investimento),
-    );
-    if (resultado == null || !mounted) return;
-    try {
-      await _salvar(
-        investimento: investimento,
-        classe: resultado['classe'] as TipoClasseInvestimento,
-        nome: resultado['nome'] as String,
-        quantidade: resultado['quantidade'] as double,
-        precoAtualCents: resultado['precoAtualCents'] as int,
-        saldoCents: resultado['saldoCents'] as int,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro ao salvar o ativo.')),
-      );
-    }
-  }
-
-  Future<void> _excluirComConfirmacao(Investimento investimento) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir ativo?'),
-        content: Text(
-          'O ativo "${investimento.nome}" será removido, junto com seus movimentos e rendimentos. Essa ação não pode ser desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
-    );
-    if (confirmar != true || !mounted) return;
-    try {
-      await ref.read(investimentosRepositoryProvider).delete(investimento.id);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro ao excluir o ativo.')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final porClasse = ref.watch(investimentosPorClasseProvider);
     final patrimonio = ref.watch(patrimonioTotalProvider);
     final rendimento = ref.watch(rendimentoAcumuladoProvider);
@@ -153,23 +36,7 @@ class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
             icon: const Icon(Icons.calendar_month),
             onPressed: () => context.push(AppRoutes.calendarioProventos),
           ),
-          IconButton(
-            tooltip: 'Atualizar cotações (B3/Internet)',
-            icon: _isRefreshing
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.sync),
-            onPressed: _isRefreshing ? null : _atualizarCotacoes,
-          ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _abrirDialog(),
-        icon: const Icon(Icons.add),
-        label: const Text('Novo ativo'),
       ),
       body: porClasse.totalAtivos == 0
           ? const _EmptyState()
@@ -199,10 +66,6 @@ class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
                       onTap: () => context.push(
                         AppRoutes.investimentoDetalheDe(investimento.id),
                       ),
-                      onEditar: () =>
-                          _abrirDialog(investimento: investimento),
-                      onExcluir: () =>
-                          _excluirComConfirmacao(investimento),
                     ),
                 ],
               ],
@@ -234,12 +97,13 @@ class _EmptyState extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Nenhum ativo cadastrado',
+                  'Nenhum investimento encontrado',
                   style: theme.textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Cadastre ações, FIIs, cripto, renda fixa ou contas de banco digital para acompanhar seu patrimônio.',
+                  'Seus investimentos aparecem aqui automaticamente, vindos '
+                  'dos bancos conectados no Open Finance.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium,
                 ),
@@ -297,6 +161,8 @@ class _PatrimonioCard extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
+            // Sem custo registrado não há como calcular o rendimento.
+            if (custoCents > 0) ...[
             const SizedBox(height: 8),
             Row(
               children: [
@@ -317,6 +183,7 @@ class _PatrimonioCard extends StatelessWidget {
                 ),
               ],
             ),
+            ],
           ],
         ),
       ),
@@ -328,14 +195,10 @@ class _InvestimentoTile extends ConsumerWidget {
   const _InvestimentoTile({
     required this.investimento,
     required this.onTap,
-    required this.onEditar,
-    required this.onExcluir,
   });
 
   final Investimento investimento;
   final VoidCallback onTap;
-  final VoidCallback onEditar;
-  final VoidCallback onExcluir;
 
   String _subtitle(PrecoMedioResultado? pm) {
     final sb = StringBuffer();
@@ -378,43 +241,26 @@ class _InvestimentoTile extends ConsumerWidget {
               ? '${_subtitle(pm)} · Open Finance'
               : _subtitle(pm),
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  formatoBRL(investimento.patrimonioCents),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+            Text(
+              formatoBRL(investimento.patrimonioCents),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            if (pm != null && pm.custoTotalCents > 0)
+              Text(
+                '${isLucro ? "+" : ""}${pm.rentabilidadePercent.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color:
+                      isLucro ? Colors.green.shade700 : theme.colorScheme.error,
                 ),
-                if (pm != null && pm.custoTotalCents > 0)
-                  Text(
-                    '${isLucro ? "+" : ""}${pm.rentabilidadePercent.toStringAsFixed(1)}%',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: isLucro
-                          ? Colors.green.shade700
-                          : theme.colorScheme.error,
-                    ),
-                  ),
-              ],
-            ),
-            PopupMenuButton<String>(
-              tooltip: 'Ações',
-              onSelected: (value) {
-                if (value == 'editar') onEditar();
-                if (value == 'excluir') onExcluir();
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'editar', child: Text('Editar')),
-                PopupMenuItem(value: 'excluir', child: Text('Excluir')),
-              ],
-            ),
+              ),
           ],
         ),
       ),
@@ -422,234 +268,3 @@ class _InvestimentoTile extends ConsumerWidget {
   }
 }
 
-class _InvestimentoFormDialog extends ConsumerStatefulWidget {
-  const _InvestimentoFormDialog({this.investimento});
-
-  final Investimento? investimento;
-
-  @override
-  ConsumerState<_InvestimentoFormDialog> createState() => _InvestimentoFormDialogState();
-}
-
-class _InvestimentoFormDialogState extends ConsumerState<_InvestimentoFormDialog> {
-  late final TextEditingController _nomeController;
-  late final TextEditingController _quantidadeController;
-  late final TextEditingController _precoController;
-  late final TextEditingController _saldoController;
-  late TipoClasseInvestimento _classe;
-  bool _isSaving = false;
-  bool _isFetchingCotacao = false;
-
-  bool get _editando => widget.investimento != null;
-
-  @override
-  void initState() {
-    super.initState();
-    final inv = widget.investimento;
-    _classe = inv?.classe ?? TipoClasseInvestimento.acao;
-    _nomeController = TextEditingController(text: inv?.nome ?? '');
-    _quantidadeController = TextEditingController(
-      text: (inv?.quantidade ?? 0) == 0
-          ? ''
-          : (inv!.quantidade.toStringAsFixed(2)),
-    );
-    _precoController = TextEditingController(
-      text: (inv != null && inv.ePorQuantidade)
-          ? _semPrefixo(formatoBRL(inv.precoAtualCents))
-          : '',
-    );
-    _saldoController = TextEditingController(
-      text: (inv != null && !inv.ePorQuantidade)
-          ? _semPrefixo(formatoBRL(inv.saldoCents))
-          : '',
-    );
-  }
-
-  String _semPrefixo(String valor) =>
-      valor.replaceAll('R\$', '').trim();
-
-  @override
-  void dispose() {
-    _nomeController.dispose();
-    _quantidadeController.dispose();
-    _precoController.dispose();
-    _saldoController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _buscarCotacaoNaInternet() async {
-    final nome = _nomeController.text.trim();
-    if (nome.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Digite o ticker do ativo (ex: PETR4, MXRF11, BTC).'),
-        ),
-      );
-      return;
-    }
-    setState(() => _isFetchingCotacao = true);
-    try {
-      final service = ref.read(cotacoesServiceProvider);
-      final precoCents = await service.buscarPrecoCents(nome, _classe);
-      if (!mounted) return;
-      if (precoCents != null && precoCents > 0) {
-        _precoController.text = _semPrefixo(formatoBRL(precoCents));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Cotação encontrada: ${formatoBRL(precoCents)}'),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cotação não encontrada para este ativo.'),
-          ),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Erro ao buscar cotação na internet.'),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isFetchingCotacao = false);
-    }
-  }
-
-  Future<void> _salvar() async {
-    final nome = _nomeController.text.trim();
-    if (nome.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe o nome do ativo.')),
-      );
-      return;
-    }
-
-    final quantidade = _classe.ePorQuantidade
-        ? double.tryParse(
-            _quantidadeController.text.trim().replaceAll(',', '.'),
-          )
-        : 0.0;
-    if (_classe.ePorQuantidade &&
-        (quantidade == null || quantidade < 0)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe uma quantidade válida.')),
-      );
-      return;
-    }
-
-    final precoAtualCents = _classe.ePorQuantidade
-        ? parseValorBRLParaCentavos(_precoController.text)
-        : 0;
-    if (_classe.ePorQuantidade && precoAtualCents == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe um preço válido.')),
-      );
-      return;
-    }
-
-    final saldoCents = _classe.ePorQuantidade
-        ? 0
-        : parseValorBRLParaCentavos(_saldoController.text);
-    if (!_classe.ePorQuantidade && saldoCents == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe um saldo válido.')),
-      );
-      return;
-    }
-
-    setState(() => _isSaving = true);
-    Navigator.pop(context, {
-      'classe': _classe,
-      'nome': nome,
-      'quantidade': quantidade!,
-      'precoAtualCents': precoAtualCents!,
-      'saldoCents': saldoCents!,
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final porQuantidade = _classe.ePorQuantidade;
-    return AlertDialog(
-      title: Text(_editando ? 'Editar ativo' : 'Novo ativo'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButtonFormField<TipoClasseInvestimento>(
-              initialValue: _classe,
-              decoration: const InputDecoration(labelText: 'Classe'),
-              items: [
-                for (final c in TipoClasseInvestimento.values)
-                  DropdownMenuItem(value: c, child: Text(c.rotulo)),
-              ],
-              onChanged: (v) => setState(() => _classe = v ?? _classe),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _nomeController,
-              textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(labelText: 'Nome/Ticker'),
-            ),
-            if (porQuantidade) ...[
-              const SizedBox(height: 16),
-              TextField(
-                controller: _quantidadeController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Quantidade'),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _precoController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: 'Preço atual',
-                  prefixText: 'R\$ ',
-                  suffixIcon: IconButton(
-                    tooltip: 'Buscar cotação na internet',
-                    icon: _isFetchingCotacao
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.cloud_download_outlined),
-                    onPressed:
-                        _isFetchingCotacao ? null : _buscarCotacaoNaInternet,
-                  ),
-                ),
-              ),
-            ] else ...[
-              const SizedBox(height: 16),
-              TextField(
-                controller: _saldoController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Saldo atual',
-                  prefixText: 'R\$ ',
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: _isSaving ? null : _salvar,
-          child: const Text('Salvar'),
-        ),
-      ],
-    );
-  }
-}

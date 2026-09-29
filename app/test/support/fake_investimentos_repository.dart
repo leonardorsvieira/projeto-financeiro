@@ -78,6 +78,9 @@ class FakeInvestimentosRepository implements InvestimentosRepository {
       _items.removeWhere(
           (i) => i.pluggyId != null && !ids.contains(i.pluggyId));
     }
+    if (importados.isNotEmpty) {
+      _items.removeWhere((i) => i.pluggyId == null);
+    }
     var alterados = antes - _items.length;
     for (final inv in importados) {
       final index = _items.indexWhere((i) => i.pluggyId == inv.pluggyId);

@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 Phase: 8 — Investimentos (concluída) — todas as 8 fases do roadmap completas
 Plan: 08-01..08-05 ✅ (05-02 push FCM/APNs adiado de propósito — lembretes usam notificação local)
 Status: **Milestone v1.1 completo.** Depois dele: Open Finance via Pluggy (Edge Functions `pluggy`/`pluggy-webhook`, meu.pluggy.ai direto, `/v2/transactions`, sincronização automática, sinal do cartão, categorias neutras) e hardening multiusuário (quick 260928-n3q).
-Last activity: 2026-09-29 — quick 260929-r0j: investimentos do Open Finance (Pluggy) importados para o Patrimônio
+Last activity: 2026-09-29 — quick 260929-rf2: Patrimônio somente Open Finance (sem cadastro/edição manual; manuais apagados ao importar)
 
 ## Performance Metrics
 
@@ -105,6 +105,7 @@ Items acknowledged and carried forward from previous milestone close:
 | 260928-n3q | Endurecimento de segurança multiusuário | 2026-09-28 | [SUMMARY](quick/260928-n3q-endurecimento-de-seguranca-multiusuario/260928-n3q-SUMMARY.md) |
 | 260929-pzt | Permissão INTERNET no manifest + APK novo + STATE | 2026-09-29 | [SUMMARY](quick/260929-pzt-internet-manifest-apk-state/260929-pzt-SUMMARY.md) |
 | 260929-r0j | Investimentos do Open Finance no Patrimônio | 2026-09-29 | [SUMMARY](quick/260929-r0j-importar-investimentos-open-finance-patr/260929-r0j-SUMMARY.md) |
+| 260929-rf2 | Patrimônio somente Open Finance | 2026-09-29 | [SUMMARY](quick/260929-rf2-patrimonio-somente-open-finance/260929-rf2-SUMMARY.md) |
 
 ## Session Continuity
 

@@ -98,6 +98,16 @@ class SupabaseInvestimentosRepository implements InvestimentosRepository {
           .inFilter('id', atuais.values.map((i) => i.id).toList());
       alterados += atuais.length;
     }
+    // Só apaga os manuais quando o Open Finance já trouxe algo para o lugar
+    // deles — o Patrimônio nunca fica vazio por uma falha na Pluggy.
+    if (importados.isNotEmpty) {
+      final manuais = await _db
+          .from(_table)
+          .delete()
+          .isFilter('pluggy_id', null)
+          .select('id');
+      alterados += manuais.length;
+    }
     return alterados;
   }
 

@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../home/domain/app_routes.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../application/investimentos_providers.dart';
 import '../domain/investimento.dart';
-import '../domain/movimento_investimento.dart';
-import '../domain/rendimento_investimento.dart';
 
-/// Detalhe de um ativo: posição resumida, lista de movimentos e registro de
-/// novas compras/vendas (que atualizam a posição).
-class InvestimentoDetalheScreen extends ConsumerStatefulWidget {
+/// Detalhe de um ativo (só leitura): a posição vem do Open Finance e é
+/// atualizada pela sincronização da Pluggy.
+class InvestimentoDetalheScreen extends ConsumerWidget {
   const InvestimentoDetalheScreen({
     super.key,
     required this.investimentoId,
@@ -20,248 +16,40 @@ class InvestimentoDetalheScreen extends ConsumerStatefulWidget {
   final String investimentoId;
 
   @override
-  ConsumerState<InvestimentoDetalheScreen> createState() =>
-      _InvestimentoDetalheScreenState();
-}
-
-class _InvestimentoDetalheScreenState
-    extends ConsumerState<InvestimentoDetalheScreen> {
-  Investimento? _getInvestimento(List<Investimento>? lista) {
-    if (lista == null) return null;
-    for (final i in lista) {
-      if (i.id == widget.investimentoId) return i;
-    }
-    return null;
-  }
-
-  Future<void> _abrirDialog(
-    Investimento investimento,
-    List<MovimentoInvestimento> movimentos,
-  ) async {
-    final resultado = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (_) => _MovimentoDialog(investimento: investimento),
-    );
-    if (resultado == null || !mounted) return;
-
-    final tipo = resultado['tipo'] as TipoMovimentoInvestimento;
-    final quantidade = resultado['quantidade'] as double;
-    final precoUnitCents = resultado['precoUnitCents'] as int;
-    final data = resultado['data'] as DateTime;
-
-    // Impede venda que deixaria a quantidade negativa.
-    if (tipo == TipoMovimentoInvestimento.venda &&
-        investimento.ePorQuantidade &&
-        quantidade > investimento.quantidade) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('A venda não pode ser maior que a quantidade atual.'),
-        ),
-      );
-      return;
-    }
-
-    try {
-      final repos = ref.read(investimentosRepositoryProvider);
-      final movRepo = ref.read(movimentosInvestimentoRepositoryProvider);
-
-      await movRepo.create(
-        MovimentoInvestimento(
-          id: '',
-          investimentoId: investimento.id,
-          tipo: tipo,
-          quantidade: quantidade,
-          precoUnitCents: precoUnitCents,
-          data: data,
-        ),
-      );
-
-      // Atualiza posição: quantidade +/− e preço unitário atual.
-      double novaQuantidade = investimento.quantidade;
-      if (investimento.ePorQuantidade) {
-        novaQuantidade = tipo == TipoMovimentoInvestimento.compra
-            ? investimento.quantidade + quantidade
-            : investimento.quantidade - quantidade;
-      }
-      await repos.update(
-        Investimento(
-          id: investimento.id,
-          classe: investimento.classe,
-          nome: investimento.nome,
-          quantidade:
-              investimento.ePorQuantidade ? novaQuantidade : investimento.quantidade,
-          precoAtualCents: investimento.ePorQuantidade
-              ? precoUnitCents
-              : investimento.precoAtualCents,
-          saldoCents: !investimento.ePorQuantidade
-              ? tipo == TipoMovimentoInvestimento.compra
-                  ? investimento.saldoCents + precoUnitCents
-                  : (investimento.saldoCents - precoUnitCents)
-                      .clamp(0, 1 << 62)
-              : investimento.saldoCents,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro ao salvar o movimento.')),
-      );
-    }
-  }
-
-  Future<void> _excluirComConfirmacao(MovimentoInvestimento movimento) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir movimento?'),
-        content: const Text(
-          'O movimento será removido do histórico. Essa ação não pode ser desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
-    );
-    if (confirmar != true || !mounted) return;
-    try {
-      await ref
-          .read(movimentosInvestimentoRepositoryProvider)
-          .delete(movimento.id);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro ao excluir o movimento.')),
-      );
-    }
-  }
-
-  Future<void> _excluirRendimento(
-    RendimentoInvestimento rendimento,
-  ) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir rendimento?'),
-        content: const Text(
-          'O rendimento será removido do histórico. Essa ação não pode ser desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
-    );
-    if (confirmar != true || !mounted) return;
-    try {
-      await ref
-          .read(rendimentosInvestimentoRepositoryProvider)
-          .delete(rendimento.id);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro ao excluir o rendimento.')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
-    final investimento = _getInvestimento(investimentos);
-    final movimentos =
-        ref.watch(movimentosPorInvestimentoProvider(widget.investimentoId)).value ??
-            [];
-    final rendimentos =
-        ref.watch(rendimentosPorAtivoProvider(widget.investimentoId));
+    Investimento? investimento;
+    for (final i in investimentos) {
+      if (i.id == investimentoId) investimento = i;
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(investimento?.nome ?? 'Investimento'),
       ),
-      floatingActionButton: investimento == null
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => _abrirDialog(investimento, movimentos),
-              icon: const Icon(Icons.add),
-              label: const Text('Movimento'),
-            ),
       body: investimento == null
           ? const Center(child: Text('Ativo não encontrado.'))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
                 _ResumoInvestimento(investimento: investimento),
-                const SizedBox(height: 24),
-                Text(
-                  'Movimentos',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                if (movimentos.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: Text('Nenhum movimento registrado.')),
-                  )
-                else
-                  for (final mov in movimentos)
-                    _MovimentoTile(
-                      movimento: mov,
-                      ePorQuantidade: investimento.ePorQuantidade,
-                      onExcluir: () => _excluirComConfirmacao(mov),
-                    ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Rendimentos',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                    Icon(
+                      Icons.sync,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.outline,
                     ),
-                    OutlinedButton.icon(
-                      onPressed: () => context.push(
-                        AppRoutes.rendimentoFormDe(widget.investimentoId),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Valores atualizados automaticamente pelo Open Finance.',
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Registrar'),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                if (rendimentos.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(
-                      child: Text('Nenhum rendimento registrado.'),
-                    ),
-                  )
-                else
-                  for (final rendimento in rendimentos)
-                    _RendimentoTile(
-                      rendimento: rendimento,
-                      onEditar: () => context.push(
-                        AppRoutes.rendimentoFormDe(widget.investimentoId),
-                        extra: rendimento,
-                      ),
-                      onExcluir: () =>
-                          _excluirRendimento(rendimento),
-                    ),
               ],
             ),
     );
@@ -390,267 +178,6 @@ class _ResumoInvestimento extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _MovimentoTile extends StatelessWidget {
-  const _MovimentoTile({
-    required this.movimento,
-    required this.ePorQuantidade,
-    required this.onExcluir,
-  });
-
-  final MovimentoInvestimento movimento;
-  final bool ePorQuantidade;
-  final VoidCallback onExcluir;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final ehCompra = movimento.tipo == TipoMovimentoInvestimento.compra;
-    final cor = ehCompra ? Colors.green.shade700 : theme.colorScheme.error;
-    final rotulo = ePorQuantidade
-        ? '${movimento.tipo.rotulo} · '
-            '${movimento.quantidade.toStringAsFixed(2)} un'
-        : (ehCompra ? 'Aporte' : 'Resgate');
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: cor.withValues(alpha: 0.12),
-          child: Icon(
-            ehCompra ? Icons.add : Icons.remove,
-            color: cor,
-          ),
-        ),
-        title: Text(rotulo),
-        subtitle: Text(formatoData(movimento.data)),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              (ehCompra ? '' : '-') + formatoBRL(movimento.valorCents),
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: cor,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            PopupMenuButton<String>(
-              tooltip: 'Ações',
-              onSelected: (value) {
-                if (value == 'excluir') onExcluir();
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'excluir', child: Text('Excluir')),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RendimentoTile extends StatelessWidget {
-  const _RendimentoTile({
-    required this.rendimento,
-    required this.onEditar,
-    required this.onExcluir,
-  });
-
-  final RendimentoInvestimento rendimento;
-  final VoidCallback onEditar;
-  final VoidCallback onExcluir;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cor = Colors.blue.shade700;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: cor.withValues(alpha: 0.12),
-          child: const Icon(Icons.card_giftcard, color: Colors.blue),
-        ),
-        title: Text(rendimento.tipo.rotulo),
-        subtitle: Text(formatoData(rendimento.data)),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '+${formatoBRL(rendimento.valorCents)}',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.green.shade700,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            PopupMenuButton<String>(
-              tooltip: 'Ações',
-              onSelected: (value) {
-                if (value == 'editar') onEditar();
-                if (value == 'excluir') onExcluir();
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'editar', child: Text('Editar')),
-                PopupMenuItem(value: 'excluir', child: Text('Excluir')),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MovimentoDialog extends StatefulWidget {
-  const _MovimentoDialog({required this.investimento});
-
-  final Investimento investimento;
-
-  @override
-  State<_MovimentoDialog> createState() => _MovimentoDialogState();
-}
-
-class _MovimentoDialogState extends State<_MovimentoDialog> {
-  late final TextEditingController _quantidadeController;
-  late final TextEditingController _precoController;
-  late TipoMovimentoInvestimento _tipo;
-  late DateTime _data;
-  bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _tipo = TipoMovimentoInvestimento.compra;
-    _data = DateTime.now();
-    _quantidadeController = TextEditingController(
-      text: widget.investimento.ePorQuantidade ? '1' : '1',
-    );
-    _precoController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _quantidadeController.dispose();
-    _precoController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickData() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _data,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      locale: Localizations.localeOf(context),
-    );
-    if (picked != null) setState(() => _data = picked);
-  }
-
-  Future<void> _salvar() async {
-    final preco = parseValorBRLParaCentavos(_precoController.text);
-    if (preco == null || preco <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe um valor/preço válido.')),
-      );
-      return;
-    }
-    final quantidade = double.tryParse(
-      _quantidadeController.text.trim().replaceAll(',', '.'),
-    );
-    if (quantidade == null || quantidade <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe uma quantidade válida.')),
-      );
-      return;
-    }
-
-    setState(() => _isSaving = true);
-    // Para RF/bco a "quantidade" do movimento é sempre 1 e o preço é o valor
-    // financeiro em centavos (aporte/resgate).
-    final precoUnitCents = widget.investimento.ePorQuantidade
-        ? preco
-        : preco;
-    Navigator.pop(context, {
-      'tipo': _tipo,
-      'quantidade': widget.investimento.ePorQuantidade ? quantidade : 1.0,
-      'precoUnitCents': precoUnitCents,
-      'data': _data,
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ePorQuantidade = widget.investimento.ePorQuantidade;
-    final tituloCompra = ePorQuantidade ? 'Compra' : 'Aporte';
-    final tituloVenda = ePorQuantidade ? 'Venda' : 'Resgate';
-
-    return AlertDialog(
-      title: Text('Novo movimento — ${widget.investimento.nome}'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SegmentedButton<TipoMovimentoInvestimento>(
-              segments: [
-                ButtonSegment(
-                  value: TipoMovimentoInvestimento.compra,
-                  label: Text(tituloCompra),
-                ),
-                ButtonSegment(
-                  value: TipoMovimentoInvestimento.venda,
-                  label: Text(tituloVenda),
-                ),
-              ],
-              selected: {_tipo},
-              onSelectionChanged: (s) => setState(() => _tipo = s.first),
-            ),
-            const SizedBox(height: 16),
-            if (ePorQuantidade) ...[
-              TextField(
-                controller: _quantidadeController,
-                keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true),
-                decoration: const InputDecoration(labelText: 'Quantidade'),
-              ),
-              const SizedBox(height: 16),
-            ],
-            TextField(
-              controller: _precoController,
-              keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true),
-              decoration: InputDecoration(
-                labelText: ePorQuantidade
-                    ? 'Preço unitário (R\$)'
-                    : 'Valor aplicado (R\$)',
-                prefixText: 'R\$ ',
-              ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Data'),
-              subtitle: Text(formatoData(_data)),
-              trailing: const Icon(Icons.calendar_today_outlined),
-              onTap: _pickData,
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: _isSaving ? null : _salvar,
-          child: const Text('Salvar'),
-        ),
-      ],
     );
   }
 }

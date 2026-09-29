@@ -136,7 +136,20 @@ void main() {
   });
 
   group('sincronizarOpenFinance (fake)', () {
-    test('atualiza importados, remove ausentes e preserva manuais', () async {
+    test('sem nada do Open Finance, mantém os manuais', () async {
+      final repo = FakeInvestimentosRepository([
+        const Investimento(
+          id: 'manual',
+          classe: TipoClasseInvestimento.rendaFixa,
+          nome: 'Poupança',
+          saldoCents: 100,
+        ),
+      ]);
+      await repo.sincronizarOpenFinance(const [], removerAusentes: true);
+      expect(repo.items.map((i) => i.id), ['manual']);
+    });
+
+    test('importa, remove ausentes e apaga os manuais', () async {
       final repo = FakeInvestimentosRepository([
         const Investimento(
           id: 'manual',
@@ -164,7 +177,7 @@ void main() {
         ],
         removerAusentes: true,
       );
-      expect(repo.items.map((i) => i.id), ['manual', 'inv-pluggy-novo']);
+      expect(repo.items.map((i) => i.id), ['inv-pluggy-novo']);
     });
   });
 }

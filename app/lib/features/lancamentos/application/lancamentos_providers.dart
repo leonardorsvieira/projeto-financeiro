@@ -12,6 +12,14 @@ final lancamentosStreamProvider = StreamProvider<List<Lancamento>>((ref) {
   return ref.watch(lancamentosRepositoryProvider).watch();
 });
 
+/// Lançamentos que contam para saldo, gráficos e relatórios: todos, menos as
+/// movimentações neutras (transferência entre contas próprias, aplicação e
+/// resgate de investimento).
+final lancamentosContabeisProvider = Provider<List<Lancamento>>((ref) {
+  final todos = ref.watch(lancamentosStreamProvider).value ?? [];
+  return todos.where((l) => !l.ehMovimentacaoNeutra).toList();
+});
+
 final lancamentoByIdProvider =
     FutureProvider.family<Lancamento?, String>((ref, id) {
   return ref.watch(lancamentosRepositoryProvider).findById(id);

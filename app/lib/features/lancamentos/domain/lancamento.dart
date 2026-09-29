@@ -10,6 +10,16 @@ enum TipoLancamento {
       v == 'receita' ? TipoLancamento.receita : TipoLancamento.despesa;
 }
 
+/// Movimentação neutra: dinheiro trocando de lugar entre contas do próprio
+/// usuário ou indo/voltando de investimentos. Aparece na lista, mas não é
+/// renda nem gasto — fica fora do saldo, dos gráficos e dos relatórios.
+const categoriaTransferenciaEntreContas = 'Transferência entre contas';
+const categoriaMovimentacaoInvestimento = 'Investimento (aplicação/resgate)';
+const categoriasNeutras = {
+  categoriaTransferenciaEntreContas,
+  categoriaMovimentacaoInvestimento,
+};
+
 class LancamentoItem {
   const LancamentoItem({
     required this.descricao,
@@ -71,6 +81,9 @@ class Lancamento {
   }
 
   bool get temItens => itens != null && itens!.isNotEmpty;
+
+  /// Não conta como entrada nem saída (ver [categoriasNeutras]).
+  bool get ehMovimentacaoNeutra => categoriasNeutras.contains(categoria);
 
   Lancamento copyWith({
     String? descricao,

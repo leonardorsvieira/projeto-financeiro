@@ -73,7 +73,7 @@ class DadosRelatorioComparativo {
 final relatoriosComparativosProvider =
     Provider<DadosRelatorioComparativo>((ref) {
   final numMeses = ref.watch(numMesesRelatorioProvider);
-  final lancamentos = ref.watch(lancamentosStreamProvider).value ?? [];
+  final lancamentos = ref.watch(lancamentosContabeisProvider);
   final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
 
   final agora = DateTime.now();

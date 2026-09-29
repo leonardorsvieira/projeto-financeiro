@@ -11,7 +11,15 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_PAGINAS = 20;
 const CONECTOR_MEU_PLUGGY = 200;
 
-type Conta = { id: string; itemId: string; type?: string; name?: string };
+type Conta = {
+  id: string;
+  itemId: string;
+  type?: string;
+  name?: string;
+  taxNumber?: string;
+  owner?: string;
+};
+type Parte = { name?: string; documentNumber?: { value?: string } | string };
 type Transacao = {
   id: string;
   amount?: number;
@@ -20,8 +28,39 @@ type Transacao = {
   descriptionRaw?: string;
   date?: string;
   category?: string;
-  paymentData?: { paymentMethod?: string };
+  paymentData?: { paymentMethod?: string; payer?: Parte; receiver?: Parte };
 };
+
+// Mesmas categorias neutras do app (lancamento.dart): não contam no saldo.
+const TRANSFERENCIA_ENTRE_CONTAS = "Transferência entre contas";
+const MOVIMENTACAO_INVESTIMENTO = "Investimento (aplicação/resgate)";
+const RE_INVESTIMENTO =
+  /\b(rdb|cdb|lci|lca)\b|resgate|aplica[cç][aã]o|caixinha|cofrinho|porquinho|dinheiro guardado|dinheiro resgatado|nuinvest|tesouro|poupan[cç]a/;
+
+const soDigitos = (s?: string) => (s ?? "").replace(/\D/g, "");
+const nomeNormalizado = (s?: string) => (s ?? "").toLowerCase().replace(/\s+/g, " ").trim();
+
+/** Mesma regra do app (categoriaNeutra em pluggy_open_finance_service.dart). */
+function categoriaNeutra(tx: Transacao, descricao: string, entrada: boolean, conta: Conta) {
+  const cat = (tx.category ?? "").toLowerCase();
+  if (cat.includes("invest") || RE_INVESTIMENTO.test(descricao.toLowerCase())) {
+    return MOVIMENTACAO_INVESTIMENTO;
+  }
+  if (
+    cat.includes("same person") || cat.includes("same ownership") ||
+    cat.includes("mesma titularidade")
+  ) return TRANSFERENCIA_ENTRE_CONTAS;
+  const parte = entrada ? tx.paymentData?.payer : tx.paymentData?.receiver;
+  if (!parte) return null;
+  const doc = soDigitos(
+    typeof parte.documentNumber === "string" ? parte.documentNumber : parte.documentNumber?.value,
+  );
+  const cpf = soDigitos(conta.taxNumber);
+  if (cpf.length === 11 && doc === cpf) return TRANSFERENCIA_ENTRE_CONTAS;
+  const nome = nomeNormalizado(conta.owner);
+  if (!doc && nome && nomeNormalizado(parte.name) === nome) return TRANSFERENCIA_ENTRE_CONTAS;
+  return null;
+}
 
 function ok(corpo: Record<string, unknown> = { ok: true }): Response {
   return new Response(JSON.stringify(corpo), {
@@ -139,7 +178,8 @@ async function importar(
         user_id: userId,
         descricao,
         valor_cents: valor,
-        categoria: categoria(tx.category, descricao),
+        categoria: categoriaNeutra(tx, descricao, entrada, conta) ??
+          categoria(tx.category, descricao),
         forma_pagamento: pix ? "Pix" : credito ? `Cartão: ${nomeBanco}` : `Conta: ${nomeBanco}`,
         data: dataLocal(tx.date),
         tipo: entrada ? "receita" : "despesa",

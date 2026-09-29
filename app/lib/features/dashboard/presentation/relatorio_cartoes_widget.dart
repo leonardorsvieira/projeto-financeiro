@@ -18,7 +18,8 @@ class RelatorioCartoesWidget extends ConsumerWidget {
     final lancamentosState = ref.watch(lancamentosStreamProvider);
     final cartoesState = ref.watch(cartoesControllerProvider);
 
-    final List<Lancamento> lancamentos = lancamentosState.value ?? [];
+    final List<Lancamento> lancamentos =
+        lancamentosState.value?.where((l) => !l.ehMovimentacaoNeutra).toList() ?? [];
     final List<CartaoCredito> cartoes = cartoesState.value ?? CartoesRepository.cartoesPadrao;
 
     final despesas =

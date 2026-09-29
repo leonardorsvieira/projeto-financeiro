@@ -67,7 +67,7 @@ class MesSelecionadoNotifier extends Notifier<DateTime> {
 
 /// Fluxo do mês selecionado (real + previsto).
 final resumoMesProvider = Provider<ResumoMes>((ref) {
-  final todos = ref.watch(lancamentosStreamProvider).value ?? [];
+  final todos = ref.watch(lancamentosContabeisProvider);
   final mesAno = ref.watch(mesSelecionadoProvider);
 
   int entradas = 0;
@@ -111,7 +111,7 @@ class GastoCategoria {
 /// Gastos do mês selecionado agrupados por categoria, ordenados do maior para o
 /// menor (lançamentos com `data` no mês).
 final gastosPorCategoriaMesProvider = Provider<List<GastoCategoria>>((ref) {
-  final todos = ref.watch(lancamentosStreamProvider).value ?? [];
+  final todos = ref.watch(lancamentosContabeisProvider);
   final mesAno = ref.watch(mesSelecionadoProvider);
 
   final porCategoria = <String, int>{};
@@ -143,7 +143,7 @@ class MesHistorico {
 
 /// Histórico dos últimos 6 meses com totais de fluxo para comparativo.
 final historicoUltimosMesesProvider = Provider<List<MesHistorico>>((ref) {
-  final todos = ref.watch(lancamentosStreamProvider).value ?? [];
+  final todos = ref.watch(lancamentosContabeisProvider);
   final agora = DateTime.now();
 
   final resultado = <MesHistorico>[];

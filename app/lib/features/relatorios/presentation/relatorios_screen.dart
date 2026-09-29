@@ -19,7 +19,7 @@ class RelatoriosScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final numMeses = ref.watch(numMesesRelatorioProvider);
     final dados = ref.watch(relatoriosComparativosProvider);
-    final lancamentos = ref.watch(lancamentosStreamProvider).value ?? [];
+    final lancamentos = ref.watch(lancamentosContabeisProvider);
 
     final fmtBrl = NumberFormat.currency(locale: 'pt_BR', symbol: r'R$ ');
     final isPositivo = dados.variacaoPatrimonialPercent >= 0;

@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/edge_function.dart';
+import '../../lancamentos/domain/lancamento.dart'
+    show categoriaMovimentacaoInvestimento, categoriaTransferenciaEntreContas;
 import '../domain/conta_bancaria_conectada.dart';
 import '../domain/transacao_bancaria_importada.dart';
 
@@ -42,6 +44,59 @@ bool ehPagamentoDeFatura(String? categoria, String descricao) {
   return RegExp(r'pagamento (de |da )?fatura|pagto\.? fatura|'
           r'pagamento recebido|pagamento efetuado|pgto fatura')
       .hasMatch(d);
+}
+
+String _soDigitos(String? s) => (s ?? '').replaceAll(RegExp(r'\D'), '');
+
+String _nomeNormalizado(String? s) =>
+    (s ?? '').toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+
+final _reInvestimento = RegExp(
+  r'\b(rdb|cdb|lci|lca)\b|resgate|aplica[cç][aã]o|caixinha|cofrinho|'
+  r'porquinho|dinheiro guardado|dinheiro resgatado|nuinvest|tesouro|'
+  r'poupan[cç]a',
+);
+
+/// Categoria neutra (não é renda nem gasto) ou null se for movimento real:
+/// - investimento: aplicação/resgate (RDB, CDB, caixinha, poupança…);
+/// - transferência entre contas do próprio titular: a Pluggy marca como
+///   mesma titularidade, ou a contraparte (quem pagou numa entrada, quem
+///   recebeu numa saída) tem o CPF — ou, sem CPF, o nome — do titular.
+String? categoriaNeutra({
+  required String? categoriaPluggy,
+  required String descricao,
+  required Map<String, dynamic>? paymentData,
+  required bool entrada,
+  required String? cpfTitular,
+  required String? nomeTitular,
+}) {
+  final cat = (categoriaPluggy ?? '').toLowerCase();
+  if (cat.contains('invest') || _reInvestimento.hasMatch(descricao.toLowerCase())) {
+    return categoriaMovimentacaoInvestimento;
+  }
+  if (cat.contains('same person') ||
+      cat.contains('same ownership') ||
+      cat.contains('mesma titularidade')) {
+    return categoriaTransferenciaEntreContas;
+  }
+  final contraparte =
+      paymentData?[entrada ? 'payer' : 'receiver'] as Map<String, dynamic>?;
+  if (contraparte == null) return null;
+  final documento = contraparte['documentNumber'];
+  final docContraparte = _soDigitos(
+    documento is Map ? documento['value'] as String? : documento as String?,
+  );
+  final cpf = _soDigitos(cpfTitular);
+  if (cpf.length == 11 && docContraparte == cpf) {
+    return categoriaTransferenciaEntreContas;
+  }
+  final nome = _nomeNormalizado(nomeTitular);
+  if (docContraparte.isEmpty &&
+      nome.isNotEmpty &&
+      _nomeNormalizado(contraparte['name'] as String?) == nome) {
+    return categoriaTransferenciaEntreContas;
+  }
+  return null;
 }
 
 class ConexaoMeuPluggyResult {
@@ -564,7 +619,15 @@ class PluggyOpenFinanceService {
                     : 'Conta: $nomeRealBanco');
 
             final categoriaRaw = tx['category'] as String?;
-            final categoria = _mapearCategoria(categoriaRaw, desc);
+            final categoria = categoriaNeutra(
+                  categoriaPluggy: categoriaRaw,
+                  descricao: desc,
+                  paymentData: paymentData,
+                  entrada: isReceita,
+                  cpfTitular: acc['taxNumber'] as String?,
+                  nomeTitular: acc['owner'] as String?,
+                ) ??
+                _mapearCategoria(categoriaRaw, desc);
 
             todasTransacoes.add(
               TransacaoBancariaImportada(

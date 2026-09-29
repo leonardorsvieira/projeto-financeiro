@@ -22,6 +22,21 @@ class SupabaseLancamentosRepository implements LancamentosRepository {
   }
 
   @override
+  Future<Set<String>> obsImportadasPluggy() async {
+    final obs = <String>{};
+    // Pagina de 1000 em 1000 (limite padrão de linhas do PostgREST).
+    for (var inicio = 0;; inicio += 1000) {
+      final rows = await _db
+          .from(_table)
+          .select('obs')
+          .like('obs', 'pluggy_id:%')
+          .range(inicio, inicio + 999);
+      obs.addAll(rows.map((r) => r['obs'] as String));
+      if (rows.length < 1000) return obs;
+    }
+  }
+
+  @override
   Future<Lancamento> create({
     required String descricao,
     required int valorCents,

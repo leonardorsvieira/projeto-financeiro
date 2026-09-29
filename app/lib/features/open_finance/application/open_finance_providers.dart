@@ -160,15 +160,11 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
     );
   }
 
-  // 2. Lançamentos já existentes (para não duplicar). Espera a lista carregar
-  // — sem ela tudo pareceria novo —, mas com prazo, para nunca travar.
+  // 2. Transações já importadas (para não duplicar), consultadas direto no
+  // banco. (Esperar o stream de lançamentos travava: sem tela ouvindo, o
+  // Riverpod pausa o provider e o future nunca completa.)
   final lancamentoRepo = ler(lancamentosRepositoryProvider);
-  final lancamentosExistentes = await ler(lancamentosStreamProvider.future)
-      .timeout(const Duration(seconds: 20));
-  final idsExistentes = lancamentosExistentes
-      .where((l) => l.obs != null && l.obs!.startsWith('pluggy_id:'))
-      .map((l) => l.obs!)
-      .toSet();
+  final idsExistentes = await lancamentoRepo.obsImportadasPluggy();
 
   // 3. Busca as transações: 30 dias na primeira vez; depois só a última
   // semana (o webhook e a sincronização periódica cobrem o resto) — cada

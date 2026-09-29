@@ -34,8 +34,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Vencimentos, Itens e Recorrências** - Agendar pagamento, detalhar produtos, contas fixas mensais
 - [x] **Phase 5: Lembretes Push** - Avisos "X dias antes" e no dia, na hora escolhida
 - [x] **Phase 6: Dashboard e Metas** - Saldo do mês, gráfico por categoria, vencimentos e metas
-- [ ] **Phase 7: Recebimentos por Voz** - Ditar receitas e ver no saldo do mês (em execução)
-- [ ] **Phase 8: Investimentos** - Acompanhar patrimônio, dividendos, compras/vendas e ditar aportes
+- [x] **Phase 7: Recebimentos por Voz** - Ditar receitas e ver no saldo do mês
+- [x] **Phase 8: Investimentos** - Acompanhar patrimônio, dividendos, compras/vendas e ditar aportes
 
 ## Phase Details (v1.1)
 
@@ -140,11 +140,11 @@ Plans:
 
 Plans:
 
-- [ ] 08-01: Modelo e tela de investimentos/ativos (4 classes)
-- [ ] 08-02: Compra e venda por ativo
-- [ ] 08-03: Patrimônio e rendimento acumulado
-- [ ] 08-04: Dividendos/rendimentos mensais
-- [ ] 08-05: Captura de aporte/investimento por voz (VOZ-03)
+- [x] 08-01: Modelo e tela de investimentos/ativos (4 classes)
+- [x] 08-02: Compra e venda por ativo
+- [x] 08-03: Patrimônio e rendimento acumulado
+- [x] 08-04: Dividendos/rendimentos mensais
+- [x] 08-05: Captura de aporte/investimento por voz (VOZ-03)
 
 ### Fase 8 em execução (2026-09-07) �?" decisões registradas em 08-CONTEXT.md (sem cotação automática; preço manual; 3 tabelas novas; VOZ-03 estende o prompt com tipo "investimento").
 
@@ -173,4 +173,4 @@ Phases execute in numeric order: 4 �+' 5 �+' 6 �+' 7 �+' 8 (v1.1)
 | 5. Lembretes Push | v1.1 | 2/2 | Complete | 2026-09-07 |
 | 6. Dashboard e Metas | v1.1 | 3/3 | Complete | 2026-09-07 |
 | 7. Recebimentos por Voz | v1.1 | 2/2 | Complete | 2026-09-07 |
-| 8. Investimentos | v1.1 | 175/175 | Complete | 2026-09-07 |
+| 8. Investimentos | v1.1 | 5/5 | Complete | 2026-09-07 |

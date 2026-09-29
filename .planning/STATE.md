@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: milestone
 status: In progress
-stopped_at: Fase 7 completa (07-01 07-02); receitas por voz + saldo do mês com entradas/saídas
-last_updated: "2026-09-28T20:05:00Z"
-last_activity: 2026-09-28 — Quick 260928-n3q endurecimento de segurança multiusuário (Edge Functions ditado/pluggy, isolamento Pluggy por usuário, logout limpa sessão, CSP, gitleaks); 231 testes passam
+stopped_at: Milestone v1.1 completo (Fases 1-8); Open Finance/Pluggy + hardening multiusuário entregues
+last_updated: "2026-09-29T21:50:00Z"
+last_activity: 2026-09-29 — Quick 260929-pzt permissão INTERNET no manifest principal + APK debug novo + STATE atualizado
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 28
-  completed_plans: 19
-  percent: 68
+  completed_plans: 27
+  percent: 96
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 
 **Core value:** O usuário dita um gasto, recebimento ou investimento pela voz e ele é registrado corretamente, no lugar certo, pronto para acompanhar.
-**Current focus:** Fase 7 concluída (receitas por voz + saldo no mês). Próximo: Fase 8 — Investimentos (milestone v1.1)
+**Current focus:** Milestone v1.1 concluído (Fases 1-8) + Open Finance (Pluggy/meu.pluggy.ai) e hardening multiusuário. Próximo: fechar o milestone (`/gsd-complete-milestone`) ou planejar o próximo.
 
 ## Current Position
 
-Phase: 7 — Recebimentos por Voz (concluída)
-Plan: 07-01 ✅, 07-02 ✅
-Status: **Fase 7 completa** — coluna `lancamentos.tipo` (despesa/receita); ditado e formulário com toggle Despesa/Receita (SegmentedButton + correção por voz do tipo); card "Saldo do mês" no Resumo com Entradas/Saídas/Saldo/Previsto; donut/metas/próximos vencimentos filtram só despesas; lista mostra receita verde com `+` e badge "Receita".
-Last activity: 2026-09-07 — Fase 7 implementada; 133 testes passam; build web + APK OK
+Phase: 8 — Investimentos (concluída) — todas as 8 fases do roadmap completas
+Plan: 08-01..08-05 ✅ (05-02 push FCM/APNs adiado de propósito — lembretes usam notificação local)
+Status: **Milestone v1.1 completo.** Depois dele: Open Finance via Pluggy (Edge Functions `pluggy`/`pluggy-webhook`, meu.pluggy.ai direto, `/v2/transactions`, sincronização automática, sinal do cartão, categorias neutras) e hardening multiusuário (quick 260928-n3q).
+Last activity: 2026-09-29 — quick 260929-pzt: `INTERNET` no AndroidManifest principal (release ficava sem rede) e APK debug regerado com todo o código atual
 
 ## Performance Metrics
 
@@ -82,11 +82,13 @@ Last activity: 2026-09-07 — Fase 7 implementada; 133 testes passam; build web 
 
 ### Pending Todos
 
-- _(nenhum)_ — todo anterior "Redefinir REQUIREMENTS.md" concluído em 2026-09-07 (arquivo criado).
+- Apagar pelo app o lançamento manual "Rescisão" R$ 4.280,47 (14/09/2026), duplicado do Pix importado de R$ 4.280,39.
+- Testar no Android a conexão meu.pluggy.ai com o APK novo (autorizar no navegador → voltar → "Sincronizar Agora").
 
 ### Blockers/Concerns
 
-None yet.
+- APK **release** falha em `minifyReleaseWithR8` (ProGuard). Debug funciona.
+- Leaked password protection do Supabase exige plano Pro (não disponível).
 
 ## Deferred Items
 
@@ -101,16 +103,17 @@ Items acknowledged and carried forward from previous milestone close:
 | ID | Descrição | Data | Resumo |
 |----|-----------|------|--------|
 | 260928-n3q | Endurecimento de segurança multiusuário | 2026-09-28 | [SUMMARY](quick/260928-n3q-endurecimento-de-seguranca-multiusuario/260928-n3q-SUMMARY.md) |
+| 260929-pzt | Permissão INTERNET no manifest + APK novo + STATE | 2026-09-29 | [SUMMARY](quick/260929-pzt-internet-manifest-apk-state/260929-pzt-SUMMARY.md) |
 
 ## Session Continuity
 
-Last session: 2026-09-07 (3ª sessão do dia)
-Stopped at: Fase 7 (VOZ-02) completa — receitas por voz + saldo do mês com entradas/saídas. Próximo: Fase 8 (Investimentos).
+Last session: 2026-09-29
+Stopped at: Milestone v1.1 completo + Open Finance; APK debug regerado.
 Resume file: None
 
 ## Operator Next Steps
 
-- **SEGURANÇA (260928-n3q) — ações do usuário pendentes:** gerar novo client secret na Pluggy (o antigo vazou no repo público e no site); `supabase secrets set GEMINI_API_KEY PLUGGY_CLIENT_ID PLUGGY_CLIENT_SECRET [OWNER_USER_ID]`; Supabase Auth: exigir confirmação de e-mail, ligar leaked password protection, revisar as 3 contas existentes; remover secret `GEMINI_API_KEY` do GitHub.
-
-- **Executar Fase 8** — Investimentos (INV-01..07 + VOZ-03) por voz e manual; planejar 08-xx.
-- **_Nota segurança:_** PAT do Supabase exposto no chat — **revogar** em Account Settings → Access Tokens. (O token usado foi aplicado e deve ser revogado agora.)
+- Instalar o APK debug novo e testar login, ditado e conexão meu.pluggy.ai.
+- Apagar o lançamento "Rescisão" duplicado pelo app.
+- Opcional: corrigir o R8/ProGuard do build release; `/gsd-complete-milestone` para arquivar a v1.1.
+- (Ações de segurança do 260928-n3q — secrets rotacionados, confirmação de e-mail — já concluídas em 2026-09-29.)

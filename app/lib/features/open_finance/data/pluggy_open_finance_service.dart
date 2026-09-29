@@ -41,9 +41,17 @@ class PluggyOpenFinanceService {
   final http.Client _httpClient;
   final EdgeFunction _funcao;
 
-  PluggyOpenFinanceService({http.Client? httpClient, EdgeFunction? funcao})
-      : _httpClient = httpClient ?? http.Client(),
-        _funcao = funcao ?? EdgeFunction.supabase('pluggy');
+  PluggyOpenFinanceService({
+    http.Client? httpClient,
+    EdgeFunction? funcao,
+    List<Duration>? esperasAutorizacao,
+  })  : _httpClient = httpClient ?? http.Client(),
+        _funcao = funcao ?? EdgeFunction.supabase('pluggy'),
+        _esperasAutorizacao = esperasAutorizacao ??
+            List.filled(10, const Duration(milliseconds: 1500));
+
+  /// Intervalos de consulta enquanto a Pluggy prepara o link de autorização.
+  final List<Duration> _esperasAutorizacao;
 
   static const int connectorMeuPluggy = 200;
 
@@ -145,6 +153,7 @@ class PluggyOpenFinanceService {
   Future<String> gerarConnectToken({
     int? connectorId,
     String? oauthRedirectUri,
+    String? itemId,
   }) async {
     final Map<String, dynamic> options = {};
     if (connectorId != null) {
@@ -157,7 +166,7 @@ class PluggyOpenFinanceService {
     final resp = await _chamar(
       'POST',
       '/connect_token',
-      corpo: {'options': options},
+      corpo: {'options': options, 'itemId': ?itemId},
     );
 
     if (resp.statusCode == 200) {
@@ -191,33 +200,58 @@ class PluggyOpenFinanceService {
   /// Inicia a conexão direta com o meu.pluggy.ai via API, retornando a URL direta de autorização OAuth
   /// sem exigir passos redundantes de seleção de conector no widget.
   Future<ConexaoMeuPluggyResult> iniciarConexaoMeuPluggyDireta() async {
-    try {
-      final resp = await _chamar(
-        'POST',
-        '/items',
-        corpo: {
-          'connectorId': connectorMeuPluggy,
-          'parameters': <String, dynamic>{},
-        },
+    final resp = await _chamar(
+      'POST',
+      '/items',
+      corpo: {
+        'connectorId': connectorMeuPluggy,
+        'parameters': <String, dynamic>{},
+      },
+    );
+
+    if (resp.statusCode != 200 && resp.statusCode != 201) {
+      throw Exception(
+        'Não foi possível iniciar a conexão com o meu.pluggy.ai '
+        '(Status ${resp.statusCode}).',
       );
+    }
+    final data = jsonDecode(resp.body) as Map<String, dynamic>;
+    final itemId = data['id'] as String;
 
-      if (resp.statusCode == 200 || resp.statusCode == 201) {
-        final data = jsonDecode(resp.body) as Map<String, dynamic>;
-        final itemId = data['id'] as String;
-        final parameter = data['parameter'] as Map<String, dynamic>?;
-        final oauthUrl = parameter?['data'] as String?;
-
-        if (oauthUrl != null && oauthUrl.isNotEmpty) {
-          return ConexaoMeuPluggyResult(itemId: itemId, oauthUrl: oauthUrl);
-        }
+    // A Pluggy cria o item primeiro e só depois (alguns segundos) publica o
+    // link de autorização em `parameter.data`: espera por ele.
+    var oauthUrl = _urlAutorizacao(data);
+    for (final espera in _esperasAutorizacao) {
+      if (oauthUrl != null) break;
+      await Future<void>.delayed(espera);
+      final atual = await _chamar(
+        'GET',
+        '/items/${Uri.encodeComponent(itemId)}',
+      );
+      if (atual.statusCode == 200) {
+        oauthUrl = _urlAutorizacao(
+          jsonDecode(atual.body) as Map<String, dynamic>,
+        );
       }
-    } catch (_) {}
+    }
+    if (oauthUrl != null) {
+      return ConexaoMeuPluggyResult(itemId: itemId, oauthUrl: oauthUrl);
+    }
 
-    final token = await gerarConnectToken(connectorId: connectorMeuPluggy);
+    // Sem link direto: abre o widget da Pluggy continuando ESTE item, para que
+    // a conexão fique registrada no usuário (o app não consegue descobrir
+    // items criados do zero pelo widget).
+    final token = await gerarConnectToken(itemId: itemId);
     return ConexaoMeuPluggyResult(
-      itemId: 'meu_pluggy_${DateTime.now().millisecondsSinceEpoch}',
+      itemId: itemId,
       oauthUrl: 'https://connect.pluggy.ai/?connect_token=$token',
     );
+  }
+
+  static String? _urlAutorizacao(Map<String, dynamic> item) {
+    final parameter = item['parameter'] as Map<String, dynamic>?;
+    final url = parameter?['data'] as String?;
+    return (url != null && url.startsWith('https://')) ? url : null;
   }
 
   /// Busca um item específico da Pluggy pelo seu ID. O servidor só o devolve se

@@ -256,6 +256,62 @@ void main() {
       expect(item.mascaraCartao, equals('•••• 5432'));
     });
 
+    test('Meu Pluggy: espera o link de autorização ficar pronto', () async {
+      var consultas = 0;
+      final service = PluggyOpenFinanceService(
+        httpClient: _proxy((metodo, caminho, _) async {
+          if (metodo == 'POST' && caminho.path == '/items') {
+            return http.Response(jsonEncode({'id': 'item_mp'}), 201);
+          }
+          if (caminho.path == '/items/item_mp') {
+            consultas++;
+            return http.Response(
+              jsonEncode({
+                'id': 'item_mp',
+                if (consultas >= 2)
+                  'parameter': {'data': 'https://meu.pluggy.ai/oauth?x=1'},
+              }),
+              200,
+            );
+          }
+          return http.Response('', 404);
+        }),
+        funcao: _funcao,
+        esperasAutorizacao: List.filled(5, Duration.zero),
+      );
+
+      final r = await service.iniciarConexaoMeuPluggyDireta();
+      expect(r.itemId, 'item_mp');
+      expect(r.oauthUrl, 'https://meu.pluggy.ai/oauth?x=1');
+      expect(consultas, 2);
+    });
+
+    test('Meu Pluggy sem link: widget continua o MESMO item (sem id inventado)', () async {
+      Map<String, dynamic>? corpoToken;
+      final service = PluggyOpenFinanceService(
+        httpClient: _proxy((metodo, caminho, corpo) async {
+          if (metodo == 'POST' && caminho.path == '/items') {
+            return http.Response(jsonEncode({'id': 'item_mp'}), 201);
+          }
+          if (caminho.path == '/items/item_mp') {
+            return http.Response(jsonEncode({'id': 'item_mp'}), 200);
+          }
+          if (caminho.path == '/connect_token') {
+            corpoToken = corpo;
+            return http.Response(jsonEncode({'accessToken': 'tok'}), 200);
+          }
+          return http.Response('', 404);
+        }),
+        funcao: _funcao,
+        esperasAutorizacao: List.filled(2, Duration.zero),
+      );
+
+      final r = await service.iniciarConexaoMeuPluggyDireta();
+      expect(r.itemId, 'item_mp');
+      expect(r.oauthUrl, 'https://connect.pluggy.ai/?connect_token=tok');
+      expect(corpoToken!['itemId'], 'item_mp');
+    });
+
     test('limite diário vira mensagem clara', () async {
       final service = _service(_proxy(
         (_, _, _) async => http.Response('{"erro":"limite_diario"}', 429),

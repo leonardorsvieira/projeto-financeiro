@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../application/open_finance_providers.dart';
+import 'abrir_autorizacao.dart';
 import '../../data/pluggy_open_finance_service.dart';
 import '../../domain/conta_bancaria_conectada.dart';
 
@@ -72,20 +72,21 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
       await ref.read(contasConectadasProvider.notifier).adicionarConta(contaMeuPluggy);
 
       final url = Uri.parse(resultado.oauthUrl);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      }
+      final abriu = await abrirAutorizacaoPluggy(url);
 
       if (!mounted) return;
+      final mensageiro = ScaffoldMessenger.of(context);
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar Agora".',
-          ),
-          backgroundColor: Colors.purple.shade700,
-          duration: const Duration(seconds: 10),
-        ),
+      mensageiro.showSnackBar(
+        abriu
+            ? SnackBar(
+                content: const Text(
+                  'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar Agora".',
+                ),
+                backgroundColor: Colors.purple.shade700,
+                duration: const Duration(seconds: 10),
+              )
+            : snackBarAbrirAutorizacao(url),
       );
     } catch (e) {
       if (!mounted) return;

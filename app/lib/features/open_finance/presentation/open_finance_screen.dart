@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../application/open_finance_providers.dart';
 import '../domain/conta_bancaria_conectada.dart';
+import 'widgets/abrir_autorizacao.dart';
 import 'widgets/conectar_banco_dialog.dart';
 import 'widgets/status_pluggy_dialog.dart';
 
@@ -45,24 +45,24 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
       await ref.read(contasConectadasProvider.notifier).adicionarConta(contaMeuPluggy);
 
       final url = Uri.parse(resultado.oauthUrl);
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      }
+      final abriu = await abrirAutorizacaoPluggy(url);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar Agora".',
-          ),
-          backgroundColor: Colors.purple.shade700,
-          duration: const Duration(seconds: 10),
-          action: SnackBarAction(
-            label: 'Sincronizar',
-            textColor: Colors.white,
-            onPressed: _executarSincronizacao,
-          ),
-        ),
+        abriu
+            ? SnackBar(
+                content: const Text(
+                  'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar Agora".',
+                ),
+                backgroundColor: Colors.purple.shade700,
+                duration: const Duration(seconds: 10),
+                action: SnackBarAction(
+                  label: 'Sincronizar',
+                  textColor: Colors.white,
+                  onPressed: _executarSincronizacao,
+                ),
+              )
+            : snackBarAbrirAutorizacao(url),
       );
     } catch (e) {
       if (!mounted) return;

@@ -131,8 +131,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       validator: (value) {
                         final v = value ?? '';
                         if (v.isEmpty) return 'Informe uma senha.';
-                        if (v.length < 6) {
-                          return 'A senha deve ter pelo menos 6 caracteres.';
+                        // Mesma regra configurada no Supabase Auth.
+                        if (v.length < 9) {
+                          return 'A senha deve ter pelo menos 9 caracteres.';
+                        }
+                        if (!RegExp('[a-z]').hasMatch(v) ||
+                            !RegExp('[A-Z]').hasMatch(v) ||
+                            !RegExp('[0-9]').hasMatch(v) ||
+                            !RegExp(r'[^A-Za-z0-9]').hasMatch(v)) {
+                          return 'Use letra minúscula, maiúscula, número e '
+                              'símbolo.';
                         }
                         return null;
                       },

@@ -9,8 +9,11 @@ String friendlyAuthError(Object error) {
     if (message.contains('already registered')) {
       return 'Este e-mail já está cadastrado.';
     }
-    if (message.contains('password should be at least')) {
-      return 'A senha deve ter pelo menos 6 caracteres.';
+    if (error is AuthWeakPasswordException ||
+        message.contains('password should') ||
+        message.contains('weak')) {
+      return 'Senha fraca: use pelo menos 9 caracteres, com letra minúscula, '
+          'maiúscula, número e símbolo.';
     }
     if (message.contains('email not confirmed')) {
       return 'Confirme seu e-mail antes de entrar.';

@@ -49,7 +49,7 @@ void main() {
     await tester.pump();
 
     expect(
-      find.text('A senha deve ter pelo menos 6 caracteres.'),
+      find.text('A senha deve ter pelo menos 9 caracteres.'),
       findsOneWidget,
     );
   });
@@ -61,7 +61,7 @@ void main() {
     await pumpSignup(tester, fake);
 
     await tester.enterText(find.byType(TextFormField).at(0), 'leo@meubolso.com');
-    await tester.enterText(find.byType(TextFormField).at(1), 'senha12345');
+    await tester.enterText(find.byType(TextFormField).at(1), 'Senha#12345');
     await tester.enterText(find.byType(TextFormField).at(2), 'senha99999');
     await tester.tap(find.widgetWithText(FilledButton, 'Criar conta'));
     await tester.pump();
@@ -77,8 +77,8 @@ void main() {
     await pumpSignup(tester, fake);
 
     await tester.enterText(find.byType(TextFormField).at(0), 'leo@meubolso.com');
-    await tester.enterText(find.byType(TextFormField).at(1), 'senha12345');
-    await tester.enterText(find.byType(TextFormField).at(2), 'senha12345');
+    await tester.enterText(find.byType(TextFormField).at(1), 'Senha#12345');
+    await tester.enterText(find.byType(TextFormField).at(2), 'Senha#12345');
     await tester.tap(find.widgetWithText(FilledButton, 'Criar conta'));
     await tester.pumpAndSettle();
 

@@ -120,10 +120,12 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
     }
   }
 
-  Future<void> _executarSincronizacao() async {
+  Future<void> _executarSincronizacao({bool historico = false}) async {
     setState(() => _sincronizando = true);
     try {
-      final res = await sincronizarComPluggy(ref);
+      final res = historico
+          ? await importarHistorico12Meses(ref)
+          : await sincronizarComPluggy(ref);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -293,6 +295,13 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                           label: Text(_sincronizando
                               ? 'Sincronizando...'
                               : 'Sincronizar Agora'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: _sincronizando
+                              ? null
+                              : () => _executarSincronizacao(historico: true),
+                          icon: const Icon(Icons.history, size: 18),
+                          label: const Text('Importar últimos 12 meses'),
                         ),
                         OutlinedButton(
                           onPressed: () => mostrarDialogoStatusPluggy(context),

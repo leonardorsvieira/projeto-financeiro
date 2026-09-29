@@ -128,12 +128,18 @@ class ResultadoSincronizacaoPluggy {
 Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) =>
     _sincronizar(ref.read, ref.invalidate);
 
+/// Importa o histórico dos últimos 12 meses (uma vez; não duplica o que já
+/// foi importado).
+Future<ResultadoSincronizacaoPluggy> importarHistorico12Meses(WidgetRef ref) =>
+    _sincronizar(ref.read, ref.invalidate, dias: 365);
+
 /// Núcleo da sincronização, usado pelo botão (WidgetRef) e pela sincronização
-/// automática (Ref de um Notifier).
+/// automática (Ref de um Notifier). [dias] força a janela de busca.
 Future<ResultadoSincronizacaoPluggy> _sincronizar(
   T Function<T>(ProviderListenable<T> provider) ler,
-  void Function(ProviderOrFamily provider) invalidar,
-) async {
+  void Function(ProviderOrFamily provider) invalidar, {
+  int? dias,
+}) async {
   final service = ler(pluggyOpenFinanceServiceProvider);
   final contasNotifier = ler(contasConectadasProvider.notifier);
   final contasAtuais = ler(contasConectadasProvider).value ?? [];
@@ -170,7 +176,7 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
   final transacoes = await service.buscarTodasTransacoes(
     contas: listaParaBuscarTransacoes,
     desde: DateTime.now().subtract(
-      Duration(days: idsExistentes.isEmpty ? 30 : 7),
+      Duration(days: dias ?? (idsExistentes.isEmpty ? 30 : 7)),
     ),
   );
 

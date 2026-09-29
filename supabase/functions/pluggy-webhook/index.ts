@@ -35,7 +35,7 @@ type Transacao = {
 const TRANSFERENCIA_ENTRE_CONTAS = "Transferência entre contas";
 const MOVIMENTACAO_INVESTIMENTO = "Investimento (aplicação/resgate)";
 const RE_INVESTIMENTO =
-  /\b(rdb|cdb|lci|lca)\b|resgate|aplica[cç][aã]o|caixinha|cofrinho|porquinho|dinheiro guardado|dinheiro resgatado|nuinvest|tesouro|poupan[cç]a/;
+  /\b(rdb|cdb|lci|lca|b3)\b|resgate|aplica[cç][aã]o|caixinha|cofrinho|porquinho|dinheiro guardado|dinheiro resgatado|nuinvest|tesouro|poupan[cç]a|nota bov|bovespa/;
 
 const soDigitos = (s?: string) => (s ?? "").replace(/\D/g, "");
 const nomeNormalizado = (s?: string) => (s ?? "").toLowerCase().replace(/\s+/g, " ").trim();
@@ -50,6 +50,12 @@ function categoriaNeutra(tx: Transacao, descricao: string, entrada: boolean, con
     cat.includes("same person") || cat.includes("same ownership") ||
     cat.includes("mesma titularidade")
   ) return TRANSFERENCIA_ENTRE_CONTAS;
+  const nome = nomeNormalizado(conta.owner);
+  // Alguns bancos só trazem a contraparte na descrição: "Transferência Recebida|NOME".
+  const partes = descricao.split("|");
+  if (nome && partes.length > 1 && nomeNormalizado(partes[partes.length - 1]) === nome) {
+    return TRANSFERENCIA_ENTRE_CONTAS;
+  }
   const parte = entrada ? tx.paymentData?.payer : tx.paymentData?.receiver;
   if (!parte) return null;
   const doc = soDigitos(
@@ -57,7 +63,6 @@ function categoriaNeutra(tx: Transacao, descricao: string, entrada: boolean, con
   );
   const cpf = soDigitos(conta.taxNumber);
   if (cpf.length === 11 && doc === cpf) return TRANSFERENCIA_ENTRE_CONTAS;
-  const nome = nomeNormalizado(conta.owner);
   if (!doc && nome && nomeNormalizado(parte.name) === nome) return TRANSFERENCIA_ENTRE_CONTAS;
   return null;
 }

@@ -52,9 +52,9 @@ String _nomeNormalizado(String? s) =>
     (s ?? '').toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
 
 final _reInvestimento = RegExp(
-  r'\b(rdb|cdb|lci|lca)\b|resgate|aplica[cç][aã]o|caixinha|cofrinho|'
+  r'\b(rdb|cdb|lci|lca|b3)\b|resgate|aplica[cç][aã]o|caixinha|cofrinho|'
   r'porquinho|dinheiro guardado|dinheiro resgatado|nuinvest|tesouro|'
-  r'poupan[cç]a',
+  r'poupan[cç]a|nota bov|bovespa',
 );
 
 /// Categoria neutra (não é renda nem gasto) ou null se for movimento real:
@@ -79,6 +79,15 @@ String? categoriaNeutra({
       cat.contains('mesma titularidade')) {
     return categoriaTransferenciaEntreContas;
   }
+  final nome = _nomeNormalizado(nomeTitular);
+  // Alguns bancos só trazem a contraparte na descrição:
+  // "Transferência Recebida|NOME DA PESSOA".
+  final partes = descricao.split('|');
+  if (nome.isNotEmpty &&
+      partes.length > 1 &&
+      _nomeNormalizado(partes.last) == nome) {
+    return categoriaTransferenciaEntreContas;
+  }
   final contraparte =
       paymentData?[entrada ? 'payer' : 'receiver'] as Map<String, dynamic>?;
   if (contraparte == null) return null;
@@ -90,7 +99,6 @@ String? categoriaNeutra({
   if (cpf.length == 11 && docContraparte == cpf) {
     return categoriaTransferenciaEntreContas;
   }
-  final nome = _nomeNormalizado(nomeTitular);
   if (docContraparte.isEmpty &&
       nome.isNotEmpty &&
       _nomeNormalizado(contraparte['name'] as String?) == nome) {

@@ -58,6 +58,18 @@ void main() {
       );
     });
 
+    test('venda de ações (B3 / nota Bovespa) é investimento', () {
+      expect(classificar(descricao: 'Crédito B3 - Nota Bov 27/05/2026'),
+          categoriaMovimentacaoInvestimento);
+    });
+
+    test('nome do titular na descrição "Transferência Recebida|NOME"', () {
+      expect(classificar(descricao: 'Transferência Recebida|LEONARDO VIEIRA'),
+          categoriaTransferenciaEntreContas);
+      expect(classificar(descricao: 'Transferência Recebida|OUTRA PESSOA'),
+          isNull);
+    });
+
     test('salário vindo de outra pessoa/empresa continua sendo entrada', () {
       expect(
         classificar(

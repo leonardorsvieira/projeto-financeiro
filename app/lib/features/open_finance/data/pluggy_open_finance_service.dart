@@ -278,7 +278,11 @@ class PluggyOpenFinanceService {
   }) async {
     final itemId = item['id'] as String;
     final connector = item['connector'] as Map<String, dynamic>? ?? {};
-    final nomeBanco = connector['name'] as String? ?? nomePadrao;
+    var nomeBanco = connector['name'] as String? ?? nomePadrao;
+    // No Meu Pluggy o conector se chama "MeuPluggy"; o banco de verdade vem
+    // no nome das contas.
+    final ehAgregador = connector['id'] == connectorMeuPluggy ||
+        nomeBanco.toLowerCase().contains('pluggy');
     final corHex = connector['primaryColor'] as String? ?? '#8A05BE';
     final statusRaw = (item['status'] as String? ?? '').toUpperCase();
 
@@ -311,8 +315,18 @@ class PluggyOpenFinanceService {
       if (accResp.statusCode == 200) {
         final accData = jsonDecode(accResp.body) as Map<String, dynamic>;
         final accounts = (accData['results'] as List<dynamic>?) ?? [];
+        _contasPorItem[itemId] = accounts;
         if (accounts.isNotEmpty) {
           final accList = accounts.cast<Map<String, dynamic>>();
+          if (ehAgregador) {
+            final nomes = accList
+                .map((a) => ((a['marketingName'] ?? a['name']) as String?)
+                    ?.trim())
+                .whereType<String>()
+                .where((n) => n.isNotEmpty)
+                .toSet();
+            if (nomes.isNotEmpty) nomeBanco = nomes.join(' / ');
+          }
           final tipos = accList
               .map((a) => (a['type'] as String? ?? 'BANK') == 'CREDIT'
                   ? 'Cartão'
@@ -416,6 +430,10 @@ class PluggyOpenFinanceService {
 
   static const int _maxPaginasTransacoes = 20;
 
+  /// Contas já buscadas nesta sincronização (evita pedir /accounts de novo
+  /// para as transações — cada chamada conta na cota diária).
+  final Map<String, List<dynamic>> _contasPorItem = {};
+
   /// Transações de uma conta via `GET /v2/transactions` (paginação por cursor:
   /// cada resposta traz em `next` a query string da próxima página, ou null).
   Future<List<dynamic>> _transacoesDaConta(
@@ -463,14 +481,16 @@ class PluggyOpenFinanceService {
       }
 
       try {
-        final accResp = await _chamar(
-          'GET',
-          '/accounts?itemId=${Uri.encodeQueryComponent(itemId)}',
-        );
-        if (accResp.statusCode != 200) continue;
-
-        final accData = jsonDecode(accResp.body) as Map<String, dynamic>;
-        final accounts = (accData['results'] as List<dynamic>?) ?? [];
+        var accounts = _contasPorItem.remove(itemId);
+        if (accounts == null) {
+          final accResp = await _chamar(
+            'GET',
+            '/accounts?itemId=${Uri.encodeQueryComponent(itemId)}',
+          );
+          if (accResp.statusCode != 200) continue;
+          final accData = jsonDecode(accResp.body) as Map<String, dynamic>;
+          accounts = (accData['results'] as List<dynamic>?) ?? [];
+        }
 
         for (final rawAcc in accounts) {
           final acc = rawAcc as Map<String, dynamic>;
@@ -478,9 +498,12 @@ class PluggyOpenFinanceService {
           final accType = (acc['type'] as String? ?? 'BANK').toUpperCase();
           final isCreditCard = accType == 'CREDIT';
           final accName = (acc['name'] as String?)?.trim();
+          // Conexões Meu Pluggy juntam vários bancos: usa o nome da conta.
           final nomeRealBanco = (accName != null &&
                   accName.isNotEmpty &&
-                  (item.nomeBanco.contains('Pluggy') || item.nomeBanco == 'Banco'))
+                  (item.nomeBanco.contains('Pluggy') ||
+                      item.nomeBanco == 'Banco' ||
+                      item.nomeBanco.contains(accName)))
               ? accName
               : item.nomeBanco;
 

@@ -77,7 +77,7 @@ function repassar(req: Request, r: Response, texto: string): Response {
 }
 
 async function atender(req: Request): Promise<Response> {
-  const usuario = await preambulo(req, "pluggy", 500);
+  const usuario = await preambulo(req, "pluggy", 3000);
   if (usuario instanceof Response) return usuario;
   const uid = usuario.id;
 

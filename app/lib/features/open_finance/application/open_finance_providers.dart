@@ -154,19 +154,25 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
     );
   }
 
-  // 2. Busca todas as transações das contas conectadas
-  final transacoes = await service.buscarTodasTransacoes(
-    contas: listaParaBuscarTransacoes,
-  );
-
-  // 3. Importa transações sem duplicar (baseado em obs: 'pluggy_id:{id}').
-  // Espera a lista de lançamentos carregar: sem ela, tudo pareceria novo.
+  // 2. Lançamentos já existentes (para não duplicar). Espera a lista carregar
+  // — sem ela tudo pareceria novo —, mas com prazo, para nunca travar.
   final lancamentoRepo = ler(lancamentosRepositoryProvider);
-  final lancamentosExistentes = await ler(lancamentosStreamProvider.future);
+  final lancamentosExistentes = await ler(lancamentosStreamProvider.future)
+      .timeout(const Duration(seconds: 20));
   final idsExistentes = lancamentosExistentes
       .where((l) => l.obs != null && l.obs!.startsWith('pluggy_id:'))
       .map((l) => l.obs!)
       .toSet();
+
+  // 3. Busca as transações: 30 dias na primeira vez; depois só a última
+  // semana (o webhook e a sincronização periódica cobrem o resto) — cada
+  // página conta na cota diária.
+  final transacoes = await service.buscarTodasTransacoes(
+    contas: listaParaBuscarTransacoes,
+    desde: DateTime.now().subtract(
+      Duration(days: idsExistentes.isEmpty ? 30 : 7),
+    ),
+  );
 
   var transacoesImportadas = 0;
   for (final t in transacoes) {

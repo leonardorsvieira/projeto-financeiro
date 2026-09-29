@@ -38,7 +38,7 @@ supabase secrets set GEMINI_API_KEY=... PLUGGY_CLIENT_ID=... PLUGGY_CLIENT_SECRE
 
 Opcionais: `OWNER_USER_ID` (uuid que pode reivindicar items Pluggy criados antes
 do proxy), `ALLOWED_ORIGINS` (origens web extras para CORS),
-`LIMITE_DIARIO_DITADO` (padrão 150) e `LIMITE_DIARIO_PLUGGY` (padrão 500).
+`LIMITE_DIARIO_DITADO` (padrão 150) e `LIMITE_DIARIO_PLUGGY` (padrão 3000).
 
 ## Como rodar
 

@@ -326,6 +326,36 @@ void main() {
       expect(corpoToken!['itemId'], 'item_mp');
     });
 
+    test('Meu Pluggy: usa o nome do banco da conta em vez de "MeuPluggy"',
+        () async {
+      final service = _service(_proxy((_, caminho, _) async {
+        if (caminho.path == '/items/item_mp') {
+          return http.Response(
+            jsonEncode({
+              'id': 'item_mp',
+              'connector': {'id': 200, 'name': 'MeuPluggy'},
+              'status': 'UPDATED',
+            }),
+            200,
+          );
+        }
+        if (caminho.path == '/accounts') {
+          return http.Response(
+            jsonEncode({
+              'results': [
+                {'id': 'a1', 'type': 'BANK', 'name': 'Nubank', 'number': '1234'},
+              ],
+            }),
+            200,
+          );
+        }
+        return http.Response('', 404);
+      }));
+
+      final conta = await service.buscarItemPorId('item_mp');
+      expect(conta.nomeBanco, 'Nubank');
+    });
+
     test('removerTodasConexoes pede DELETE /items ao servidor', () async {
       String? metodoEnviado;
       final service = _service(_proxy((metodo, caminho, _) async {

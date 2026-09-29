@@ -7,6 +7,7 @@ import '../../auth/application/auth_controller.dart';
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/presentation/lancamentos_list_screen.dart';
 import '../../lancamentos/presentation/lembretes_preferencias_dialog.dart';
+import '../../open_finance/application/open_finance_providers.dart';
 import '../../seguranca/presentation/bloqueio_biometrico_dialog.dart';
 import '../../../theme/theme_selector_dialog.dart';
 import '../../cartoes/presentation/cartoes_screen.dart';
@@ -45,6 +46,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Mantém a sincronização automática do Open Finance ativa enquanto o
+    // usuário está logado (a HomeScreen só existe autenticada).
+    ref.watch(sincronizacaoAutomaticaProvider);
     return Scaffold(
       appBar: AppBar(
         title: Row(

@@ -1,5 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show ProviderListenable, ProviderOrFamily;
+
+import '../../../core/env.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
 import '../../lancamentos/domain/lancamento.dart';
 import '../data/bank_notification_parser.dart';
@@ -103,10 +108,18 @@ class ResultadoSincronizacaoPluggy {
 }
 
 /// Sincroniza todas as contas e transações da Pluggy em um só clique.
-Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) async {
-  final service = ref.read(pluggyOpenFinanceServiceProvider);
-  final contasNotifier = ref.read(contasConectadasProvider.notifier);
-  final contasAtuais = ref.read(contasConectadasProvider).value ?? [];
+Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) =>
+    _sincronizar(ref.read, ref.invalidate);
+
+/// Núcleo da sincronização, usado pelo botão (WidgetRef) e pela sincronização
+/// automática (Ref de um Notifier).
+Future<ResultadoSincronizacaoPluggy> _sincronizar(
+  T Function<T>(ProviderListenable<T> provider) ler,
+  void Function(ProviderOrFamily provider) invalidar,
+) async {
+  final service = ler(pluggyOpenFinanceServiceProvider);
+  final contasNotifier = ler(contasConectadasProvider.notifier);
+  final contasAtuais = ler(contasConectadasProvider).value ?? [];
 
   // 1. Busca ou atualiza os bancos conectados no Pluggy
   final contas = await service.buscarItensConectados(
@@ -117,16 +130,22 @@ Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) async {
   }
 
   final listaParaBuscarTransacoes = contas.isNotEmpty ? contas : contasAtuais;
+  if (listaParaBuscarTransacoes.isEmpty) {
+    return const ResultadoSincronizacaoPluggy(
+      contasSincronizadas: 0,
+      transacoesNovas: 0,
+    );
+  }
 
   // 2. Busca todas as transações das contas conectadas
   final transacoes = await service.buscarTodasTransacoes(
     contas: listaParaBuscarTransacoes,
   );
 
-  // 3. Importa transações sem duplicar (baseado em obs: 'pluggy_id:{id}')
-  final lancamentoRepo = ref.read(lancamentosRepositoryProvider);
-  final lancamentosExistentes =
-      ref.read(lancamentosStreamProvider).value ?? [];
+  // 3. Importa transações sem duplicar (baseado em obs: 'pluggy_id:{id}').
+  // Espera a lista de lançamentos carregar: sem ela, tudo pareceria novo.
+  final lancamentoRepo = ler(lancamentosRepositoryProvider);
+  final lancamentosExistentes = await ler(lancamentosStreamProvider.future);
   final idsExistentes = lancamentosExistentes
       .where((l) => l.obs != null && l.obs!.startsWith('pluggy_id:'))
       .map((l) => l.obs!)
@@ -151,12 +170,71 @@ Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) async {
   }
 
   // Atualiza os streams
-  ref.invalidate(lancamentosStreamProvider);
+  invalidar(lancamentosStreamProvider);
 
   return ResultadoSincronizacaoPluggy(
     contasSincronizadas: listaParaBuscarTransacoes.length,
     transacoesNovas: transacoesImportadas,
   );
+}
+
+/// Liga a sincronização automática só no app de verdade (com Supabase
+/// configurado); nos testes fica desligada.
+final sincronizacaoAutomaticaHabilitadaProvider = Provider<bool>(
+  (ref) => AppEnv.supabaseUrl.isNotEmpty,
+);
+
+/// Sincroniza a Pluggy sozinho enquanto o app está aberto: ao entrar, a cada
+/// [intervalo] e quando o app volta para a frente. O estado é o horário da
+/// última sincronização bem-sucedida.
+final sincronizacaoAutomaticaProvider =
+    NotifierProvider<SincronizacaoAutomatica, DateTime?>(
+  SincronizacaoAutomatica.new,
+);
+
+class SincronizacaoAutomatica extends Notifier<DateTime?> {
+  static const intervalo = Duration(minutes: 30);
+  static const intervaloMinimo = Duration(minutes: 5);
+
+  bool _rodando = false;
+
+  @override
+  DateTime? build() {
+    if (!ref.watch(sincronizacaoAutomaticaHabilitadaProvider)) return null;
+
+    final timer = Timer.periodic(intervalo, (_) => sincronizar());
+    final ciclo = AppLifecycleListener(onResume: sincronizar);
+    ref.onDispose(() {
+      timer.cancel();
+      ciclo.dispose();
+    });
+    Future.microtask(sincronizar);
+    return null;
+  }
+
+  Future<void> sincronizar() async {
+    final ultima = state;
+    if (_rodando ||
+        (ultima != null &&
+            DateTime.now().difference(ultima) < intervaloMinimo)) {
+      return;
+    }
+    _rodando = true;
+    try {
+      if (!await ref.read(pluggyConfiguradoProvider.future)) return;
+      final resultado = await _sincronizar(ref.read, ref.invalidate);
+      state = DateTime.now();
+      if (resultado.transacoesNovas > 0) {
+        debugPrint(
+          'Sincronização automática: ${resultado.transacoesNovas} nova(s).',
+        );
+      }
+    } on Object catch (e) {
+      debugPrint('Sincronização automática falhou: $e');
+    } finally {
+      _rodando = false;
+    }
+  }
 }
 
 /// Função utilitária para converter uma transação importada em um Lançamento do Meu Bolso.

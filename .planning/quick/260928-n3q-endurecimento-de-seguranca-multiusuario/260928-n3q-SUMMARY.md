@@ -32,4 +32,4 @@ Rotacionar secret da Pluggy; `supabase secrets set ...`; exigir confirmação de
 - Regras de dinheiro: sinal invertido no cartão, pagamento de fatura ignorado, categorias neutras (transferência entre contas / investimento) fora do saldo (`lancamentosContabeisProvider`).
 - Dados: importações erradas movidas para `lancamentos_backup_pluggy` (só servidor) e reimportadas; 26 repetidos (data+valor+tipo+descrição) movidos para a reserva.
 - UI: "Gastos por Meio de Pagamento" só do mês selecionado; cartão "Captura em Tempo Real" escondido (nunca foi implementado).
-- Pendente (usuário): decidir sobre 78 lançamentos manuais com gêmeo importado; apagar a reserva depois de conferir.
+- 78 manuais com gêmeo importado movidos para a reserva; usuário conferiu os totais e a reserva `lancamentos_backup_pluggy` foi apagada (migration 20260929205242).

@@ -211,6 +211,7 @@ void main() {
         nome: 'PETR4',
         quantidade: 10,
         precoAtualCents: 4000,
+        valorInvestidoCents: 32000,
       ),
     ]);
 
@@ -220,8 +221,25 @@ void main() {
     expect(find.text('Patrimônio'), findsOneWidget);
     expect(find.text('R\$ 400,00'), findsWidgets);
     expect(find.text('Ver'), findsOneWidget);
-    // Sem movimentos → custo 0 → rendimento = patrimônio.
-    expect(find.text('+R\$ 400,00 rendimento'), findsOneWidget);
+    // Aplicado 320 → vale 400: rendeu 80 (25%).
+    expect(find.text('+R\$ 80,00 (25,0%) rendimento'), findsOneWidget);
+  });
+
+  testWidgets('Patrimônio sem valor aplicado não mostra rendimento',
+      (tester) async {
+    final investimentos = FakeInvestimentosRepository([
+      const Investimento(
+        id: 'i1',
+        classe: TipoClasseInvestimento.rendaFixa,
+        nome: 'Fundo',
+        saldoCents: 40000,
+      ),
+    ]);
+    await _pump(tester, FakeLancamentosRepository(),
+        investimentosRepo: investimentos);
+    await tester.scrollUntilVisible(find.text('Patrimônio'), 100);
+    expect(find.text('R\$ 400,00'), findsWidgets);
+    expect(find.textContaining('rendimento'), findsNothing);
   });
 
   testWidgets('seção Patrimônio mostra estado vazio sem ativos', (tester) async {

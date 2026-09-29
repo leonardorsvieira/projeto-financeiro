@@ -67,7 +67,7 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           _PatrimonioSection(
             patrimonioCents: ref.watch(patrimonioTotalProvider),
-            rendimentoCents: ref.watch(rendimentoAcumuladoProvider),
+            resumo: ref.watch(resumoRendimentosProvider),
           ),
           const SizedBox(height: 16),
           Text('Por categoria', style: theme.textTheme.titleMedium),
@@ -210,20 +210,23 @@ class _ValorRotulado extends StatelessWidget {
 class _PatrimonioSection extends StatelessWidget {
   const _PatrimonioSection({
     required this.patrimonioCents,
-    required this.rendimentoCents,
+    required this.resumo,
   });
 
   final int patrimonioCents;
-  final int rendimentoCents;
+  final ResumoRendimentos resumo;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final rendimentoCents = resumo.rendimentoCents;
     final positivo = rendimentoCents >= 0;
-    final corRendimento =
-        positivo ? Colors.green.shade700 : theme.colorScheme.error;
+    final corRendimento = positivo
+        ? Colors.green.shade700
+        : theme.colorScheme.error;
+    final pct = resumo.rentabilidadePercent;
 
-    final temInvestimentos = patrimonioCents != 0 || rendimentoCents != 0;
+    final temInvestimentos = patrimonioCents != 0;
 
     return Card(
       child: Padding(
@@ -234,10 +237,7 @@ class _PatrimonioSection extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    'Patrimônio',
-                    style: theme.textTheme.titleMedium,
-                  ),
+                  child: Text('Patrimônio', style: theme.textTheme.titleMedium),
                 ),
                 TextButton(
                   onPressed: () => context.push(AppRoutes.investimentos),
@@ -258,25 +258,30 @@ class _PatrimonioSection extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    positivo ? Icons.trending_up : Icons.trending_down,
-                    color: corRendimento,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${positivo ? '+' : '-'}'
-                    '${formatoBRL(rendimentoCents.abs())} rendimento',
-                    style: theme.textTheme.bodyMedium?.copyWith(
+              // Só há rendimento quando o banco informou o valor aplicado.
+              if (resumo.ranking.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      positivo ? Icons.trending_up : Icons.trending_down,
                       color: corRendimento,
-                      fontWeight: FontWeight.w600,
+                      size: 18,
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${positivo ? '+' : '-'}'
+                      '${formatoBRL(rendimentoCents.abs())}'
+                      '${pct == null ? '' : ' (${pct.toStringAsFixed(1).replaceAll('.', ',')}%)'}'
+                      ' ${positivo ? 'rendimento' : 'de perda'}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: corRendimento,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ],
         ),
@@ -286,10 +291,7 @@ class _PatrimonioSection extends StatelessWidget {
 }
 
 class _DonutGastosCategoria extends StatelessWidget {
-  const _DonutGastosCategoria({
-    required this.gastos,
-    required this.totalCents,
-  });
+  const _DonutGastosCategoria({required this.gastos, required this.totalCents});
 
   final List<GastoCategoria> gastos;
   final int totalCents;
@@ -342,7 +344,8 @@ class _DonutGastosCategoria extends StatelessWidget {
                 width: 12,
                 height: 12,
                 decoration: BoxDecoration(
-                  color: _coresCategorias[g.categoria] ??
+                  color:
+                      _coresCategorias[g.categoria] ??
                       theme.colorScheme.primary,
                   shape: BoxShape.circle,
                 ),
@@ -504,7 +507,7 @@ class _SeletorMesHeader extends ConsumerWidget {
     'Setembro',
     'Outubro',
     'Novembro',
-    'Dezembro'
+    'Dezembro',
   ];
 
   @override
@@ -514,8 +517,7 @@ class _SeletorMesHeader extends ConsumerWidget {
     final nomeCapitalizado = '${_meses[mesAno.month - 1]} ${mesAno.year}';
 
     final agora = DateTime.now();
-    final ehMesAtual =
-        mesAno.year == agora.year && mesAno.month == agora.month;
+    final ehMesAtual = mesAno.year == agora.year && mesAno.month == agora.month;
 
     return Card(
       color: theme.colorScheme.surfaceContainerHigh,
@@ -613,7 +615,8 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _erro = 'Não foi possível gerar a análise no momento. Tente novamente.';
+          _erro =
+              'Não foi possível gerar a análise no momento. Tente novamente.';
           _carregando = false;
         });
       }
@@ -676,10 +679,7 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
                 ],
               ),
             ] else if (_analiseTexto != null) ...[
-              Text(
-                _analiseTexto!,
-                style: theme.textTheme.bodyMedium,
-              ),
+              Text(_analiseTexto!, style: theme.textTheme.bodyMedium),
             ] else if (_erro != null) ...[
               Text(
                 _erro!,

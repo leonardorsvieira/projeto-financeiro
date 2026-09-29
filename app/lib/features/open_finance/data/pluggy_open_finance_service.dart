@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -42,9 +43,10 @@ bool ehPagamentoDeFatura(String? categoria, String descricao) {
     return true;
   }
   final d = descricao.toLowerCase();
-  return RegExp(r'pagamento (de |da )?fatura|pagto\.? fatura|'
-          r'pagamento recebido|pagamento efetuado|pgto fatura')
-      .hasMatch(d);
+  return RegExp(
+    r'pagamento (de |da )?fatura|pagto\.? fatura|'
+    r'pagamento recebido|pagamento efetuado|pgto fatura',
+  ).hasMatch(d);
 }
 
 String _soDigitos(String? s) => (s ?? '').replaceAll(RegExp(r'\D'), '');
@@ -72,7 +74,8 @@ String? categoriaNeutra({
   required String? nomeTitular,
 }) {
   final cat = (categoriaPluggy ?? '').toLowerCase();
-  if (cat.contains('invest') || _reInvestimento.hasMatch(descricao.toLowerCase())) {
+  if (cat.contains('invest') ||
+      _reInvestimento.hasMatch(descricao.toLowerCase())) {
     return categoriaMovimentacaoInvestimento;
   }
   if (cat.contains('same person') ||
@@ -109,7 +112,10 @@ String? categoriaNeutra({
 }
 
 /// Classe do Patrimônio para um investimento da Pluggy (`type`/`subtype`).
-TipoClasseInvestimento classeDoInvestimentoPluggy(String? tipo, String? subtipo) {
+TipoClasseInvestimento classeDoInvestimentoPluggy(
+  String? tipo,
+  String? subtipo,
+) {
   final t = (tipo ?? '').toUpperCase();
   final s = (subtipo ?? '').toUpperCase();
   if (s.contains('CRYPTO')) return TipoClasseInvestimento.cripto;
@@ -138,8 +144,9 @@ Investimento? investimentoDaPluggy(Map<String, dynamic> inv) {
   );
   final codigo = (inv['code'] as String?)?.trim() ?? '';
   final nomePluggy = (inv['name'] as String?)?.trim() ?? '';
+  final investido = valorInvestidoDaPluggy(inv);
   if (classe.ePorQuantidade) {
-    // O ticker vira o nome: é o que a atualização de cotações procura.
+    // Para ações/FIIs o ticker (PETR4, HGLG11) identifica melhor o ativo.
     final nome = codigo.isNotEmpty
         ? codigo
         : (nomePluggy.isNotEmpty ? nomePluggy : 'Ativo');
@@ -153,6 +160,7 @@ Investimento? investimentoDaPluggy(Map<String, dynamic> inv) {
         quantidade: quantidade,
         precoAtualCents: precoCents,
         pluggyId: id,
+        valorInvestidoCents: investido,
       );
     }
     // Sem quantidade/preço: registra a posição inteira como 1 unidade.
@@ -163,11 +171,15 @@ Investimento? investimentoDaPluggy(Map<String, dynamic> inv) {
       quantidade: 1,
       precoAtualCents: saldoCents,
       pluggyId: id,
+      valorInvestidoCents: investido,
     );
   }
   final emissor = (inv['issuer'] as String?)?.trim() ?? '';
-  var nome = nomePluggy.isNotEmpty ? nomePluggy : (codigo.isNotEmpty ? codigo : 'Investimento');
-  if (emissor.isNotEmpty && !nome.toLowerCase().contains(emissor.toLowerCase())) {
+  var nome = nomePluggy.isNotEmpty
+      ? nomePluggy
+      : (codigo.isNotEmpty ? codigo : 'Investimento');
+  if (emissor.isNotEmpty &&
+      !nome.toLowerCase().contains(emissor.toLowerCase())) {
     nome = '$nome · $emissor';
   }
   return Investimento(
@@ -176,7 +188,21 @@ Investimento? investimentoDaPluggy(Map<String, dynamic> inv) {
     nome: nome,
     saldoCents: saldoCents,
     pluggyId: id,
+    valorInvestidoCents: investido,
   );
+}
+
+/// Quanto foi aplicado: `amountOriginal`; sem ele, o valor bruto menos o
+/// lucro informado (`amount − amountProfit`). Null se o banco não informar.
+int? valorInvestidoDaPluggy(Map<String, dynamic> inv) {
+  final original = inv['amountOriginal'] as num?;
+  if (original != null && original > 0) return _centavos(original);
+  final lucro = inv['amountProfit'] as num?;
+  final bruto = (inv['amount'] ?? inv['balance']) as num?;
+  if (lucro != null && bruto != null && bruto - lucro > 0) {
+    return _centavos(bruto - lucro);
+  }
+  return null;
 }
 
 /// Posições de investimento vindas das conexões Pluggy.
@@ -197,10 +223,7 @@ class ConexaoMeuPluggyResult {
   final String itemId;
   final String oauthUrl;
 
-  const ConexaoMeuPluggyResult({
-    required this.itemId,
-    required this.oauthUrl,
-  });
+  const ConexaoMeuPluggyResult({required this.itemId, required this.oauthUrl});
 }
 
 /// Acesso à Pluggy através da Edge Function `pluggy`.
@@ -216,10 +239,11 @@ class PluggyOpenFinanceService {
     http.Client? httpClient,
     EdgeFunction? funcao,
     List<Duration>? esperasAutorizacao,
-  })  : _httpClient = httpClient ?? http.Client(),
-        _funcao = funcao ?? EdgeFunction.supabase('pluggy'),
-        _esperasAutorizacao = esperasAutorizacao ??
-            List.filled(10, const Duration(milliseconds: 1500));
+  }) : _httpClient = httpClient ?? http.Client(),
+       _funcao = funcao ?? EdgeFunction.supabase('pluggy'),
+       _esperasAutorizacao =
+           esperasAutorizacao ??
+           List.filled(10, const Duration(milliseconds: 1500));
 
   /// Intervalos de consulta enquanto a Pluggy prepara o link de autorização.
   final List<Duration> _esperasAutorizacao;
@@ -293,14 +317,12 @@ class PluggyOpenFinanceService {
     final resp = await _httpClient.post(
       _funcao.url,
       headers: cabecalhos,
-      body: jsonEncode({
-        'metodo': metodo,
-        'caminho': caminho,
-        'corpo': ?corpo,
-      }),
+      body: jsonEncode({'metodo': metodo, 'caminho': caminho, 'corpo': ?corpo}),
     );
     if (resp.statusCode == 401) {
-      throw Exception('Sessão expirada ou e-mail não confirmado. Entre de novo.');
+      throw Exception(
+        'Sessão expirada ou e-mail não confirmado. Entre de novo.',
+      );
     }
     if (resp.statusCode == 429 && resp.body.contains('limite_diario')) {
       throw Exception('Limite diário do Open Finance atingido. Tente amanhã.');
@@ -362,7 +384,9 @@ class PluggyOpenFinanceService {
       connectorId: connectorId,
       oauthRedirectUri: oauthRedirectUri,
     );
-    final url = Uri.parse('https://connect.pluggy.ai/?connect_token=$connectToken');
+    final url = Uri.parse(
+      'https://connect.pluggy.ai/?connect_token=$connectToken',
+    );
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
@@ -428,10 +452,7 @@ class PluggyOpenFinanceService {
   /// Busca um item específico da Pluggy pelo seu ID. O servidor só o devolve se
   /// pertencer ao usuário logado.
   Future<ContaBancariaConectada> buscarItemPorId(String itemId) async {
-    final resp = await _chamar(
-      'GET',
-      '/items/${Uri.encodeComponent(itemId)}',
-    );
+    final resp = await _chamar('GET', '/items/${Uri.encodeComponent(itemId)}');
 
     if (resp.statusCode != 200) {
       throw Exception(
@@ -452,7 +473,8 @@ class PluggyOpenFinanceService {
     var nomeBanco = connector['name'] as String? ?? nomePadrao;
     // No Meu Pluggy o conector se chama "MeuPluggy"; o banco de verdade vem
     // no nome das contas.
-    final ehAgregador = connector['id'] == connectorMeuPluggy ||
+    final ehAgregador =
+        connector['id'] == connectorMeuPluggy ||
         nomeBanco.toLowerCase().contains('pluggy');
     final corHex = connector['primaryColor'] as String? ?? '#8A05BE';
     final statusRaw = (item['status'] as String? ?? '').toUpperCase();
@@ -491,17 +513,20 @@ class PluggyOpenFinanceService {
           final accList = accounts.cast<Map<String, dynamic>>();
           if (ehAgregador) {
             final nomes = accList
-                .map((a) => ((a['marketingName'] ?? a['name']) as String?)
-                    ?.trim())
+                .map(
+                  (a) => ((a['marketingName'] ?? a['name']) as String?)?.trim(),
+                )
                 .whereType<String>()
                 .where((n) => n.isNotEmpty)
                 .toSet();
             if (nomes.isNotEmpty) nomeBanco = nomes.join(' / ');
           }
           final tipos = accList
-              .map((a) => (a['type'] as String? ?? 'BANK') == 'CREDIT'
-                  ? 'Cartão'
-                  : 'Conta')
+              .map(
+                (a) => (a['type'] as String? ?? 'BANK') == 'CREDIT'
+                    ? 'Cartão'
+                    : 'Conta',
+              )
               .toSet()
               .toList();
           tipoConta = tipos.join(' & ');
@@ -583,8 +608,10 @@ class PluggyOpenFinanceService {
       '/items/${Uri.encodeComponent(itemId)}',
     );
     if (resp.statusCode >= 400 && resp.statusCode != 404) {
-      throw Exception('Não foi possível remover a conexão '
-          '(Status ${resp.statusCode}).');
+      throw Exception(
+        'Não foi possível remover a conexão '
+        '(Status ${resp.statusCode}).',
+      );
     }
   }
 
@@ -592,8 +619,10 @@ class PluggyOpenFinanceService {
   Future<int> removerTodasConexoes() async {
     final resp = await _chamar('DELETE', '/items');
     if (resp.statusCode != 200) {
-      throw Exception('Não foi possível remover as conexões '
-          '(Status ${resp.statusCode}).');
+      throw Exception(
+        'Não foi possível remover as conexões '
+        '(Status ${resp.statusCode}).',
+      );
     }
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
     return (data['removidas'] as num?)?.toInt() ?? 0;
@@ -612,10 +641,9 @@ class PluggyOpenFinanceService {
     String dataDesde,
   ) async {
     final todas = <dynamic>[];
-    var query = Uri(queryParameters: {
-      'accountId': accountId,
-      'dateFrom': dataDesde,
-    }).query;
+    var query = Uri(
+      queryParameters: {'accountId': accountId, 'dateFrom': dataDesde},
+    ).query;
     for (var pagina = 0; pagina < _maxPaginasTransacoes; pagina++) {
       final resp = await _chamar('GET', '/v2/transactions?$query');
       if (resp.statusCode != 200) break;
@@ -643,7 +671,10 @@ class PluggyOpenFinanceService {
 
     final dataDesdeStr = desde != null
         ? desde.toIso8601String().substring(0, 10)
-        : DateTime.now().subtract(const Duration(days: 30)).toIso8601String().substring(0, 10);
+        : DateTime.now()
+              .subtract(const Duration(days: 30))
+              .toIso8601String()
+              .substring(0, 10);
 
     for (final item in itens) {
       final itemId = item.itemIdPluggy ?? item.id;
@@ -670,7 +701,8 @@ class PluggyOpenFinanceService {
           final isCreditCard = accType == 'CREDIT';
           final accName = (acc['name'] as String?)?.trim();
           // Conexões Meu Pluggy juntam vários bancos: usa o nome da conta.
-          final nomeRealBanco = (accName != null &&
+          final nomeRealBanco =
+              (accName != null &&
                   accName.isNotEmpty &&
                   (item.nomeBanco.contains('Pluggy') ||
                       item.nomeBanco == 'Banco' ||
@@ -688,12 +720,16 @@ class PluggyOpenFinanceService {
 
             if (valorCents == 0) continue;
 
-            final desc = (tx['description'] as String?) ??
+            final desc =
+                (tx['description'] as String?) ??
                 (tx['descriptionRaw'] as String?) ??
                 'Transação $nomeRealBanco';
 
             if (ehPagamentoDeFatura(tx['category'] as String?, desc)) continue;
-            final isReceita = ehEntrada(amount: amount, cartaoDeCredito: isCreditCard);
+            final isReceita = ehEntrada(
+              amount: amount,
+              cartaoDeCredito: isCreditCard,
+            );
 
             final dateStr = tx['date'] as String?;
             final data = dateStr != null
@@ -703,17 +739,18 @@ class PluggyOpenFinanceService {
             final paymentData = tx['paymentData'] as Map<String, dynamic>?;
             final paymentMethod =
                 (paymentData?['paymentMethod'] as String? ?? '').toUpperCase();
-            final isPix = paymentMethod == 'PIX' ||
-                desc.toLowerCase().contains('pix');
+            final isPix =
+                paymentMethod == 'PIX' || desc.toLowerCase().contains('pix');
 
             final formaPagamento = isPix
                 ? 'Pix'
                 : (isCreditCard
-                    ? 'Cartão: $nomeRealBanco'
-                    : 'Conta: $nomeRealBanco');
+                      ? 'Cartão: $nomeRealBanco'
+                      : 'Conta: $nomeRealBanco');
 
             final categoriaRaw = tx['category'] as String?;
-            final categoria = categoriaNeutra(
+            final categoria =
+                categoriaNeutra(
                   categoriaPluggy: categoriaRaw,
                   descricao: desc,
                   paymentData: paymentData,
@@ -762,11 +799,13 @@ class PluggyOpenFinanceService {
       }
       try {
         for (var pagina = 1; pagina <= _maxPaginasInvestimentos; pagina++) {
-          final query = Uri(queryParameters: {
-            'itemId': itemId,
-            'page': '$pagina',
-            'pageSize': '500',
-          }).query;
+          final query = Uri(
+            queryParameters: {
+              'itemId': itemId,
+              'page': '$pagina',
+              'pageSize': '500',
+            },
+          ).query;
           final resp = await _chamar('GET', '/investments?$query');
           if (resp.statusCode != 200) {
             completo = false;
@@ -798,10 +837,13 @@ class PluggyOpenFinanceService {
     String? itemIdPluggy,
   }) async {
     final id = itemIdPluggy ?? 'banco_${DateTime.now().millisecondsSinceEpoch}';
-    final cor = corHex ??
+    final cor =
+        corHex ??
         (bancosPrincipais
-            .firstWhere((b) => b.nome.contains(nomeBanco),
-                orElse: () => bancosPrincipais.first)
+            .firstWhere(
+              (b) => b.nome.contains(nomeBanco),
+              orElse: () => bancosPrincipais.first,
+            )
             .corHex);
 
     return ContaBancariaConectada(

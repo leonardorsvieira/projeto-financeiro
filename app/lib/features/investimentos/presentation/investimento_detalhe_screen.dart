@@ -4,14 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../application/investimentos_providers.dart';
 import '../domain/investimento.dart';
+import 'investimentos_screen.dart' show corRendimento, textoRendimento;
 
 /// Detalhe de um ativo (só leitura): a posição vem do Open Finance e é
 /// atualizada pela sincronização da Pluggy.
 class InvestimentoDetalheScreen extends ConsumerWidget {
-  const InvestimentoDetalheScreen({
-    super.key,
-    required this.investimentoId,
-  });
+  const InvestimentoDetalheScreen({super.key, required this.investimentoId});
 
   final String investimentoId;
 
@@ -24,9 +22,7 @@ class InvestimentoDetalheScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(investimento?.nome ?? 'Investimento'),
-      ),
+      appBar: AppBar(title: Text(investimento?.nome ?? 'Investimento')),
       body: investimento == null
           ? const Center(child: Text('Ativo não encontrado.'))
           : ListView(
@@ -56,24 +52,31 @@ class InvestimentoDetalheScreen extends ConsumerWidget {
   }
 }
 
-class _ResumoInvestimento extends ConsumerWidget {
+class _ResumoInvestimento extends StatelessWidget {
   const _ResumoInvestimento({required this.investimento});
 
   final Investimento investimento;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final pmResultado =
-        ref.watch(precoMedioPorAtivoProvider(investimento.id));
+    final rendimento = investimento.rendimentoCents;
+    final investido = investimento.valorInvestidoCents;
 
-    final detalhe = investimento.ePorQuantidade
-        ? '${investimento.quantidade.toStringAsFixed(2)} un · '
-            '${formatoBRL(investimento.precoAtualCents)}/un'
-        : investimento.classe.rotulo;
-
-    final isLucro = (pmResultado?.lucroPrejuizoCents ?? 0) >= 0;
-    final corLucro = isLucro ? Colors.green.shade700 : theme.colorScheme.error;
+    Widget coluna(String rotulo, String valor, {Color? cor}) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(rotulo, style: theme.textTheme.labelSmall),
+        const SizedBox(height: 2),
+        Text(
+          valor,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: cor,
+          ),
+        ),
+      ],
+    );
 
     return Card(
       child: Padding(
@@ -81,38 +84,12 @@ class _ResumoInvestimento extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  investimento.classe.rotulo,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (pmResultado != null)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isLucro
-                          ? Colors.green.shade100
-                          : theme.colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${isLucro ? "+" : ""}${pmResultado.rentabilidadePercent.toStringAsFixed(2)}%',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: isLucro
-                            ? Colors.green.shade800
-                            : theme.colorScheme.onErrorContainer,
-                      ),
-                    ),
-                  ),
-              ],
+            Text(
+              investimento.classe.rotulo,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -121,60 +98,40 @@ class _ResumoInvestimento extends ConsumerWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(detalhe, style: theme.textTheme.bodyMedium),
-            if (pmResultado != null) ...[
-              const Divider(height: 24),
+            if (investimento.ePorQuantidade) ...[
+              const SizedBox(height: 4),
+              Text(
+                '${investimento.quantidade.toStringAsFixed(2)} un · '
+                '${formatoBRL(investimento.precoAtualCents)}/un',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ],
+            const Divider(height: 24),
+            if (investido == null || rendimento == null)
+              Text(
+                'O banco não informou o valor aplicado neste investimento, '
+                'então não dá para calcular o rendimento.',
+                style: theme.textTheme.bodyMedium,
+              )
+            else
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Preço Médio (PM)',
-                          style: theme.textTheme.labelSmall),
-                      const SizedBox(height: 2),
-                      Text(
-                        investimento.ePorQuantidade
-                            ? '${formatoBRL(pmResultado.precoMedioCents)}/un'
-                            : formatoBRL(pmResultado.custoTotalCents),
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  coluna('Aplicado', formatoBRL(investido)),
+                  coluna(
+                    'Valor atual',
+                    formatoBRL(investimento.patrimonioCents),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Custo Total Aportado',
-                          style: theme.textTheme.labelSmall),
-                      const SizedBox(height: 2),
-                      Text(
-                        formatoBRL(pmResultado.custoTotalCents),
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Ganho / Perda', style: theme.textTheme.labelSmall),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${isLucro ? "+" : ""}${formatoBRL(pmResultado.lucroPrejuizoCents)}',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: corLucro,
-                        ),
-                      ),
-                    ],
+                  coluna(
+                    rendimento >= 0 ? 'Rendeu' : 'Perdeu',
+                    textoRendimento(
+                      rendimento,
+                      investimento.rentabilidadePercent,
+                    ),
+                    cor: corRendimento(context, rendimento),
                   ),
                 ],
               ),
-            ],
           ],
         ),
       ),

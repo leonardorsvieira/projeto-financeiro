@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:meubolso/features/investimentos/application/investimentos_providers.dart';
 import 'package:meubolso/features/investimentos/domain/investimento.dart';
-import 'package:meubolso/features/investimentos/domain/movimento_investimento.dart';
 import 'package:meubolso/features/investimentos/domain/rendimento_investimento.dart';
 
 import '../../../support/fake_investimentos_repository.dart';
@@ -15,19 +14,6 @@ import '../../../support/fake_rendimentos_investimento_repository.dart';
 Future<void> _aguardarInvestimentos(ProviderContainer c) {
   final completer = Completer<void>();
   c.listen(investimentosStreamProvider, (_, next) {
-    if (next.value != null && !completer.isCompleted) {
-      completer.complete();
-    }
-  });
-  return completer.future;
-}
-
-Future<void> _aguardarMovimentos(
-  ProviderContainer c,
-  String id,
-) {
-  final completer = Completer<void>();
-  c.listen(movimentosPorInvestimentoProvider(id), (_, next) {
     if (next.value != null && !completer.isCompleted) {
       completer.complete();
     }
@@ -161,93 +147,70 @@ void main() {
     expect(container.read(patrimonioTotalProvider), 38500 + 50000);
   });
 
-  test('custo e rendimento acumulado: compras e vendas', () async {
+  test('resumo de rendimentos: totais, ranking, maior ganho e maior perda',
+      () async {
     final repo = FakeInvestimentosRepository([
       const Investimento(
-        id: 'i1',
+        id: 'cdb',
+        classe: TipoClasseInvestimento.rendaFixa,
+        nome: 'CDB',
+        saldoCents: 11000,
+        valorInvestidoCents: 10000,
+      ),
+      const Investimento(
+        id: 'acao',
         classe: TipoClasseInvestimento.acao,
         nome: 'PETR4',
         quantidade: 10,
-        precoAtualCents: 4000,
+        precoAtualCents: 3000,
+        valorInvestidoCents: 40000,
       ),
-    ]);
-    final movimentos = FakeMovimentosInvestimentoRepository([
-      MovimentoInvestimento(
-        id: 'm1',
-        investimentoId: 'i1',
-        tipo: TipoMovimentoInvestimento.compra,
-        quantidade: 5,
-        precoUnitCents: 3000,
-        data: DateTime(2026, 8, 1),
+      const Investimento(
+        id: 'lci',
+        classe: TipoClasseInvestimento.rendaFixa,
+        nome: 'LCI',
+        saldoCents: 50500,
+        valorInvestidoCents: 50000,
       ),
-      MovimentoInvestimento(
-        id: 'm2',
-        investimentoId: 'i1',
-        tipo: TipoMovimentoInvestimento.compra,
-        quantidade: 5,
-        precoUnitCents: 3000,
-        data: DateTime(2026, 8, 2),
+      const Investimento(
+        id: 'sem',
+        classe: TipoClasseInvestimento.rendaFixa,
+        nome: 'Fundo',
+        saldoCents: 99999,
       ),
     ]);
     final container = ProviderContainer(
-      overrides: [
-        investimentosRepositoryProvider.overrideWithValue(repo),
-        movimentosInvestimentoRepositoryProvider.overrideWithValue(movimentos),
-      ],
+      overrides: [investimentosRepositoryProvider.overrideWithValue(repo)],
     );
     addTearDown(container.dispose);
 
     await _aguardarInvestimentos(container);
-    await _aguardarMovimentos(container, 'i1');
+    final resumo = container.read(resumoRendimentosProvider);
 
-    // Custo = 10 un × 3000 = 30000; patrimônio = 10 × 4000 = 40000.
-    expect(container.read(custoPorAtivoProvider)['i1'], 30000);
-    expect(container.read(custoTotalProvider), 30000);
-    expect(container.read(rendimentoAcumuladoProvider), 10000);
+    // Aplicado 100000; atual 11000 + 30000 + 50500 = 91500.
+    expect(resumo.investidoCents, 100000);
+    expect(resumo.atualCents, 91500);
+    expect(resumo.rendimentoCents, -8500);
+    expect(resumo.rentabilidadePercent, closeTo(-8.5, 0.001));
+    expect(resumo.semValorInvestido, 1);
+    expect(resumo.ranking.map((i) => i.id), ['cdb', 'lci', 'acao']);
+    expect(resumo.maiorGanho?.id, 'cdb');
+    expect(resumo.maiorPerda?.id, 'acao');
+    expect(container.read(rendimentoAcumuladoProvider), -8500);
   });
 
-  test('venda subtrai do custo', () async {
-    final repo = FakeInvestimentosRepository([
-      const Investimento(
-        id: 'i1',
-        classe: TipoClasseInvestimento.acao,
-        nome: 'PETR4',
-        quantidade: 5,
-        precoAtualCents: 4000,
+  test('sem perdas, maiorPerda é null', () {
+    final resumo = ResumoRendimentos.de(const [
+      Investimento(
+        id: 'a',
+        classe: TipoClasseInvestimento.rendaFixa,
+        nome: 'A',
+        saldoCents: 200,
+        valorInvestidoCents: 100,
       ),
     ]);
-    final movimentos = FakeMovimentosInvestimentoRepository([
-      MovimentoInvestimento(
-        id: 'm1',
-        investimentoId: 'i1',
-        tipo: TipoMovimentoInvestimento.compra,
-        quantidade: 10,
-        precoUnitCents: 3000,
-        data: DateTime(2026, 8, 1),
-      ),
-      MovimentoInvestimento(
-        id: 'm2',
-        investimentoId: 'i1',
-        tipo: TipoMovimentoInvestimento.venda,
-        quantidade: 5,
-        precoUnitCents: 3500,
-        data: DateTime(2026, 8, 2),
-      ),
-    ]);
-    final container = ProviderContainer(
-      overrides: [
-        investimentosRepositoryProvider.overrideWithValue(repo),
-        movimentosInvestimentoRepositoryProvider.overrideWithValue(movimentos),
-      ],
-    );
-    addTearDown(container.dispose);
-
-    await _aguardarInvestimentos(container);
-    await _aguardarMovimentos(container, 'i1');
-
-    // Custo = 30000 − 17500 = 12500.
-    expect(container.read(custoPorAtivoProvider)['i1'], 12500);
-    expect(container.read(rendimentoAcumuladoProvider), 20000 - 12500);
+    expect(resumo.maiorGanho?.id, 'a');
+    expect(resumo.maiorPerda, isNull);
   });
 
   test('rendimentosPorAtivoProvider filtra por investimento', () async {

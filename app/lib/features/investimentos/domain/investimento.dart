@@ -14,9 +14,11 @@ enum TipoClasseInvestimento {
   /// true → posição = quantidade × preço; false → posição = saldo.
   final bool ePorQuantidade;
 
-  static TipoClasseInvestimento fromDb(String dbValue) => TipoClasseInvestimento
-      .values.firstWhere((c) => c.dbValue == dbValue,
-          orElse: () => TipoClasseInvestimento.acao);
+  static TipoClasseInvestimento fromDb(String dbValue) =>
+      TipoClasseInvestimento.values.firstWhere(
+        (c) => c.dbValue == dbValue,
+        orElse: () => TipoClasseInvestimento.acao,
+      );
 }
 
 /// Posição/ativo de investimento nas 4 classes.
@@ -29,6 +31,7 @@ class Investimento {
     this.precoAtualCents = 0,
     this.saldoCents = 0,
     this.pluggyId,
+    this.valorInvestidoCents,
   });
 
   final String id;
@@ -42,6 +45,10 @@ class Investimento {
   /// A sincronização sobrescreve esses ativos com a posição do banco.
   final String? pluggyId;
 
+  /// Quanto foi aplicado (informado pelo banco via Open Finance); null quando
+  /// o banco não informa — aí não dá para calcular o rendimento.
+  final int? valorInvestidoCents;
+
   bool get importadoOpenFinance => pluggyId != null;
 
   bool get ePorQuantidade => classe.ePorQuantidade;
@@ -54,6 +61,18 @@ class Investimento {
     return saldoCents;
   }
 
+  /// Quanto rendeu (negativo = perda): valor atual − valor aplicado.
+  int? get rendimentoCents => valorInvestidoCents == null
+      ? null
+      : patrimonioCents - valorInvestidoCents!;
+
+  /// Rendimento em % sobre o valor aplicado.
+  double? get rentabilidadePercent {
+    final investido = valorInvestidoCents;
+    if (investido == null || investido == 0) return null;
+    return (patrimonioCents - investido) / investido * 100;
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -63,6 +82,8 @@ class Investimento {
       'preco_atual_cents': precoAtualCents,
       'saldo_cents': saldoCents,
       if (pluggyId != null) 'pluggy_id': pluggyId,
+      if (valorInvestidoCents != null)
+        'valor_investido_cents': valorInvestidoCents,
     };
   }
 
@@ -75,6 +96,7 @@ class Investimento {
       precoAtualCents: ((map['preco_atual_cents'] as num?) ?? 0).toInt(),
       saldoCents: ((map['saldo_cents'] as num?) ?? 0).toInt(),
       pluggyId: map['pluggy_id'] as String?,
+      valorInvestidoCents: (map['valor_investido_cents'] as num?)?.toInt(),
     );
   }
 }

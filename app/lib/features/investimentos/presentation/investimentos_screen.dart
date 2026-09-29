@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
-import '../application/investimentos_calculos_service.dart';
 import '../application/investimentos_providers.dart';
 import '../domain/investimento.dart';
 
@@ -12,20 +11,53 @@ import 'rebalanceamento_dialog.dart';
 
 /// Patrimônio: só leitura. Os ativos e valores vêm do Open Finance e são
 /// atualizados pela sincronização da Pluggy.
-class InvestimentosScreen extends ConsumerWidget {
+class InvestimentosScreen extends ConsumerStatefulWidget {
   const InvestimentosScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InvestimentosScreen> createState() =>
+      _InvestimentosScreenState();
+}
+
+class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
+  /// false = agrupado por classe; true = do que mais rendeu ao que mais perdeu.
+  bool _porRendimento = false;
+
+  void _abrir(Investimento investimento) =>
+      context.push(AppRoutes.investimentoDetalheDe(investimento.id));
+
+  @override
+  Widget build(BuildContext context) {
     final porClasse = ref.watch(investimentosPorClasseProvider);
     final patrimonio = ref.watch(patrimonioTotalProvider);
-    final rendimento = ref.watch(rendimentoAcumuladoProvider);
-    final custoTotal = ref.watch(custoTotalProvider);
+    final resumo = ref.watch(resumoRendimentosProvider);
+    final theme = Theme.of(context);
+
+    Widget titulo(String texto) => Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Text(
+        texto,
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+
+    final todos = [for (final g in porClasse.grupos) ...g.investimentos];
+    final semDado = todos.where((i) => i.valorInvestidoCents == null);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Investimentos'),
         actions: [
+          IconButton(
+            tooltip: _porRendimento
+                ? 'Agrupar por classe'
+                : 'Ordenar por rendimento',
+            icon: Icon(_porRendimento ? Icons.category : Icons.leaderboard),
+            onPressed: () => setState(() => _porRendimento = !_porRendimento),
+          ),
           IconButton(
             tooltip: 'Calculadora de Rebalanceamento',
             icon: const Icon(Icons.balance),
@@ -43,31 +75,37 @@ class InvestimentosScreen extends ConsumerWidget {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _PatrimonioCard(
-                  patrimonioCents: patrimonio,
-                  rendimentoCents: rendimento,
-                  custoCents: custoTotal,
-                ),
+                _PatrimonioCard(patrimonioCents: patrimonio, resumo: resumo),
+                if (resumo.maiorGanho != null || resumo.maiorPerda != null) ...[
+                  const SizedBox(height: 12),
+                  _DestaquesCard(resumo: resumo, onTap: _abrir),
+                ],
                 const SizedBox(height: 16),
-                for (final grupo in porClasse.grupos) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 4),
-                    child: Text(
-                      grupo.classe.rotulo,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                  ),
-                  for (final investimento in grupo.investimentos)
+                if (_porRendimento) ...[
+                  titulo('Do que mais rendeu ao que mais perdeu'),
+                  for (final (i, investimento) in resumo.ranking.indexed)
                     _InvestimentoTile(
                       investimento: investimento,
-                      onTap: () => context.push(
-                        AppRoutes.investimentoDetalheDe(investimento.id),
-                      ),
+                      posicao: i + 1,
+                      onTap: () => _abrir(investimento),
                     ),
-                ],
+                  if (semDado.isNotEmpty) ...[
+                    titulo('Sem valor aplicado informado'),
+                    for (final investimento in semDado)
+                      _InvestimentoTile(
+                        investimento: investimento,
+                        onTap: () => _abrir(investimento),
+                      ),
+                  ],
+                ] else
+                  for (final grupo in porClasse.grupos) ...[
+                    titulo(grupo.classe.rotulo),
+                    for (final investimento in grupo.investimentos)
+                      _InvestimentoTile(
+                        investimento: investimento,
+                        onTap: () => _abrir(investimento),
+                      ),
+                  ],
               ],
             ),
     );
@@ -116,29 +154,49 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
+/// "+R$ 12,34 (+5,6%)" / "-R$ 12,34 (-5,6%)".
+String textoRendimento(int cents, double? percent) {
+  final sinal = cents >= 0 ? '+' : '-';
+  final pct = percent == null
+      ? ''
+      : ' ($sinal${percent.abs().toStringAsFixed(1).replaceAll('.', ',')}%)';
+  return '$sinal${formatoBRL(cents.abs())}$pct';
+}
+
+Color corRendimento(BuildContext context, int cents) =>
+    cents >= 0 ? Colors.green.shade700 : Theme.of(context).colorScheme.error;
+
 class _PatrimonioCard extends StatelessWidget {
-  const _PatrimonioCard({
-    required this.patrimonioCents,
-    required this.rendimentoCents,
-    required this.custoCents,
-  });
+  const _PatrimonioCard({required this.patrimonioCents, required this.resumo});
 
   final int patrimonioCents;
-  final int rendimentoCents;
-  final int custoCents;
+  final ResumoRendimentos resumo;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final positivo = rendimentoCents >= 0;
-    final corRendimento =
-        positivo ? Colors.green.shade700 : theme.colorScheme.error;
-    final pct = custoCents > 0
-        ? (rendimentoCents / custoCents * 100).abs().round()
-        : 0;
-    final textoPct = custoCents > 0
-        ? '${positivo ? '+' : '-'}$pct%'
-        : '—';
+    final naCor = theme.colorScheme.onPrimaryContainer;
+    final temDado = resumo.ranking.isNotEmpty;
+
+    Widget linha(String rotulo, String valor, {Color? cor}) => Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            rotulo,
+            style: theme.textTheme.bodyMedium?.copyWith(color: naCor),
+          ),
+          Text(
+            valor,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: cor ?? naCor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
 
     return Card(
       color: theme.colorScheme.primaryContainer,
@@ -149,40 +207,39 @@ class _PatrimonioCard extends StatelessWidget {
           children: [
             Text(
               'Patrimônio total',
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
-              ),
+              style: theme.textTheme.titleSmall?.copyWith(color: naCor),
             ),
             const SizedBox(height: 4),
             Text(
               formatoBRL(patrimonioCents),
               style: theme.textTheme.headlineMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
+                color: naCor,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            // Sem custo registrado não há como calcular o rendimento.
-            if (custoCents > 0) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  positivo ? Icons.trending_up : Icons.trending_down,
-                  color: corRendimento,
-                  size: 18,
+            if (temDado) ...[
+              const SizedBox(height: 8),
+              linha('Total aplicado', formatoBRL(resumo.investidoCents)),
+              linha('Valor atual', formatoBRL(resumo.atualCents)),
+              linha(
+                resumo.rendimentoCents >= 0 ? 'Rendeu' : 'Perdeu',
+                textoRendimento(
+                  resumo.rendimentoCents,
+                  resumo.rentabilidadePercent,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  '${positivo ? '+' : '-'}'
-                  '${formatoBRL(rendimentoCents.abs())} '
-                  '($textoPct)',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: corRendimento,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
+                cor: corRendimento(context, resumo.rendimentoCents),
+              ),
+            ],
+            if (resumo.semValorInvestido > 0) ...[
+              const SizedBox(height: 8),
+              Text(
+                temDado
+                    ? '${resumo.semValorInvestido} ativo(s) sem valor aplicado '
+                          'informado pelo banco não entram no rendimento.'
+                    : 'O banco não informou o valor aplicado, então não dá '
+                          'para calcular o rendimento.',
+                style: theme.textTheme.bodySmall?.copyWith(color: naCor),
+              ),
             ],
           ],
         ),
@@ -191,38 +248,84 @@ class _PatrimonioCard extends StatelessWidget {
   }
 }
 
-class _InvestimentoTile extends ConsumerWidget {
+class _DestaquesCard extends StatelessWidget {
+  const _DestaquesCard({required this.resumo, required this.onTap});
+
+  final ResumoRendimentos resumo;
+  final void Function(Investimento) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget destaque(String rotulo, IconData icone, Investimento inv) {
+      final cor = corRendimento(context, inv.rendimentoCents!);
+      return ListTile(
+        onTap: () => onTap(inv),
+        leading: Icon(icone, color: cor),
+        title: Text(rotulo, style: Theme.of(context).textTheme.labelMedium),
+        subtitle: Text(
+          inv.nome,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        trailing: Text(
+          textoRendimento(inv.rendimentoCents!, inv.rentabilidadePercent),
+          style: TextStyle(color: cor, fontWeight: FontWeight.w700),
+        ),
+      );
+    }
+
+    return Card(
+      child: Column(
+        children: [
+          if (resumo.maiorGanho case final g?)
+            destaque('Mais rendeu', Icons.emoji_events, g),
+          if (resumo.maiorPerda case final p?)
+            destaque('Mais perdeu', Icons.trending_down, p),
+        ],
+      ),
+    );
+  }
+}
+
+class _InvestimentoTile extends StatelessWidget {
   const _InvestimentoTile({
     required this.investimento,
     required this.onTap,
+    this.posicao,
   });
 
   final Investimento investimento;
   final VoidCallback onTap;
 
-  String _subtitle(PrecoMedioResultado? pm) {
-    final sb = StringBuffer();
+  /// Posição no ranking de rendimento (null na visão por classe).
+  final int? posicao;
+
+  String get _subtitle {
+    final partes = <String>[];
     if (investimento.ePorQuantidade) {
       final qtd = investimento.quantidade.toStringAsFixed(
         investimento.quantidade == investimento.quantidade.roundToDouble()
             ? 0
             : 2,
       );
-      sb.write('$qtd un · ${formatoBRL(investimento.precoAtualCents)}');
-      if (pm != null && pm.precoMedioCents > 0) {
-        sb.write(' · PM: ${formatoBRL(pm.precoMedioCents)}');
-      }
-    } else {
-      sb.write(investimento.classe.rotulo);
+      partes.add('$qtd un · ${formatoBRL(investimento.precoAtualCents)}');
+    } else if (posicao != null) {
+      partes.add(investimento.classe.rotulo);
     }
-    return sb.toString();
+    final investido = investimento.valorInvestidoCents;
+    partes.add(
+      investido == null
+          ? 'Aplicado: não informado'
+          : 'Aplicado: ${formatoBRL(investido)}',
+    );
+    return partes.join(' · ');
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final pm = ref.watch(precoMedioPorAtivoProvider(investimento.id));
-    final isLucro = (pm?.lucroPrejuizoCents ?? 0) >= 0;
+    final rendimento = investimento.rendimentoCents;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -230,17 +333,21 @@ class _InvestimentoTile extends ConsumerWidget {
         onTap: onTap,
         leading: CircleAvatar(
           backgroundColor: theme.colorScheme.primaryContainer,
-          child: Icon(
-            Icons.trending_up,
-            color: theme.colorScheme.onPrimaryContainer,
-          ),
+          child: posicao != null
+              ? Text(
+                  '$posicao',
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w700,
+                  ),
+                )
+              : Icon(
+                  Icons.trending_up,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
         ),
         title: Text(investimento.nome),
-        subtitle: Text(
-          investimento.importadoOpenFinance
-              ? '${_subtitle(pm)} · Open Finance'
-              : _subtitle(pm),
-        ),
+        subtitle: Text(_subtitle),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -251,14 +358,13 @@ class _InvestimentoTile extends ConsumerWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            if (pm != null && pm.custoTotalCents > 0)
+            if (rendimento != null)
               Text(
-                '${isLucro ? "+" : ""}${pm.rentabilidadePercent.toStringAsFixed(1)}%',
+                textoRendimento(rendimento, investimento.rentabilidadePercent),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color:
-                      isLucro ? Colors.green.shade700 : theme.colorScheme.error,
+                  color: corRendimento(context, rendimento),
                 ),
               ),
           ],
@@ -267,4 +373,3 @@ class _InvestimentoTile extends ConsumerWidget {
     );
   }
 }
-

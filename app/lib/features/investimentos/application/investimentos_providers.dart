@@ -22,70 +22,100 @@ final investimentosStreamProvider = StreamProvider<List<Investimento>>((ref) {
 
 final movimentosInvestimentoRepositoryProvider =
     Provider<MovimentosInvestimentoRepository>(
-  (ref) => SupabaseMovimentosInvestimentoRepository(),
-);
+      (ref) => SupabaseMovimentosInvestimentoRepository(),
+    );
 
 final movimentosPorInvestimentoProvider =
     StreamProvider.family<List<MovimentoInvestimento>, String>((ref, id) {
-  return ref.watch(movimentosInvestimentoRepositoryProvider)
-      .watchPorInvestimento(id);
-});
+      return ref
+          .watch(movimentosInvestimentoRepositoryProvider)
+          .watchPorInvestimento(id);
+    });
 
 final rendimentosInvestimentoRepositoryProvider =
     Provider<RendimentosInvestimentoRepository>(
-  (ref) => SupabaseRendimentosInvestimentoRepository(),
-);
+      (ref) => SupabaseRendimentosInvestimentoRepository(),
+    );
 
-final rendimentosStreamProvider =
-    StreamProvider<List<RendimentoInvestimento>>((ref) {
+final rendimentosStreamProvider = StreamProvider<List<RendimentoInvestimento>>((
+  ref,
+) {
   return ref.watch(rendimentosInvestimentoRepositoryProvider).watchTodos();
 });
 
 final rendimentosPorAtivoProvider =
     Provider.family<List<RendimentoInvestimento>, String>((ref, id) {
-  final todos = ref.watch(rendimentosStreamProvider).value ?? [];
-  return todos.where((r) => r.investimentoId == id).toList();
-});
+      final todos = ref.watch(rendimentosStreamProvider).value ?? [];
+      return todos.where((r) => r.investimentoId == id).toList();
+    });
 
 /// Patrimônio total somando todos os ativos (qtd×preço ou saldo).
 final patrimonioTotalProvider = Provider<int>((ref) {
   final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
-  return investimentos.fold(
-    0,
-    (sum, inv) => sum + inv.patrimonioCents,
-  );
+  return investimentos.fold(0, (sum, inv) => sum + inv.patrimonioCents);
 });
 
-/// Custo investido por ativo = Σ compras − Σ vendas (qtd×preço).
-/// Para RF/bco a quantidade é 1 e o preço é o valor aplicado/resgatado.
-final custoPorAtivoProvider = Provider<Map<String, int>>((ref) {
-  final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
-  final custo = <String, int>{};
-  for (final inv in investimentos) {
-    final movs =
-        ref.watch(movimentosPorInvestimentoProvider(inv.id)).value ?? [];
-    var total = 0;
-    for (final m in movs) {
-      final sinal = m.tipo == TipoMovimentoInvestimento.compra ? 1 : -1;
-      total += sinal * m.valorCents;
-    }
-    custo[inv.id] = total;
+/// Quanto foi aplicado, quanto vale hoje e quanto rendeu — no total e por
+/// ativo. Só entram na conta os ativos cujo banco informou o valor aplicado
+/// ([semValorInvestido] conta os demais).
+class ResumoRendimentos {
+  const ResumoRendimentos({
+    required this.investidoCents,
+    required this.atualCents,
+    required this.ranking,
+    required this.semValorInvestido,
+  });
+
+  factory ResumoRendimentos.de(List<Investimento> investimentos) {
+    final comDado =
+        investimentos.where((i) => i.valorInvestidoCents != null).toList()
+          ..sort((a, b) => b.rendimentoCents!.compareTo(a.rendimentoCents!));
+    return ResumoRendimentos(
+      investidoCents: comDado.fold(0, (s, i) => s + i.valorInvestidoCents!),
+      atualCents: comDado.fold(0, (s, i) => s + i.patrimonioCents),
+      ranking: comDado,
+      semValorInvestido: investimentos.length - comDado.length,
+    );
   }
-  return custo;
+
+  /// Soma do valor aplicado.
+  final int investidoCents;
+
+  /// Valor atual desses mesmos ativos.
+  final int atualCents;
+
+  /// Ativos com valor aplicado, do que mais rendeu ao que mais perdeu (R$).
+  final List<Investimento> ranking;
+
+  final int semValorInvestido;
+
+  int get rendimentoCents => atualCents - investidoCents;
+
+  double? get rentabilidadePercent =>
+      investidoCents == 0 ? null : rendimentoCents / investidoCents * 100;
+
+  /// O que mais rendeu (null se nenhum teve ganho).
+  Investimento? get maiorGanho =>
+      ranking.isNotEmpty && ranking.first.rendimentoCents! > 0
+      ? ranking.first
+      : null;
+
+  /// O que mais perdeu (null se nenhum teve perda).
+  Investimento? get maiorPerda =>
+      ranking.isNotEmpty && ranking.last.rendimentoCents! < 0
+      ? ranking.last
+      : null;
+}
+
+final resumoRendimentosProvider = Provider<ResumoRendimentos>((ref) {
+  final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
+  return ResumoRendimentos.de(investimentos);
 });
 
-/// Custo total investido (soma de custoPorAtivoProvider).
-final custoTotalProvider = Provider<int>((ref) {
-  final custo = ref.watch(custoPorAtivoProvider);
-  return custo.values.fold(0, (sum, v) => sum + v);
-});
-
-/// Rendimento acumulado total = patrimônio total − custo total.
-final rendimentoAcumuladoProvider = Provider<int>((ref) {
-  final patrimonio = ref.watch(patrimonioTotalProvider);
-  final custo = ref.watch(custoTotalProvider);
-  return patrimonio - custo;
-});
+/// Rendimento total (valor atual − valor aplicado) dos ativos com dado.
+final rendimentoAcumuladoProvider = Provider<int>(
+  (ref) => ref.watch(resumoRendimentosProvider).rendimentoCents,
+);
 
 /// Ordem fixa de exibição das classes na lista.
 const ordemClassesInvestimento = [
@@ -113,8 +143,7 @@ class GrupoInvestimento {
   final List<Investimento> investimentos;
 }
 
-final investimentosPorClasseProvider =
-    Provider<InvestimentosPorClasse>((ref) {
+final investimentosPorClasseProvider = Provider<InvestimentosPorClasse>((ref) {
   final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
 
   final grupos = <GrupoInvestimento>[];
@@ -138,8 +167,7 @@ class MesRendimentos {
   final int mes;
   final List<RendimentoInvestimento> rendimentos;
 
-  int get totalCents =>
-      rendimentos.fold(0, (soma, r) => soma + r.valorCents);
+  int get totalCents => rendimentos.fold(0, (soma, r) => soma + r.valorCents);
 }
 
 /// Rendimentos agregados por mês, do mais recente para o mais antigo.
@@ -147,46 +175,31 @@ final rendimentosPorMesProvider = Provider<List<MesRendimentos>>((ref) {
   final todos = ref.watch(rendimentosStreamProvider).value ?? [];
   final porMes = <String, List<RendimentoInvestimento>>{};
   for (final r in todos) {
-    final chave =
-        '${r.data.year}-${r.data.month.toString().padLeft(2, '0')}';
+    final chave = '${r.data.year}-${r.data.month.toString().padLeft(2, '0')}';
     porMes.putIfAbsent(chave, () => []).add(r);
   }
 
-  final meses = porMes.entries.map((e) {
-    final partes = e.key.split('-');
-    return MesRendimentos(
-      ano: int.parse(partes[0]),
-      mes: int.parse(partes[1]),
-      rendimentos: e.value,
-    );
-  }).toList()
-    ..sort((a, b) {
-      final porAno = a.ano.compareTo(b.ano);
-      return porAno != 0 ? porAno : a.mes.compareTo(b.mes);
-    });
+  final meses =
+      porMes.entries.map((e) {
+        final partes = e.key.split('-');
+        return MesRendimentos(
+          ano: int.parse(partes[0]),
+          mes: int.parse(partes[1]),
+          rendimentos: e.value,
+        );
+      }).toList()..sort((a, b) {
+        final porAno = a.ano.compareTo(b.ano);
+        return porAno != 0 ? porAno : a.mes.compareTo(b.mes);
+      });
   return meses.reversed.toList();
 });
 
-/// Preço Médio (PM) e Rentabilidade apurada por ativo.
-final precoMedioPorAtivoProvider =
-    Provider.family<PrecoMedioResultado?, String>((ref, id) {
-  final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
-  final investimento =
-      investimentos.where((i) => i.id == id).firstOrNull;
-  if (investimento == null) return null;
-
-  final movs = ref.watch(movimentosPorInvestimentoProvider(id)).value ?? [];
-  return InvestimentosCalculosService.calcularPrecoMedio(
-    investimento: investimento,
-    movimentos: movs,
-  );
-});
-
 /// Metas percentuais de alocação por classe de investimento.
-final metasAlocacaoProvider = NotifierProvider<MetasAlocacaoNotifier,
-    Map<TipoClasseInvestimento, double>>(
-  MetasAlocacaoNotifier.new,
-);
+final metasAlocacaoProvider =
+    NotifierProvider<
+      MetasAlocacaoNotifier,
+      Map<TipoClasseInvestimento, double>
+    >(MetasAlocacaoNotifier.new);
 
 class MetasAlocacaoNotifier
     extends Notifier<Map<TipoClasseInvestimento, double>> {
@@ -217,7 +230,8 @@ class MetasAlocacaoNotifier
   }
 
   Future<void> salvarMetas(
-      Map<TipoClasseInvestimento, double> novasMetas) async {
+    Map<TipoClasseInvestimento, double> novasMetas,
+  ) async {
     state = novasMetas;
     final prefs = await SharedPreferences.getInstance();
     for (final entry in novasMetas.entries) {
@@ -227,13 +241,13 @@ class MetasAlocacaoNotifier
 }
 
 /// Sugestões de rebalanceamento da carteira para um determinado valor de aporte em cents.
-final rebalanceamentoSugestoesProvider = Provider.family<
-    List<SugestaoAporteClasse>, int>((ref, aporteCents) {
-  final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
-  final metas = ref.watch(metasAlocacaoProvider);
-  return InvestimentosCalculosService.calcularRebalanceamento(
-    investimentos: investimentos,
-    metasPercentuais: metas,
-    aporteCents: aporteCents,
-  );
-});
+final rebalanceamentoSugestoesProvider =
+    Provider.family<List<SugestaoAporteClasse>, int>((ref, aporteCents) {
+      final investimentos = ref.watch(investimentosStreamProvider).value ?? [];
+      final metas = ref.watch(metasAlocacaoProvider);
+      return InvestimentosCalculosService.calcularRebalanceamento(
+        investimentos: investimentos,
+        metasPercentuais: metas,
+        aporteCents: aporteCents,
+      );
+    });

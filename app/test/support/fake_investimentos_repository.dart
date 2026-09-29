@@ -92,6 +92,7 @@ class FakeInvestimentosRepository implements InvestimentosRepository {
         precoAtualCents: inv.precoAtualCents,
         saldoCents: inv.saldoCents,
         pluggyId: inv.pluggyId,
+        valorInvestidoCents: inv.valorInvestidoCents,
       );
       if (index >= 0) {
         _items[index] = novo;

@@ -16,6 +16,7 @@ class SupabaseInvestimentosRepository implements InvestimentosRepository {
     final map = <String, dynamic>{
       'nome': investimento.nome,
       'classe': investimento.classe.dbValue,
+      'valor_investido_cents': investimento.valorInvestidoCents,
     };
     if (investimento.ePorQuantidade) {
       map['quantidade'] = investimento.quantidade;
@@ -78,9 +79,10 @@ class SupabaseInvestimentosRepository implements InvestimentosRepository {
       final atual = atuais.remove(inv.pluggyId);
       if (atual == null) {
         try {
-          await _db
-              .from(_table)
-              .insert({..._toDb(inv), 'pluggy_id': inv.pluggyId});
+          await _db.from(_table).insert({
+            ..._toDb(inv),
+            'pluggy_id': inv.pluggyId,
+          });
           alterados++;
         } on PostgrestException catch (e) {
           // 23505: outro aparelho importou o mesmo investimento agora.
@@ -116,5 +118,6 @@ class SupabaseInvestimentosRepository implements InvestimentosRepository {
       a.nome == b.nome &&
       a.classe == b.classe &&
       a.patrimonioCents == b.patrimonioCents &&
+      a.valorInvestidoCents == b.valorInvestidoCents &&
       (!a.ePorQuantidade || a.quantidade == b.quantidade);
 }

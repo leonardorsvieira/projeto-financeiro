@@ -76,6 +76,38 @@ void main() {
       expect(inv.patrimonioCents, 50000);
     });
 
+    test('valor aplicado: amountOriginal ou amount − amountProfit', () {
+      final comOriginal = investimentoDaPluggy({
+        'id': 'a',
+        'type': 'FIXED_INCOME',
+        'balance': 1100,
+        'amountOriginal': 1000,
+        'amountProfit': 120,
+      })!;
+      expect(comOriginal.valorInvestidoCents, 100000);
+      expect(comOriginal.rendimentoCents, 10000);
+      expect(comOriginal.rentabilidadePercent, closeTo(10, 0.001));
+
+      final soLucro = investimentoDaPluggy({
+        'id': 'b',
+        'type': 'MUTUAL_FUND',
+        'balance': 480,
+        'amount': 500,
+        'amountProfit': -20,
+      })!;
+      expect(soLucro.valorInvestidoCents, 52000);
+      expect(soLucro.rendimentoCents, -4000);
+
+      final semDado = investimentoDaPluggy({
+        'id': 'c',
+        'type': 'EQUITY',
+        'code': 'BBSE3',
+        'balance': 300,
+      })!;
+      expect(semDado.valorInvestidoCents, isNull);
+      expect(semDado.rendimentoCents, isNull);
+    });
+
     test('ignora resgatados e saldo zerado', () {
       expect(
         investimentoDaPluggy({

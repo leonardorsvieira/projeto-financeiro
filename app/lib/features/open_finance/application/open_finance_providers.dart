@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderListenable, ProviderOrFamily;
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/env.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
@@ -156,17 +157,25 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
     final obsTag = 'pluggy_id:${t.id}';
     if (idsExistentes.contains(obsTag)) continue;
 
-    await lancamentoRepo.create(
-      descricao: t.descricao,
-      valorCents: t.valorCents,
-      categoria: t.categoriaSugerida,
-      formaPagamento: t.formaPagamento,
-      data: t.data,
-      tipo: t.isReceita ? TipoLancamento.receita : TipoLancamento.despesa,
-      obs: obsTag,
-    );
+    try {
+      await lancamentoRepo.create(
+        // A coluna aceita até 200 caracteres.
+        descricao: t.descricao.length > 200
+            ? t.descricao.substring(0, 200)
+            : t.descricao,
+        valorCents: t.valorCents,
+        categoria: t.categoriaSugerida,
+        formaPagamento: t.formaPagamento,
+        data: t.data,
+        tipo: t.isReceita ? TipoLancamento.receita : TipoLancamento.despesa,
+        obs: obsTag,
+      );
+      transacoesImportadas++;
+    } on PostgrestException catch (e) {
+      // 23505: o webhook (ou outro aparelho) já importou esta transação.
+      if (e.code != '23505') rethrow;
+    }
     idsExistentes.add(obsTag);
-    transacoesImportadas++;
   }
 
   // Atualiza os streams

@@ -13,6 +13,7 @@ class FakeAuthRepository implements AuthRepository {
   final _controller = StreamController<AuthState>.broadcast();
   Object? signInError;
   Object? signUpError;
+  bool signUpExigeConfirmacao = false;
 
   void emit(AuthState state) {
     _state = state;
@@ -29,8 +30,9 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> signUp(String email, String password) async {
+  Future<bool> signUp(String email, String password) async {
     if (signUpError != null) throw signUpError!;
+    return signUpExigeConfirmacao;
   }
 
   @override

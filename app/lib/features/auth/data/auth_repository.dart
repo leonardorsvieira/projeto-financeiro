@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart'
     hide AuthState;
 
@@ -8,7 +9,9 @@ abstract class AuthRepository {
 
   String? get currentEmail;
 
-  Future<void> signUp(String email, String password);
+  /// Cria a conta. Devolve true quando é preciso confirmar o e-mail antes de
+  /// entrar (o Supabase não abre sessão até o clique no link).
+  Future<bool> signUp(String email, String password);
 
   Future<void> signIn(String email, String password);
 
@@ -34,8 +37,14 @@ class SupabaseAuthRepository implements AuthRepository {
   String? get currentEmail => _auth.currentSession?.user.email;
 
   @override
-  Future<void> signUp(String email, String password) async {
-    await _auth.signUp(email: email, password: password);
+  Future<bool> signUp(String email, String password) async {
+    final resposta = await _auth.signUp(
+      email: email,
+      password: password,
+      // Na web, o link de confirmação volta para este mesmo site.
+      emailRedirectTo: kIsWeb ? Uri.base.removeFragment().toString() : null,
+    );
+    return resposta.session == null;
   }
 
   @override

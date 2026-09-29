@@ -69,6 +69,25 @@ void main() {
     expect(find.text('As senhas não coincidem.'), findsOneWidget);
   });
 
+  testWidgets('cadastro: com confirmação de e-mail, avisa para abrir o link',
+      (tester) async {
+    final fake = FakeAuthRepository(
+      const AuthState(AuthStatus.unauthenticated),
+    )..signUpExigeConfirmacao = true;
+    await pumpSignup(tester, fake);
+
+    await tester.enterText(find.byType(TextFormField).at(0), 'leo@meubolso.com');
+    await tester.enterText(find.byType(TextFormField).at(1), 'senha12345');
+    await tester.enterText(find.byType(TextFormField).at(2), 'senha12345');
+    await tester.tap(find.widgetWithText(FilledButton, 'Criar conta'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Enviamos um link de confirmação para leo@meubolso.com'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('login: credenciais inválidas exibem mensagem amigável',
       (tester) async {
     final fake = FakeAuthRepository(

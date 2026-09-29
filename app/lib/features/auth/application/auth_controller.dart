@@ -22,7 +22,8 @@ class AuthController extends StreamNotifier<AuthState> {
     return _repo.signIn(email.trim(), password);
   }
 
-  Future<void> signUp(String email, String password) {
+  /// true = conta criada, falta confirmar o e-mail.
+  Future<bool> signUp(String email, String password) {
     return _repo.signUp(email.trim(), password);
   }
 

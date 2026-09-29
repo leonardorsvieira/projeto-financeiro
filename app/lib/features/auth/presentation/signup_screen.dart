@@ -21,6 +21,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   String? _errorText;
+  String? _avisoConfirmacao;
 
   @override
   void dispose() {
@@ -34,13 +35,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _errorText = null);
+    setState(() {
+      _errorText = null;
+      _avisoConfirmacao = null;
+    });
     final controller = ref.read(authControllerProvider.notifier);
     try {
-      await controller.signUp(
+      final precisaConfirmar = await controller.signUp(
         _emailController.text,
         _passwordController.text,
       );
+      if (precisaConfirmar && mounted) {
+        setState(() => _avisoConfirmacao =
+            'Enviamos um link de confirmação para '
+            '${_emailController.text.trim()}. Abra seu e-mail, clique no '
+            'link e depois entre com sua senha.');
+      }
     } catch (e) {
       setState(() => _errorText = friendlyAuthError(e));
     }
@@ -156,6 +166,33 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         return null;
                       },
                     ),
+                    if (_avisoConfirmacao != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.mark_email_read_outlined,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _avisoConfirmacao!,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     if (_errorText != null) ...[
                       const SizedBox(height: 16),
                       Text(

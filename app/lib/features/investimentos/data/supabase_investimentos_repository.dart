@@ -63,4 +63,48 @@ class SupabaseInvestimentosRepository implements InvestimentosRepository {
   Future<void> delete(String id) async {
     await _db.from(_table).delete().eq('id', id);
   }
+
+  @override
+  Future<int> sincronizarOpenFinance(
+    List<Investimento> importados, {
+    required bool removerAusentes,
+  }) async {
+    final rows = await _db.from(_table).select().not('pluggy_id', 'is', null);
+    final atuais = {
+      for (final r in rows) r['pluggy_id'] as String: Investimento.fromMap(r),
+    };
+    var alterados = 0;
+    for (final inv in importados) {
+      final atual = atuais.remove(inv.pluggyId);
+      if (atual == null) {
+        try {
+          await _db
+              .from(_table)
+              .insert({..._toDb(inv), 'pluggy_id': inv.pluggyId});
+          alterados++;
+        } on PostgrestException catch (e) {
+          // 23505: outro aparelho importou o mesmo investimento agora.
+          if (e.code != '23505') rethrow;
+        }
+      } else if (!_mesmaPosicao(atual, inv)) {
+        await _db.from(_table).update(_toDb(inv)).eq('id', atual.id);
+        alterados++;
+      }
+    }
+    if (removerAusentes && atuais.isNotEmpty) {
+      await _db
+          .from(_table)
+          .delete()
+          .inFilter('id', atuais.values.map((i) => i.id).toList());
+      alterados += atuais.length;
+    }
+    return alterados;
+  }
+
+  /// Evita reescrever (e disparar o realtime) quando nada mudou.
+  bool _mesmaPosicao(Investimento a, Investimento b) =>
+      a.nome == b.nome &&
+      a.classe == b.classe &&
+      a.patrimonioCents == b.patrimonioCents &&
+      (!a.ePorQuantidade || a.quantidade == b.quantidade);
 }

@@ -28,6 +28,7 @@ class Investimento {
     this.quantidade = 0,
     this.precoAtualCents = 0,
     this.saldoCents = 0,
+    this.pluggyId,
   });
 
   final String id;
@@ -36,6 +37,12 @@ class Investimento {
   final double quantidade;
   final int precoAtualCents;
   final int saldoCents;
+
+  /// Id do investimento na Pluggy quando veio do Open Finance (null = manual).
+  /// A sincronização sobrescreve esses ativos com a posição do banco.
+  final String? pluggyId;
+
+  bool get importadoOpenFinance => pluggyId != null;
 
   bool get ePorQuantidade => classe.ePorQuantidade;
 
@@ -55,6 +62,7 @@ class Investimento {
       'quantidade': quantidade,
       'preco_atual_cents': precoAtualCents,
       'saldo_cents': saldoCents,
+      if (pluggyId != null) 'pluggy_id': pluggyId,
     };
   }
 
@@ -66,6 +74,7 @@ class Investimento {
       quantidade: ((map['quantidade'] as num?) ?? 0).toDouble(),
       precoAtualCents: ((map['preco_atual_cents'] as num?) ?? 0).toInt(),
       saldoCents: ((map['saldo_cents'] as num?) ?? 0).toInt(),
+      pluggyId: map['pluggy_id'] as String?,
     );
   }
 }

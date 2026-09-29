@@ -256,6 +256,21 @@ async function atender(req: Request): Promise<Response> {
     return repassar(req, r, await r.text());
   }
 
+  // Posições de investimento de um item (paginado por page/pageSize).
+  if (metodo === "GET" && seg[0] === "investments" && seg.length === 1) {
+    const itemId = q.get("itemId");
+    if (!itemId || !(await ehDono(uid, itemId))) {
+      return resposta(req, 404, { erro: "item_nao_encontrado" });
+    }
+    const params = new URLSearchParams({ itemId });
+    for (const k of ["page", "pageSize"]) {
+      const v = q.get(k);
+      if (v && /^\d{1,4}$/.test(v)) params.set(k, v);
+    }
+    const r = await pluggy("GET", `/investments?${params}`);
+    return repassar(req, r, await r.text());
+  }
+
   // Transações: /v2/transactions (cursor). O /transactions antigo responde 410
   // para aplicações novas da Pluggy.
   if (

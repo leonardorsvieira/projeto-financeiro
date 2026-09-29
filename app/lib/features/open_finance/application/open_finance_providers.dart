@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/misc.dart' show ProviderListenable, ProviderOrF
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/env.dart';
+import '../../investimentos/application/investimentos_providers.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
 import '../../lancamentos/domain/lancamento.dart';
 import '../data/bank_notification_parser.dart';
@@ -118,9 +119,13 @@ class ResultadoSincronizacaoPluggy {
   final int contasSincronizadas;
   final int transacoesNovas;
 
+  /// Investimentos do Patrimônio criados/atualizados/removidos.
+  final int investimentosAtualizados;
+
   const ResultadoSincronizacaoPluggy({
     required this.contasSincronizadas,
     required this.transacoesNovas,
+    this.investimentosAtualizados = 0,
   });
 }
 
@@ -205,9 +210,25 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
   // Atualiza os streams
   invalidar(lancamentosStreamProvider);
 
+  // 4. Posições de investimento → Patrimônio. Uma falha aqui não desfaz a
+  // importação das transações.
+  var investimentosAtualizados = 0;
+  try {
+    final posicoes =
+        await service.buscarInvestimentos(listaParaBuscarTransacoes);
+    investimentosAtualizados =
+        await ler(investimentosRepositoryProvider).sincronizarOpenFinance(
+      posicoes.investimentos,
+      removerAusentes: posicoes.completo,
+    );
+  } on Object catch (e) {
+    debugPrint('Importação de investimentos falhou: $e');
+  }
+
   return ResultadoSincronizacaoPluggy(
     contasSincronizadas: listaParaBuscarTransacoes.length,
     transacoesNovas: transacoesImportadas,
+    investimentosAtualizados: investimentosAtualizados,
   );
 }
 

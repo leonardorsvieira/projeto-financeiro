@@ -138,7 +138,8 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Sincronização concluída! ${res.contasSincronizadas} banco(s) e ${res.transacoesNovas} transação(ões) nova(s) importada(s).',
+            'Sincronização concluída! ${res.contasSincronizadas} banco(s) e ${res.transacoesNovas} transação(ões) nova(s) importada(s).'
+            '${res.investimentosAtualizados > 0 ? ' ${res.investimentosAtualizados} investimento(s) atualizado(s) no Patrimônio.' : ''}',
           ),
           backgroundColor: Colors.green.shade700,
         ),

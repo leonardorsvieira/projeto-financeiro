@@ -66,4 +66,38 @@ class FakeInvestimentosRepository implements InvestimentosRepository {
     _items.removeWhere((m) => m.id == id);
     _emit();
   }
+
+  @override
+  Future<int> sincronizarOpenFinance(
+    List<Investimento> importados, {
+    required bool removerAusentes,
+  }) async {
+    final ids = importados.map((i) => i.pluggyId).toSet();
+    final antes = _items.length;
+    if (removerAusentes) {
+      _items.removeWhere(
+          (i) => i.pluggyId != null && !ids.contains(i.pluggyId));
+    }
+    var alterados = antes - _items.length;
+    for (final inv in importados) {
+      final index = _items.indexWhere((i) => i.pluggyId == inv.pluggyId);
+      final novo = Investimento(
+        id: index >= 0 ? _items[index].id : 'inv-pluggy-${inv.pluggyId}',
+        classe: inv.classe,
+        nome: inv.nome,
+        quantidade: inv.quantidade,
+        precoAtualCents: inv.precoAtualCents,
+        saldoCents: inv.saldoCents,
+        pluggyId: inv.pluggyId,
+      );
+      if (index >= 0) {
+        _items[index] = novo;
+      } else {
+        _items.add(novo);
+      }
+      alterados++;
+    }
+    _emit();
+    return alterados;
+  }
 }

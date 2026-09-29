@@ -373,7 +373,11 @@ class _InvestimentoTile extends ConsumerWidget {
           ),
         ),
         title: Text(investimento.nome),
-        subtitle: Text(_subtitle(pm)),
+        subtitle: Text(
+          investimento.importadoOpenFinance
+              ? '${_subtitle(pm)} · Open Finance'
+              : _subtitle(pm),
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

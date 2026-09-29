@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/edge_function.dart';
+import '../../investimentos/domain/investimento.dart';
 import '../../lancamentos/domain/lancamento.dart'
     show categoriaMovimentacaoInvestimento, categoriaTransferenciaEntreContas;
 import '../domain/conta_bancaria_conectada.dart';
@@ -105,6 +106,91 @@ String? categoriaNeutra({
     return categoriaTransferenciaEntreContas;
   }
   return null;
+}
+
+/// Classe do Patrimônio para um investimento da Pluggy (`type`/`subtype`).
+TipoClasseInvestimento classeDoInvestimentoPluggy(String? tipo, String? subtipo) {
+  final t = (tipo ?? '').toUpperCase();
+  final s = (subtipo ?? '').toUpperCase();
+  if (s.contains('CRYPTO')) return TipoClasseInvestimento.cripto;
+  if (s.contains('REAL_ESTATE')) return TipoClasseInvestimento.fii;
+  if (t == 'EQUITY' || t == 'ETF') return TipoClasseInvestimento.acao;
+  // FIXED_INCOME, MUTUAL_FUND, SECURITY (previdência), COE, OTHER.
+  return TipoClasseInvestimento.rendaFixa;
+}
+
+int _centavos(Object? valor) =>
+    (((valor as num?) ?? 0).toDouble() * 100).round().clamp(0, 1 << 52);
+
+/// Converte um investimento da Pluggy em posição do Patrimônio, ou null se já
+/// foi resgatado (status TOTAL_WITHDRAWAL ou saldo zerado).
+Investimento? investimentoDaPluggy(Map<String, dynamic> inv) {
+  final id = inv['id'] as String?;
+  final saldoCents = _centavos(inv['balance'] ?? inv['amount']);
+  if (id == null ||
+      (inv['status'] as String?)?.toUpperCase() == 'TOTAL_WITHDRAWAL' ||
+      saldoCents <= 0) {
+    return null;
+  }
+  final classe = classeDoInvestimentoPluggy(
+    inv['type'] as String?,
+    inv['subtype'] as String?,
+  );
+  final codigo = (inv['code'] as String?)?.trim() ?? '';
+  final nomePluggy = (inv['name'] as String?)?.trim() ?? '';
+  if (classe.ePorQuantidade) {
+    // O ticker vira o nome: é o que a atualização de cotações procura.
+    final nome = codigo.isNotEmpty
+        ? codigo
+        : (nomePluggy.isNotEmpty ? nomePluggy : 'Ativo');
+    final quantidade = ((inv['quantity'] as num?) ?? 0).toDouble();
+    final precoCents = _centavos(inv['value']);
+    if (quantidade > 0 && precoCents > 0) {
+      return Investimento(
+        id: '',
+        classe: classe,
+        nome: nome,
+        quantidade: quantidade,
+        precoAtualCents: precoCents,
+        pluggyId: id,
+      );
+    }
+    // Sem quantidade/preço: registra a posição inteira como 1 unidade.
+    return Investimento(
+      id: '',
+      classe: classe,
+      nome: nome,
+      quantidade: 1,
+      precoAtualCents: saldoCents,
+      pluggyId: id,
+    );
+  }
+  final emissor = (inv['issuer'] as String?)?.trim() ?? '';
+  var nome = nomePluggy.isNotEmpty ? nomePluggy : (codigo.isNotEmpty ? codigo : 'Investimento');
+  if (emissor.isNotEmpty && !nome.toLowerCase().contains(emissor.toLowerCase())) {
+    nome = '$nome · $emissor';
+  }
+  return Investimento(
+    id: '',
+    classe: classe,
+    nome: nome,
+    saldoCents: saldoCents,
+    pluggyId: id,
+  );
+}
+
+/// Posições de investimento vindas das conexões Pluggy.
+class InvestimentosOpenFinance {
+  const InvestimentosOpenFinance({
+    required this.investimentos,
+    required this.completo,
+  });
+
+  final List<Investimento> investimentos;
+
+  /// true se todas as conexões responderam: só então é seguro remover do
+  /// Patrimônio os importados que não vieram mais.
+  final bool completo;
 }
 
 class ConexaoMeuPluggyResult {
@@ -659,6 +745,49 @@ class PluggyOpenFinanceService {
     }
 
     return todasTransacoes;
+  }
+
+  static const int _maxPaginasInvestimentos = 10;
+
+  /// Investimentos (CDB, fundos, ações, previdência…) de todas as conexões.
+  Future<InvestimentosOpenFinance> buscarInvestimentos(
+    List<ContaBancariaConectada> contas,
+  ) async {
+    final investimentos = <Investimento>[];
+    var completo = true;
+    for (final conta in contas) {
+      final itemId = conta.itemIdPluggy ?? conta.id;
+      if (itemId.startsWith('pluggy_item_') || itemId.startsWith('banco_')) {
+        continue;
+      }
+      try {
+        for (var pagina = 1; pagina <= _maxPaginasInvestimentos; pagina++) {
+          final query = Uri(queryParameters: {
+            'itemId': itemId,
+            'page': '$pagina',
+            'pageSize': '500',
+          }).query;
+          final resp = await _chamar('GET', '/investments?$query');
+          if (resp.statusCode != 200) {
+            completo = false;
+            break;
+          }
+          final data = jsonDecode(resp.body) as Map<String, dynamic>;
+          for (final raw in (data['results'] as List<dynamic>?) ?? const []) {
+            final inv = investimentoDaPluggy(raw as Map<String, dynamic>);
+            if (inv != null) investimentos.add(inv);
+          }
+          final totalPaginas = (data['totalPages'] as num?)?.toInt() ?? 1;
+          if (pagina >= totalPaginas) break;
+        }
+      } catch (_) {
+        completo = false;
+      }
+    }
+    return InvestimentosOpenFinance(
+      investimentos: investimentos,
+      completo: completo,
+    );
   }
 
   /// Conecta uma nova instituição bancária localmente ou via Pluggy.

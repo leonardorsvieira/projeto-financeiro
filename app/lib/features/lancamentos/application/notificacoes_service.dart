@@ -209,8 +209,8 @@ class NotificacoesService {
     try {
       await _plugin.show(
         id: 99999,
-        title: '🔔 Meu Bolso',
-        body: 'As notificações estão ativas e funcionando no seu dispositivo!',
+        title: 'Meu Bolso',
+        body: 'As notificações estão ativas neste dispositivo.',
         notificationDetails: details,
       );
       return true;

@@ -41,7 +41,7 @@ void main() {
     await tester.tap(find.text('Livro-caixa'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
+    expect(find.text('Página em branco'), findsOneWidget);
     expect(find.byType(SplashScreen), findsNothing);
   });
 
@@ -61,7 +61,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Livro-caixa'));
     await tester.pumpAndSettle();
-    expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
+    expect(find.text('Página em branco'), findsOneWidget);
 
     fake.emit(const AuthState(AuthStatus.unauthenticated));
     await tester.pumpAndSettle();

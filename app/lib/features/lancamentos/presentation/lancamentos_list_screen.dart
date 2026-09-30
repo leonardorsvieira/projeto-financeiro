@@ -59,9 +59,9 @@ class _ErrorState extends StatelessWidget {
               color: theme.colorScheme.error,
             ),
             const SizedBox(height: 12),
-            const Text('Não foi possível carregar os lançamentos.'),
+            const Text('Não foi possível carregar o livro-caixa.'),
             const SizedBox(height: 12),
-            FilledButton.tonal(onPressed: onRetry, child: const Text('Tentar de novo')),
+            FilledButton.tonal(onPressed: onRetry, child: const Text('Tentar novamente')),
           ],
         ),
       ),
@@ -91,12 +91,12 @@ class _EmptyState extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Nenhum lançamento ainda',
+                  'Página em branco',
                   style: theme.textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Toque em + para registrar sua primeira despesa.',
+                  'Os lançamentos do período aparecerão aqui.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium,
                 ),
@@ -181,7 +181,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
           isFixa
               ? 'Este lançamento faz parte de uma série fixa mensal.\n'
                   'O que deseja fazer?'
-              : 'Você está prestes a excluir "${lancamento.descricao}". '
+              : 'Deseja excluir "${lancamento.descricao}"? '
                   'Essa ação não pode ser desfeita.',
         ),
         actions: [
@@ -229,7 +229,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
       }
     } catch (_) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Não foi possível excluir.')),
+        const SnackBar(content: Text('Não foi possível excluir o lançamento. Tente novamente.')),
       );
     }
   }
@@ -261,7 +261,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
                 controller: _buscaController,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Buscar lançamento por nome ou categoria...',
+                  hintText: 'Buscar lançamento',
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _buscaController.text.isNotEmpty
                       ? IconButton(
@@ -311,7 +311,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
           child: filtrados.isEmpty
               ? Center(
                   child: Text(
-                    'Nenhum lançamento encontrado.',
+                    'Nenhum lançamento corresponde à busca.',
                     style: theme.textTheme.bodyMedium,
                   ),
                 )

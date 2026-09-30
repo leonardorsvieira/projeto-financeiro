@@ -41,8 +41,8 @@ class CartoesNotificacoesService {
           if (now.year == anoValidade && now.month == mesValidade) {
             await plugin.show(
               id: (cartao.id.hashCode + 900).abs() % 100000,
-              title: '⚠️ Validade do Cartão ${cartao.nome}',
-              body: 'Seu cartão ${cartao.nome} expira este mês (${cartao.validadeMMYY}). Verifique a 2ª via enviada pelo banco.',
+              title: 'Validade do cartão ${cartao.nome}',
+              body: 'Seu cartão ${cartao.nome} expira este mês (${cartao.validadeMMYY}). Verifique a segunda via enviada pelo banco.',
               notificationDetails: details,
             );
           }
@@ -58,11 +58,11 @@ class CartoesNotificacoesService {
 
         final diasRestantes = proxVencimento.difference(DateTime(now.year, now.month, now.day)).inDays;
         if (diasRestantes <= 3 && diasRestantes >= 0) {
-          final textoDias = diasRestantes == 0 ? 'vence HOJE' : 'vence em $diasRestantes dia(s)';
+          final textoDias = diasRestantes == 0 ? 'vence hoje' : 'vence em $diasRestantes ${diasRestantes == 1 ? 'dia' : 'dias'}';
           await plugin.show(
             id: (cartao.id.hashCode + 100).abs() % 100000,
-            title: '💳 Fatura ${cartao.nome}',
-            body: 'A fatura do seu cartão ${cartao.nome} (dia ${cartao.diaVencimento}) $textoDias. Lembre-se de realizar o pagamento!',
+            title: 'Fatura do cartão ${cartao.nome}',
+            body: 'A fatura do seu cartão ${cartao.nome} (dia ${cartao.diaVencimento}) $textoDias. Não esqueça de realizar o pagamento.',
             notificationDetails: details,
           );
         }

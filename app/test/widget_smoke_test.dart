@@ -23,7 +23,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(LancamentosListScreen), findsOneWidget);
-    expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
+    expect(find.text('Página em branco'), findsOneWidget);
     expect(find.byTooltip('Novo lançamento'), findsOneWidget);
     expect(find.text('Ditar'), findsOneWidget);
   });

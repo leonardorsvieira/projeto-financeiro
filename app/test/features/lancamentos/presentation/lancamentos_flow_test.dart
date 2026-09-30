@@ -61,7 +61,7 @@ void main() {
   testWidgets('T1: lista vazia mostra empty state', (tester) async {
     await pumpApp(tester);
 
-    expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
+    expect(find.text('Página em branco'), findsOneWidget);
   });
 
   testWidgets('T2: lista com itens renderiza descrição e valor BRL',
@@ -87,7 +87,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(fake.createCount, 1);
-    expect(find.text('Nenhum lançamento ainda'), findsNothing);
+    expect(find.text('Página em branco'), findsNothing);
     expect(find.text('Mercado'), findsOneWidget);
     expect(find.text('-R\$ 89,90'), findsOneWidget);
   });
@@ -158,7 +158,7 @@ void main() {
 
     expect(fake.deleteCount, 1);
     expect(find.text('Armário'), findsNothing);
-    expect(find.text('Nenhum lançamento ainda'), findsOneWidget);
+    expect(find.text('Página em branco'), findsOneWidget);
   });
 
   testWidgets('T7: criar receita via formulário persiste tipo', (tester) async {

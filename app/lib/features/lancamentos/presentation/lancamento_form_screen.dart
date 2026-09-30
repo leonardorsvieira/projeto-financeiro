@@ -116,13 +116,13 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
         final item = _itens[i];
         if (item.descricao.trim().isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Item ${i + 1}: descrição obrigatória')),
+            SnackBar(content: Text('Item ${i + 1}: informe a descrição.')),
           );
           return;
         }
         if (item.valorCents == null || item.valorCents! <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Item ${i + 1}: valor obrigatório')),
+            SnackBar(content: Text('Item ${i + 1}: informe o valor.')),
           );
           return;
         }
@@ -136,7 +136,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
       final parsed = parseValorBRLParaCentavos(_valorController.text);
       if (parsed == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Valor inválido')),
+          const SnackBar(content: Text('Informe um valor válido.')),
         );
         return;
       }
@@ -153,7 +153,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
       final dia = int.tryParse(_diaVencimentoController.text);
       if (dia == null || dia < 1 || dia > 31) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dia do vencimento inválido (1-31)')),
+          const SnackBar(content: Text('Informe um dia de vencimento entre 1 e 31.')),
         );
         return;
       }
@@ -225,7 +225,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
       if (mounted) context.pop();
     } catch (_) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Não foi possível salvar.')),
+        const SnackBar(content: Text('Não foi possível registrar o lançamento. Tente novamente.')),
       );
       if (mounted) setState(() => _isSaving = false);
     }
@@ -448,7 +448,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                             ? null
                             : (v) => setState(() => _fixoMensal = v ?? false),
                         title: const Text('Despesa fixa mensal'),
-                        subtitle: const Text('Gera cópias automáticas nos próximos meses'),
+                        subtitle: const Text('Repete automaticamente nos próximos meses.'),
                         controlAffinity: ListTileControlAffinity.leading,
                         contentPadding: EdgeInsets.zero,
                       ),

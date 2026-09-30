@@ -135,7 +135,7 @@ class _LembretesPreferenciasDialogState
                 SnackBar(
                   content: Text(
                     ok
-                        ? 'Notificação enviada para o dispositivo!'
+                        ? 'Notificação enviada para o dispositivo.'
                         : 'Permita as notificações nas configurações do dispositivo.',
                   ),
                 ),

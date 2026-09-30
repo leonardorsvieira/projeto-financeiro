@@ -68,6 +68,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
         bottom: TabBar(
           controller: _tabController,
+          // Folga para a pílula da aba selecionada (indicador do tema).
+          indicatorPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 4,
+          ),
           tabs: const [
             Tab(icon: Icon(Icons.space_dashboard_outlined), text: 'Resumo'),
             Tab(icon: Icon(Icons.list_alt_outlined), text: 'Livro-caixa'),

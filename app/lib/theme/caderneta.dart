@@ -15,6 +15,8 @@ class CadernetaCores {
     required this.receita,
     required this.pauta,
     required this.divisor,
+    required this.contorno,
+    required this.sombra,
   });
 
   final Color papel;
@@ -30,6 +32,12 @@ class CadernetaCores {
   final Color pauta;
   final Color divisor;
 
+  /// Borda fina e translúcida de cards, campos e chips.
+  final Color contorno;
+
+  /// Cor da sombra suave de "papel levantado".
+  final Color sombra;
+
   static const claro = CadernetaCores._(
     papel: Color(0xFFF4ECD8),
     papelClaro: Color(0xFFFBF6EA),
@@ -43,6 +51,8 @@ class CadernetaCores {
     receita: Color(0xFF2D6A3E),
     pauta: Color(0xFFD9CCAA),
     divisor: Color(0xFFCDBF9C),
+    contorno: Color(0x381D2A47),
+    sombra: Color(0x241D2A47),
   );
 
   // Noturna: superficie elevada #1c2844 (mais clara que o papel #17213a),
@@ -60,6 +70,8 @@ class CadernetaCores {
     receita: Color(0xFF7FBF8E),
     pauta: Color(0xFF243154),
     divisor: Color(0xFF243154),
+    contorno: Color(0x33F1E8D2),
+    sombra: Color(0x66000000),
   );
 
   static CadernetaCores de(Brightness b) =>
@@ -72,10 +84,11 @@ class CadernetaCores {
 class Caderneta {
   Caderneta._();
 
-  static const double borda = 1.5;
-  static const double raioCard = 4.0;
-  static const double raioChip = 3.0;
-  static const double raioBotao = 3.0;
+  static const double borda = 1.0;
+  static const double raioCard = 16.0;
+  static const double raioGrande = 24.0;
+  static const double raioChip = 999.0;
+  static const double raioBotao = 14.0;
   static const double alturaBarra = 8.0;
   static const double espacoPauta = 28.0;
 
@@ -117,6 +130,11 @@ class Caderneta {
     Color(0xFFE0A29B),
     Color(0xFFA3C48F),
     Color(0xFF8C8A80),
+  ];
+
+  /// Sombra bem suave de papel levantado (cards e cartão de saldo).
+  static List<BoxShadow> sombraPapel(CadernetaCores c) => [
+    BoxShadow(color: c.sombra, blurRadius: 18, offset: const Offset(0, 6)),
   ];
 
   static List<Color> paletaCategorias(Brightness b) =>
@@ -248,10 +266,14 @@ class PapelPautado extends StatelessWidget {
       position: DecorationPosition.foreground,
       decoration: BoxDecoration(
         borderRadius: raio,
-        border: Border.all(color: c.tinta, width: Caderneta.borda),
+        border: Border.all(color: c.contorno, width: Caderneta.borda),
       ),
       child: DecoratedBox(
-        decoration: BoxDecoration(color: c.papelClaro, borderRadius: raio),
+        decoration: BoxDecoration(
+          color: c.papelClaro,
+          borderRadius: raio,
+          boxShadow: Caderneta.sombraPapel(c),
+        ),
         child: ClipRRect(
           borderRadius: raio,
           child: CustomPaint(

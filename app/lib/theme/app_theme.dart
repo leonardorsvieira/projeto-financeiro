@@ -89,17 +89,17 @@ class AppTheme {
       shadow: Colors.transparent,
       scrim: Colors.black,
     );
-    final borda = BorderSide(color: c.tinta, width: Caderneta.borda);
+    // Borda fina e translúcida; a tinta cheia fica para foco e botões.
+    final borda = BorderSide(color: c.contorno, width: Caderneta.borda);
+    final bordaTinta = BorderSide(color: c.tinta, width: Caderneta.borda);
     final raioCard = BorderRadius.circular(Caderneta.raioCard);
+    final raioGrande = BorderRadius.circular(Caderneta.raioGrande);
     final raioBotao = BorderRadius.circular(Caderneta.raioBotao);
     final formaCard = RoundedRectangleBorder(
       borderRadius: raioCard,
       side: borda,
     );
-    final formaBotao = RoundedRectangleBorder(
-      borderRadius: raioBotao,
-      side: borda,
-    );
+    final formaBotao = RoundedRectangleBorder(borderRadius: raioBotao);
     final textTheme = _textTheme(c);
     const semSombra = Colors.transparent;
 
@@ -126,7 +126,6 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         foregroundColor: c.tinta,
-        shape: Border(bottom: borda),
         titleTextStyle: CadernetaTexto.display(
           size: 22,
           cor: c.tinta,
@@ -134,9 +133,14 @@ class AppTheme {
         ),
       ),
       tabBarTheme: TabBarThemeData(
-        dividerColor: c.divisor,
-        indicatorColor: c.tinta,
+        dividerColor: Colors.transparent,
+        // Aba selecionada em pílula de papel, em vez de sublinhado reto.
+        indicator: BoxDecoration(
+          color: c.papelChip,
+          borderRadius: BorderRadius.circular(Caderneta.raioChip),
+        ),
         indicatorSize: TabBarIndicatorSize.tab,
+        splashBorderRadius: BorderRadius.circular(Caderneta.raioChip),
         labelColor: c.tinta,
         unselectedLabelColor: c.apagado,
         labelStyle: CadernetaTexto.corpo(size: 14, peso: FontWeight.w600),
@@ -147,18 +151,18 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: c.papelClaro,
-        elevation: 0,
-        shadowColor: semSombra,
+        elevation: 2,
+        shadowColor: c.sombra,
         surfaceTintColor: semSombra,
         shape: formaCard,
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: c.papelClaro,
         surfaceTintColor: semSombra,
-        shadowColor: semSombra,
-        elevation: 0,
+        shadowColor: c.sombra,
+        elevation: 6,
         barrierColor: Colors.black.withValues(alpha: 0.35),
-        shape: formaCard,
+        shape: RoundedRectangleBorder(borderRadius: raioGrande, side: borda),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: c.papelClaro,
@@ -169,16 +173,18 @@ class AppTheme {
         modalBarrierColor: Colors.black.withValues(alpha: 0.35),
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(Caderneta.raioCard),
+            top: Radius.circular(Caderneta.raioGrande),
           ),
           side: borda,
         ),
+        showDragHandle: true,
+        dragHandleColor: c.divisor,
       ),
       popupMenuTheme: PopupMenuThemeData(
         color: c.papelClaro,
         surfaceTintColor: semSombra,
-        shadowColor: semSombra,
-        elevation: 0,
+        shadowColor: c.sombra,
+        elevation: 4,
         shape: formaCard,
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -197,12 +203,12 @@ class AppTheme {
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: c.tinta,
         foregroundColor: c.tintaSobrePrimaria,
-        elevation: 0,
-        focusElevation: 0,
-        hoverElevation: 0,
-        highlightElevation: 0,
+        elevation: 3,
+        focusElevation: 3,
+        hoverElevation: 4,
+        highlightElevation: 2,
         disabledElevation: 0,
-        shape: formaBotao,
+        shape: const StadiumBorder(),
         extendedTextStyle: CadernetaTexto.corpo(
           size: 14,
           peso: FontWeight.w600,
@@ -219,7 +225,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: raioBotao,
-          borderSide: BorderSide(color: c.tinta, width: 2),
+          borderSide: BorderSide(color: c.tinta, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: raioBotao,
@@ -257,7 +263,7 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: c.tinta,
-          side: borda,
+          side: bordaTinta,
           shape: RoundedRectangleBorder(borderRadius: raioBotao),
           textStyle: CadernetaTexto.corpo(size: 14, peso: FontWeight.w600),
         ),
@@ -280,9 +286,7 @@ class AppTheme {
         pressElevation: 0,
         shadowColor: semSombra,
         surfaceTintColor: semSombra,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Caderneta.raioChip),
-        ),
+        shape: const StadiumBorder(),
         labelStyle: CadernetaTexto.corpo(
           size: 13,
           peso: FontWeight.w500,
@@ -299,7 +303,7 @@ class AppTheme {
         color: c.tinta,
         linearTrackColor: c.trilho,
         linearMinHeight: Caderneta.alturaBarra,
-        borderRadius: BorderRadius.zero,
+        borderRadius: BorderRadius.circular(Caderneta.alturaBarra),
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
@@ -316,7 +320,8 @@ class AppTheme {
               s.contains(WidgetState.selected) ? c.tinta : Colors.transparent,
         ),
         checkColor: WidgetStatePropertyAll(c.tintaSobrePrimaria),
-        side: borda,
+        side: bordaTinta,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
       ),
       radioTheme: RadioThemeData(fillColor: tinta),
       snackBarTheme: SnackBarThemeData(

@@ -34,7 +34,7 @@ const _ordemCategorias = <String>[
 Color corDaCategoria(String categoria, Brightness b) {
   final paleta = Caderneta.paletaCategorias(b);
   final i = _ordemCategorias.indexOf(categoria);
-  return paleta[i < 0 ? paleta.length - 1 : i];
+  return i < 0 ? Caderneta.corExtra(categoria, b) : paleta[i];
 }
 
 /// Aba "Resumo" do home: gastos do mês (real + previsto) e próximos vencimentos.

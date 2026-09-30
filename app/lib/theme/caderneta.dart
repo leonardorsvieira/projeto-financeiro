@@ -88,7 +88,23 @@ class Caderneta {
     Color(0xFF4A5A7A),
     Color(0xFFC8736B),
     Color(0xFF6F8F5A),
-    Color(0xFFA08A5A),
+    Color(0xFF8B877C),
+  ];
+
+  /// Cores para categorias fora da lista padrão (ex.: vindas do Open
+  /// Finance), para não repetirem a cor de "Outros".
+  static const _extrasClara = <Color>[
+    Color(0xFF2F6F73),
+    Color(0xFF7A4A6B),
+    Color(0xFFA4552A),
+    Color(0xFF6B6B2E),
+  ];
+
+  static const _extrasEscura = <Color>[
+    Color(0xFF7FC4C8),
+    Color(0xFFC79BBE),
+    Color(0xFFE39A6C),
+    Color(0xFFC2C27A),
   ];
 
   static const _paletaEscura = <Color>[
@@ -100,11 +116,18 @@ class Caderneta {
     Color(0xFF8FA1C4),
     Color(0xFFE0A29B),
     Color(0xFFA3C48F),
-    Color(0xFFC9B98A),
+    Color(0xFF8C8A80),
   ];
 
   static List<Color> paletaCategorias(Brightness b) =>
       b == Brightness.light ? _paletaClara : _paletaEscura;
+
+  /// Cor estável para uma categoria desconhecida (mesmo nome, mesma cor).
+  static Color corExtra(String categoria, Brightness b) {
+    final extras = b == Brightness.light ? _extrasClara : _extrasEscura;
+    final soma = categoria.codeUnits.fold<int>(0, (s, c) => s + c);
+    return extras[soma % extras.length];
+  }
 
   static Color corReceita(BuildContext c) => CadernetaCores.of(c).receita;
 
@@ -220,27 +243,31 @@ class PapelPautado extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = CadernetaCores.of(context);
     final raio = BorderRadius.circular(Caderneta.raioCard);
+    // Borda desenhada por cima, para a pauta não atravessar o contorno.
     return DecoratedBox(
+      position: DecorationPosition.foreground,
       decoration: BoxDecoration(
-        color: c.papelClaro,
         borderRadius: raio,
         border: Border.all(color: c.tinta, width: Caderneta.borda),
       ),
-      child: ClipRRect(
-        borderRadius: raio,
-        child: CustomPaint(
-          painter: _PautaPainter(cor: c.pauta, espacamento: espacamento),
-          child: Stack(
-            children: [
-              Padding(padding: padding, child: child),
-              if (margem)
-                const Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: MargemVermelha(),
-                ),
-            ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(color: c.papelClaro, borderRadius: raio),
+        child: ClipRRect(
+          borderRadius: raio,
+          child: CustomPaint(
+            painter: _PautaPainter(cor: c.pauta, espacamento: espacamento),
+            child: Stack(
+              children: [
+                Padding(padding: padding, child: child),
+                if (margem)
+                  const Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: MargemVermelha(),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

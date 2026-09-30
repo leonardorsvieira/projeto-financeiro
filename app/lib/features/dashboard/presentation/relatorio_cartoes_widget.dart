@@ -82,7 +82,7 @@ class RelatorioCartoesWidget extends ConsumerWidget {
                 Icon(Icons.pie_chart_outline, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  'Gastos por Meio de Pagamento',
+                  'Despesas por forma de pagamento',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),

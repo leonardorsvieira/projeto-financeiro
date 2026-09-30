@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../theme/icones.dart';
 import '../../home/domain/app_routes.dart';
 import '../application/lancamentos_providers.dart';
 import '../domain/lancamento.dart';
@@ -50,8 +51,8 @@ class _EmptyState extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.event_available_outlined,
+                PhosphorIcon(
+                  Icones.semVencimentos,
                   size: 64,
                   color: theme.colorScheme.primary,
                 ),
@@ -109,13 +110,13 @@ class _VencimentoTile extends StatelessWidget {
               children: [
                 _Badge(
                   label: 'Vence $dataVenc',
-                  icon: Icons.schedule_outlined,
+                  icon: Icones.vencimento,
                   color: theme.colorScheme.tertiary,
                 ),
                 if (isFixa)
                   _Badge(
                     label: 'Fixa mensal',
-                    icon: Icons.repeat_outlined,
+                    icon: Icones.fixaMensal,
                     color: theme.colorScheme.primary,
                   ),
               ],
@@ -157,7 +158,7 @@ class _Badge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          PhosphorIcon(icon, size: 12, color: color),
           const SizedBox(width: 4),
           Text(
             label,

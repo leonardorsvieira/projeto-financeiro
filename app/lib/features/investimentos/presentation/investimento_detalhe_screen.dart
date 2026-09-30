@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../theme/icones.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../application/investimentos_providers.dart';
 import '../domain/investimento.dart';
@@ -32,8 +33,8 @@ class InvestimentoDetalheScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Icon(
-                      Icons.sync,
+                    PhosphorIcon(
+                      Icones.sincronizar,
                       size: 16,
                       color: Theme.of(context).colorScheme.outline,
                     ),

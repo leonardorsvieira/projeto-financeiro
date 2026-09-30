@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:intl/intl.dart';
 
+import '../../../theme/icones.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../ditado/application/ditado_providers.dart';
 import '../../home/domain/app_routes.dart';
@@ -105,7 +106,7 @@ class DashboardScreen extends ConsumerWidget {
               ListTile(
                 dense: true,
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.schedule_outlined),
+                leading: const PhosphorIcon(Icones.vencimento),
                 title: Text(l.descricao),
                 subtitle: Text(_textoVencimento(l.vencimento!)),
                 trailing: Text(
@@ -299,8 +300,8 @@ class _PatrimonioSection extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(
-                      positivo ? Icons.trending_up : Icons.trending_down,
+                    PhosphorIcon(
+                      positivo ? Icones.sobe : Icones.desce,
                       color: corRendimento,
                       size: 18,
                     ),
@@ -573,7 +574,7 @@ class _SeletorMesHeader extends ConsumerWidget {
           children: [
             IconButton(
               tooltip: 'Mês anterior',
-              icon: const Icon(Icons.chevron_left),
+              icon: const PhosphorIcon(Icones.anterior),
               onPressed: () {
                 ref.read(mesSelecionadoProvider.notifier).mesAnterior();
               },
@@ -606,7 +607,7 @@ class _SeletorMesHeader extends ConsumerWidget {
             ),
             IconButton(
               tooltip: 'Próximo mês',
-              icon: const Icon(Icons.chevron_right),
+              icon: const PhosphorIcon(Icones.proximo),
               onPressed: () {
                 ref.read(mesSelecionadoProvider.notifier).proximoMes();
               },
@@ -614,7 +615,7 @@ class _SeletorMesHeader extends ConsumerWidget {
             if (!ehMesAtual)
               IconButton(
                 tooltip: 'Voltar ao mês atual',
-                icon: const Icon(Icons.today),
+                icon: const PhosphorIcon(Icones.hoje),
                 onPressed: () {
                   ref.read(mesSelecionadoProvider.notifier).resetarParaAtual();
                 },
@@ -681,7 +682,7 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
           children: [
             Row(
               children: [
-                Icon(Icons.auto_awesome, color: Caderneta.ocre(context)),
+                PhosphorIcon(Icones.ia, color: Caderneta.ocre(context)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -693,7 +694,7 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
                 ),
                 if (_analiseTexto != null || _erro != null)
                   IconButton(
-                    icon: const Icon(Icons.refresh, size: 20),
+                    icon: const PhosphorIcon(Icones.atualizar, size: 20),
                     onPressed: _gerarAnalise,
                   ),
               ],
@@ -707,7 +708,7 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _gerarAnalise,
-                icon: const Icon(Icons.psychology_outlined),
+                icon: const PhosphorIcon(Icones.analisar),
                 label: const Text('Gerar análise por IA'),
               ),
             ] else if (_carregando) ...[

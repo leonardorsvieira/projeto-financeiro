@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../theme/icones.dart';
 import '../application/lancamentos_providers.dart';
 import '../../cartoes/application/cartoes_providers.dart';
 import '../../cartoes/data/cartoes_repository.dart';
@@ -267,12 +268,12 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                       segments: const [
                         ButtonSegment(
                           value: TipoLancamento.despesa,
-                          icon: Icon(Icons.trending_down),
+                          icon: PhosphorIcon(Icones.desce),
                           label: Text('Despesa'),
                         ),
                         ButtonSegment(
                           value: TipoLancamento.receita,
-                          icon: Icon(Icons.trending_up),
+                          icon: PhosphorIcon(Icones.sobe),
                           label: Text('Receita'),
                         ),
                       ],
@@ -287,7 +288,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                       textCapitalization: TextCapitalization.sentences,
                       decoration: const InputDecoration(
                         labelText: 'Descrição',
-                        prefixIcon: Icon(Icons.description_outlined),
+                        prefixIcon: PhosphorIcon(Icones.descricao),
                       ),
                       validator: validateDescricao,
                     ),
@@ -300,7 +301,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                         ),
                         decoration: const InputDecoration(
                           labelText: 'Valor (R\$)',
-                          prefixIcon: Icon(Icons.attach_money),
+                          prefixIcon: PhosphorIcon(Icones.valor),
                         ),
                         validator: validateValor,
                       ),
@@ -330,7 +331,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                                         textCapitalization: TextCapitalization.sentences,
                                         decoration: const InputDecoration(
                                           labelText: 'Descrição do item',
-                                          prefixIcon: Icon(Icons.shopping_basket_outlined),
+                                          prefixIcon: PhosphorIcon(Icones.item),
                                         ),
                                         onChanged: (v) => item.descricao = v,
                                         validator: (v) => v?.trim().isEmpty ?? true
@@ -347,7 +348,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                         decoration: const InputDecoration(
                                           labelText: 'Valor (R\$)',
-                                          prefixIcon: Icon(Icons.attach_money),
+                                          prefixIcon: PhosphorIcon(Icones.valor),
                                         ),
                                         onChanged: (v) {
                                           final parsed = parseValorBRLParaCentavos(v);
@@ -362,7 +363,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                                       ),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                      icon: const PhosphorIcon(Icones.excluir, color: Colors.red),
                                       onPressed: () => _removeItem(idx),
                                     ),
                                   ],
@@ -387,7 +388,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
                         onPressed: _addItem,
-                        icon: const Icon(Icons.add),
+                        icon: const PhosphorIcon(Icones.adicionar),
                         label: const Text('Adicionar item'),
                       ),
                       const SizedBox(height: 16),
@@ -396,7 +397,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                       initialValue: _categoria,
                       decoration: const InputDecoration(
                         labelText: 'Categoria',
-                        prefixIcon: Icon(Icons.category_outlined),
+                        prefixIcon: PhosphorIcon(Icones.categoria),
                       ),
                       items: [
                         for (final c in categorias)
@@ -426,7 +427,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                           initialValue: formaValida,
                           decoration: const InputDecoration(
                             labelText: 'Forma de pagamento',
-                            prefixIcon: Icon(Icons.payments_outlined),
+                            prefixIcon: PhosphorIcon(Icones.formaPagamento),
                           ),
                           items: [
                             for (final f in opcoesForma)
@@ -459,7 +460,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
                             labelText: 'Dia do vencimento (1-31)',
-                            prefixIcon: Icon(Icons.schedule_outlined),
+                            prefixIcon: PhosphorIcon(Icones.vencimento),
                           ),
                           validator: (v) {
                             if (!_fixoMensal) return null;
@@ -471,13 +472,13 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                         const SizedBox(height: 16),
                         OutlinedButton.icon(
                           onPressed: _isSaving ? null : _pickData,
-                          icon: const Icon(Icons.event_outlined),
+                          icon: const PhosphorIcon(Icones.data),
                           label: Text('Data: ${formatoData(_data)}'),
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
                           onPressed: _isSaving ? null : _pickVencimento,
-                          icon: const Icon(Icons.schedule_outlined),
+                          icon: const PhosphorIcon(Icones.vencimento),
                           label: Text(
                             _vencimento == null
                                 ? 'Vencimento (opcional)'
@@ -501,7 +502,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                       const SizedBox(height: 16),
                       OutlinedButton.icon(
                         onPressed: _isSaving ? null : _pickData,
-                        icon: const Icon(Icons.event_outlined),
+                        icon: const PhosphorIcon(Icones.data),
                         label: Text('Data: ${formatoData(_data)}'),
                       ),
                     ],
@@ -537,7 +538,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Icon(Icons.check),
+                              : const PhosphorIcon(Icones.confirmar),
                           label: Text(
                             _isSaving ? 'Salvando...' : 'Salvar',
                           ),

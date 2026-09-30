@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../theme/icones.dart';
 import '../application/lembretes_controller.dart';
 import '../application/notificacoes_service.dart';
 import '../application/preferencias_service.dart';
@@ -73,7 +74,7 @@ class _LembretesPreferenciasDialogState
         children: [
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.schedule_outlined),
+            leading: const PhosphorIcon(Icones.horario),
             title: const Text('Horário do aviso'),
             trailing: Text(
               _horario.format(context),
@@ -93,7 +94,7 @@ class _LembretesPreferenciasDialogState
           const Divider(),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.event_outlined),
+            leading: const PhosphorIcon(Icones.antecedencia),
             title: const Text('Avisar dias antes'),
             subtitle: Text(
               _diasAntes == 0
@@ -105,7 +106,7 @@ class _LembretesPreferenciasDialogState
               children: [
                 IconButton(
                   tooltip: 'Diminuir',
-                  icon: const Icon(Icons.remove_circle_outline),
+                  icon: const PhosphorIcon(Icones.remover),
                   onPressed: _diasAntes > PreferenciasLembretes.diasAntesMin
                       ? () => setState(() => _diasAntes--)
                       : null,
@@ -116,7 +117,7 @@ class _LembretesPreferenciasDialogState
                 ),
                 IconButton(
                   tooltip: 'Aumentar',
-                  icon: const Icon(Icons.add_circle_outline),
+                  icon: const PhosphorIcon(Icones.aumentar),
                   onPressed: _diasAntes < PreferenciasLembretes.diasAntesMax
                       ? () => setState(() => _diasAntes++)
                       : null,
@@ -141,7 +142,7 @@ class _LembretesPreferenciasDialogState
                 ),
               );
             },
-            icon: const Icon(Icons.notifications_active_outlined),
+            icon: const PhosphorIcon(Icones.testarNotificacao),
             label: const Text('Testar notificação no aparelho'),
           ),
         ],

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../theme/icones.dart';
 import '../../home/domain/app_routes.dart';
 import '../application/ditado_providers.dart';
 
@@ -90,21 +91,21 @@ class _LancamentoDitadoScreenState
     final (IconData icone, Color cor, String rotulo, String? detalhe,
         VoidCallback? acao) = switch (estado) {
       DitadoGravando() => (
-          Icons.stop,
+          Icones.pararGravacao,
           tema.colorScheme.error,
           'Toque para parar',
           'Gravando ditado… $_segundos s',
           _parar,
         ),
       DitadoProcessando() => (
-          Icons.hourglass_top,
+          Icones.processando,
           tema.colorScheme.primary,
           'Lançando no livro…',
           'Interpretando o que foi dito.',
           null,
         ),
       _ => (
-          Icons.mic_none,
+          Icones.ditar,
           tema.colorScheme.primary,
           'Toque para gravar',
           null,
@@ -191,7 +192,7 @@ class _BotaoMic extends StatelessWidget {
       ),
       child: DecoratedBox(
         decoration: BoxDecoration(shape: BoxShape.circle, color: cor),
-        child: Center(child: Icon(icone, size: 64, color: c.papel)),
+        child: Center(child: PhosphorIcon(icone, size: 64, color: c.papel)),
       ),
     );
   }

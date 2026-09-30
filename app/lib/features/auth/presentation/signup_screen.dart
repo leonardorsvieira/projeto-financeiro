@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth_errors.dart';
 import '../../../features/home/domain/app_routes.dart';
+import '../../../theme/icones.dart';
 import '../application/auth_controller.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -73,8 +74,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(
-                      Icons.account_balance_wallet_outlined,
+                    PhosphorIcon(
+                      Icones.carteira,
                       size: 64,
                       color: theme.colorScheme.primary,
                     ),
@@ -97,7 +98,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       autofillHints: const [AutofillHints.email],
                       decoration: const InputDecoration(
                         labelText: 'E-mail',
-                        prefixIcon: Icon(Icons.mail_outline),
+                        prefixIcon: PhosphorIcon(Icones.email),
                       ),
                       validator: (value) {
                         final v = value?.trim() ?? '';
@@ -113,15 +114,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       autofillHints: const [AutofillHints.newPassword],
                       decoration: InputDecoration(
                         labelText: 'Senha',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: const PhosphorIcon(Icones.senha),
                         suffixIcon: IconButton(
                           tooltip: _obscurePassword
                               ? 'Mostrar senha'
                               : 'Ocultar senha',
-                          icon: Icon(
+                          icon: PhosphorIcon(
                             _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
+                                ? Icones.ocultarSenha
+                                : Icones.verSenha,
                           ),
                           onPressed: () => setState(
                             () => _obscurePassword = !_obscurePassword,
@@ -152,15 +153,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       autofillHints: const [AutofillHints.newPassword],
                       decoration: InputDecoration(
                         labelText: 'Confirmar senha',
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIcon: const PhosphorIcon(Icones.senha),
                         suffixIcon: IconButton(
                           tooltip: _obscureConfirm
                               ? 'Mostrar senha'
                               : 'Ocultar senha',
-                          icon: Icon(
+                          icon: PhosphorIcon(
                             _obscureConfirm
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
+                                ? Icones.ocultarSenha
+                                : Icones.verSenha,
                           ),
                           onPressed: () => setState(
                             () => _obscureConfirm = !_obscureConfirm,
@@ -184,8 +185,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.mark_email_read_outlined,
+                            PhosphorIcon(
+                              Icones.emailConfirmado,
                               color: theme.colorScheme.onPrimaryContainer,
                             ),
                             const SizedBox(width: 12),

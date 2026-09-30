@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../theme/icones.dart';
 import '../application/open_finance_providers.dart';
 import '../domain/conta_bancaria_conectada.dart';
 import 'widgets/abrir_autorizacao.dart';
@@ -183,12 +184,12 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.sync),
+                : const PhosphorIcon(Icones.sincronizar),
             tooltip: 'Sincronizar com Pluggy',
             onPressed: _sincronizando ? null : _executarSincronizacao,
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const PhosphorIcon(Icones.configuracoes),
             tooltip: 'Status do Open Finance',
             onPressed: () => mostrarDialogoStatusPluggy(context),
           ),
@@ -222,8 +223,8 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                         backgroundColor: pluggyConfigurado
                             ? Colors.purple.withValues(alpha: 0.2)
                             : Colors.amber.withValues(alpha: 0.2),
-                        child: Icon(
-                          pluggyConfigurado ? Icons.link : Icons.link_off,
+                        child: PhosphorIcon(
+                          pluggyConfigurado ? Icones.conectado : Icones.desconectar,
                           color: pluggyConfigurado
                               ? (theme.brightness == Brightness.dark
                                     ? Colors.purple.shade200
@@ -289,7 +290,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Icon(Icons.cloud_sync, size: 18),
+                              : const PhosphorIcon(Icones.conectarNuvem, size: 18),
                           label: const Text('Conectar meu.pluggy.ai'),
                         ),
                         FilledButton.icon(
@@ -305,7 +306,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Icon(Icons.sync, size: 18),
+                              : const PhosphorIcon(Icones.sincronizar, size: 18),
                           label: Text(
                             _sincronizando
                                 ? 'Sincronizando…'
@@ -316,7 +317,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                           onPressed: _sincronizando
                               ? null
                               : () => _executarSincronizacao(historico: true),
-                          icon: const Icon(Icons.history, size: 18),
+                          icon: const PhosphorIcon(Icones.historico, size: 18),
                           label: const Text('Importar últimos 12 meses'),
                         ),
                         OutlinedButton(
@@ -326,7 +327,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                       ] else ...[
                         FilledButton.icon(
                           onPressed: () => mostrarDialogoStatusPluggy(context),
-                          icon: const Icon(Icons.vpn_key_outlined, size: 18),
+                          icon: const PhosphorIcon(Icones.chave, size: 18),
                           label: const Text('Verificar Open Finance'),
                         ),
                       ],
@@ -353,7 +354,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.bolt, color: Colors.amber),
+                            const PhosphorIcon(Icones.tempoReal, color: Colors.amber),
                             const SizedBox(width: 8),
                             Text(
                               'Captura em Tempo Real (Notificações)',
@@ -397,7 +398,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
               ),
               TextButton.icon(
                 onPressed: () => mostrarDialogoConectarBanco(context),
-                icon: const Icon(Icons.add, size: 18),
+                icon: const PhosphorIcon(Icones.adicionar, size: 18),
                 label: const Text('Adicionar'),
               ),
             ],
@@ -418,8 +419,8 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       children: [
-                        const Icon(
-                          Icons.account_balance_outlined,
+                        const PhosphorIcon(
+                          Icones.banco,
                           size: 48,
                           color: Colors.grey,
                         ),
@@ -452,20 +453,20 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                                 onPressed: _abrindoMeuPluggy
                                     ? null
                                     : _abrirMeuPluggyConnect,
-                                icon: const Icon(Icons.cloud_sync, size: 18),
+                                icon: const PhosphorIcon(Icones.conectarNuvem, size: 18),
                                 label: const Text('Conectar meu.pluggy.ai'),
                               ),
                               OutlinedButton.icon(
                                 onPressed: () =>
                                     mostrarDialogoConectarBanco(context),
-                                icon: const Icon(Icons.add, size: 18),
+                                icon: const PhosphorIcon(Icones.adicionar, size: 18),
                                 label: const Text('Adicionar banco ou Item ID'),
                               ),
                             ] else ...[
                               FilledButton.icon(
                                 onPressed: () =>
                                     mostrarDialogoStatusPluggy(context),
-                                icon: const Icon(Icons.vpn_key_outlined),
+                                icon: const PhosphorIcon(Icones.chave),
                                 label: const Text('Verificar Open Finance'),
                               ),
                             ],
@@ -497,7 +498,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                         foregroundColor: theme.colorScheme.error,
                       ),
                       onPressed: _removerTodasConexoes,
-                      icon: const Icon(Icons.link_off, size: 18),
+                      icon: const PhosphorIcon(Icones.desconectar, size: 18),
                       label: const Text('Remover todas as conexões'),
                     ),
                   ),
@@ -517,7 +518,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.file_upload_outlined, size: 28),
+                      const PhosphorIcon(Icones.importar, size: 28),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -543,7 +544,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () => _mostrarDialogoOFX(context, ref),
-                      icon: const Icon(Icons.upload_file),
+                      icon: const PhosphorIcon(Icones.importar),
                       label: const Text('Importar arquivo OFX'),
                     ),
                   ),
@@ -700,7 +701,7 @@ class _CardContaBancaria extends StatelessWidget {
             const PopupMenuItem(
               value: 'sync',
               child: ListTile(
-                leading: Icon(Icons.sync),
+                leading: PhosphorIcon(Icones.sincronizar),
                 title: Text('Sincronizar'),
                 dense: true,
               ),
@@ -708,7 +709,7 @@ class _CardContaBancaria extends StatelessWidget {
             const PopupMenuItem(
               value: 'remover',
               child: ListTile(
-                leading: Icon(Icons.link_off, color: Colors.red),
+                leading: PhosphorIcon(Icones.desconectar, color: Colors.red),
                 title: Text('Desconectar'),
                 dense: true,
               ),

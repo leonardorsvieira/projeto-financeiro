@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../theme/icones.dart';
 import '../application/biometria_providers.dart';
 
 Future<void> mostrarDialogoBloqueioBiometrico(BuildContext context) {
@@ -80,7 +81,7 @@ class __BloqueioBiometricoDialogState
     return AlertDialog(
       title: const Row(
         children: [
-          Icon(Icons.fingerprint),
+          PhosphorIcon(Icones.biometria),
           SizedBox(width: 8),
           Text('Segurança e Biometria'),
         ],
@@ -102,7 +103,7 @@ class __BloqueioBiometricoDialogState
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.amber),
+                  PhosphorIcon(Icones.aviso, color: Colors.amber),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../theme/icones.dart';
 import '../../application/open_finance_providers.dart';
 import 'abrir_autorizacao.dart';
 import '../../data/pluggy_open_finance_service.dart';
@@ -237,7 +238,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
       appBar: AppBar(
         title: const Text('Conectar banco (Open Finance)'),
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const PhosphorIcon(Icones.fechar),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -264,7 +265,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                       CircleAvatar(
                         backgroundColor: Colors.purple.shade700,
                         radius: 18,
-                        child: const Icon(Icons.cloud_sync, color: Colors.white, size: 20),
+                        child: const PhosphorIcon(Icones.conectarNuvem, color: Colors.white, size: 20),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -306,7 +307,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                             )
-                          : const Icon(Icons.open_in_new, size: 18),
+                          : const PhosphorIcon(Icones.abrirExterno, size: 18),
                       label: const Text('Autorizar no meu.pluggy.ai'),
                     ),
                   ),
@@ -328,7 +329,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                       CircleAvatar(
                         backgroundColor: Colors.blue.shade100,
                         radius: 18,
-                        child: Icon(Icons.account_balance, color: Colors.blue.shade800, size: 20),
+                        child: PhosphorIcon(Icones.banco, color: Colors.blue.shade800, size: 20),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -355,7 +356,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: _conectando ? null : () => _abrirPluggyConnectGeral(),
-                      icon: const Icon(Icons.launch, size: 18),
+                      icon: const PhosphorIcon(Icones.abrirExterno, size: 18),
                       label: const Text('Abrir catálogo de bancos Pluggy'),
                     ),
                   ),
@@ -367,7 +368,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
 
           // Opção: Vincular por Item ID direto
           ExpansionTile(
-            leading: const Icon(Icons.pin_outlined),
+            leading: const PhosphorIcon(Icones.pin),
             title: const Text(
               'Vincular conexão por Item ID',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -385,7 +386,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                   hintText: 'Ex: e1c385fa-7b98-4c02-...',
                   border: OutlineInputBorder(),
                   isDense: true,
-                  prefixIcon: Icon(Icons.tag),
+                  prefixIcon: PhosphorIcon(Icones.codigo),
                 ),
               ),
               const SizedBox(height: 10),
@@ -399,7 +400,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : const Icon(Icons.check),
+                      : const PhosphorIcon(Icones.confirmar),
                   label: const Text('Vincular e Importar Contas'),
                 ),
               ),
@@ -507,7 +508,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                       : () => _abrirPluggyConnectGeral(
                             connectorId: _bancoSelecionado!.connectorId,
                           ),
-                  icon: const Icon(Icons.open_in_new),
+                  icon: const PhosphorIcon(Icones.abrirExterno),
                   label: Text('Conectar ${_bancoSelecionado!.nome} Oficial'),
                 ),
               ),
@@ -517,7 +518,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
               height: 44,
               child: OutlinedButton.icon(
                 onPressed: _conectando ? null : _conectarManual,
-                icon: const Icon(Icons.add),
+                icon: const PhosphorIcon(Icones.adicionar),
                 label: Text('Adicionar ${_bancoSelecionado!.nome} Manualmente'),
               ),
             ),

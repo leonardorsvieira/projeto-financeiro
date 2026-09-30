@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../theme/icones.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../application/cartoes_providers.dart';
 import '../domain/cartao_credito.dart';
@@ -26,7 +27,7 @@ class CartoesScreen extends ConsumerWidget {
         title: const Text('Cartões de crédito'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const PhosphorIcon(Icones.adicionar),
             tooltip: 'Novo cartão',
             onPressed: () => _abrirDialogoFormulario(context, ref, null),
           ),
@@ -41,7 +42,7 @@ class CartoesScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.credit_card_off_outlined,
+                    const PhosphorIcon(Icones.semCartao,
                         size: 64, color: Colors.grey),
                     const SizedBox(height: 16),
                     const Text(
@@ -51,7 +52,7 @@ class CartoesScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     ElevatedButton.icon(
                       onPressed: () => _abrirDialogoFormulario(context, ref, null),
-                      icon: const Icon(Icons.add),
+                      icon: const PhosphorIcon(Icones.adicionar),
                       label: const Text('Cadastrar cartão'),
                     ),
                   ],
@@ -95,7 +96,7 @@ class CartoesScreen extends ConsumerWidget {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.credit_card, color: Colors.white),
+                              const PhosphorIcon(Icones.cartao, color: Colors.white),
                               const SizedBox(width: 8),
                               Text(
                                 c.nome,
@@ -108,7 +109,7 @@ class CartoesScreen extends ConsumerWidget {
                             ],
                           ),
                           PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert, color: Colors.white),
+                            icon: const PhosphorIcon(Icones.menu, color: Colors.white),
                             onSelected: (val) {
                               if (val == 'editar') {
                                 _abrirDialogoFormulario(context, ref, c);
@@ -287,7 +288,7 @@ class __FormularioCartaoDialogState
                 controller: _nomeCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Nome do Cartão (ex: Nubank, Inter)',
-                  prefixIcon: Icon(Icons.credit_card),
+                  prefixIcon: PhosphorIcon(Icones.cartao),
                 ),
                 validator: (val) =>
                     val == null || val.trim().isEmpty ? 'Informe o nome' : null,
@@ -332,7 +333,7 @@ class __FormularioCartaoDialogState
                 decoration: const InputDecoration(
                   labelText: 'Validade (opcional: MM/AA)',
                   hintText: 'ex: 12/28',
-                  prefixIcon: Icon(Icons.event),
+                  prefixIcon: PhosphorIcon(Icones.vencimento),
                 ),
               ),
               const SizedBox(height: 12),
@@ -343,7 +344,7 @@ class __FormularioCartaoDialogState
                 decoration: const InputDecoration(
                   labelText: 'Limite (opcional)',
                   prefixText: r'R$ ',
-                  prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+                  prefixIcon: PhosphorIcon(Icones.carteira),
                 ),
               ),
             ],

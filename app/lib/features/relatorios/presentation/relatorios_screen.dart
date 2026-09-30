@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 
+import '../../../theme/icones.dart';
 import '../../lancamentos/application/exportar_service.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
 import '../application/pdf_report_service.dart';
@@ -30,12 +31,12 @@ class RelatoriosScreen extends ConsumerWidget {
         title: const Text('Relatórios e comparativos'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
+            icon: const PhosphorIcon(Icones.pdf),
             tooltip: 'Exportar PDF',
             onPressed: () => _exportarPDF(context, dados, lancamentos),
           ),
           IconButton(
-            icon: const Icon(Icons.table_chart_outlined),
+            icon: const PhosphorIcon(Icones.planilha),
             tooltip: 'Exportar planilha (CSV)',
             onPressed: () => _exportarCSV(context, dados),
           ),
@@ -65,12 +66,12 @@ class RelatoriosScreen extends ConsumerWidget {
                         ButtonSegment(
                           value: 6,
                           label: Text('Últimos 6 Meses'),
-                          icon: Icon(Icons.calendar_view_month),
+                          icon: PhosphorIcon(Icones.periodoCurto),
                         ),
                         ButtonSegment(
                           value: 12,
                           label: Text('Últimos 12 Meses'),
-                          icon: Icon(Icons.calendar_today),
+                          icon: PhosphorIcon(Icones.periodoLongo),
                         ),
                       ],
                       selected: {numMeses},
@@ -125,10 +126,10 @@ class RelatoriosScreen extends ConsumerWidget {
                         ),
                         child: Row(
                           children: [
-                            Icon(
+                            PhosphorIcon(
                               isPositivo
-                                  ? Icons.trending_up
-                                  : Icons.trending_down,
+                                  ? Icones.sobe
+                                  : Icones.desce,
                               size: 16,
                               color: isPositivo
                                   ? Caderneta.corReceita(context)
@@ -233,7 +234,7 @@ class RelatoriosScreen extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.download_outlined, size: 28),
+                      const PhosphorIcon(Icones.exportar, size: 28),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -261,7 +262,7 @@ class RelatoriosScreen extends ConsumerWidget {
                         child: OutlinedButton.icon(
                           onPressed: () =>
                               _exportarPDF(context, dados, lancamentos),
-                          icon: const Icon(Icons.picture_as_pdf),
+                          icon: const PhosphorIcon(Icones.pdf),
                           label: const Text('Exportar PDF'),
                         ),
                       ),
@@ -269,7 +270,7 @@ class RelatoriosScreen extends ConsumerWidget {
                       Expanded(
                         child: FilledButton.icon(
                           onPressed: () => _exportarCSV(context, dados),
-                          icon: const Icon(Icons.table_chart_outlined),
+                          icon: const PhosphorIcon(Icones.planilha),
                           label: const Text('Excel (CSV)'),
                         ),
                       ),

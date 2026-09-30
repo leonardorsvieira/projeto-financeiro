@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../theme/icones.dart';
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../application/investimentos_providers.dart';
@@ -56,12 +57,12 @@ class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
             tooltip: _porRendimento
                 ? 'Agrupar por classe'
                 : 'Ordenar por rendimento',
-            icon: Icon(_porRendimento ? Icons.category : Icons.leaderboard),
+            icon: PhosphorIcon(_porRendimento ? Icones.categoria : Icones.ranking),
             onPressed: () => setState(() => _porRendimento = !_porRendimento),
           ),
           IconButton(
             tooltip: 'Calculadora de Rebalanceamento',
-            icon: const Icon(Icons.balance),
+            icon: const PhosphorIcon(Icones.rebalancear),
             onPressed: () => mostrarDialogoRebalanceamento(context),
           ),
         ],
@@ -124,8 +125,8 @@ class _EmptyState extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.pie_chart_outline,
+                PhosphorIcon(
+                  Icones.patrimonio,
                   size: 64,
                   color: theme.colorScheme.primary,
                 ),
@@ -256,7 +257,7 @@ class _DestaquesCard extends StatelessWidget {
       final cor = corRendimento(context, inv.rendimentoCents!);
       return ListTile(
         onTap: () => onTap(inv),
-        leading: Icon(icone, color: cor),
+        leading: PhosphorIcon(icone, color: cor),
         title: Text(rotulo, style: Theme.of(context).textTheme.labelMedium),
         subtitle: Text(
           inv.nome,
@@ -275,9 +276,9 @@ class _DestaquesCard extends StatelessWidget {
       child: Column(
         children: [
           if (resumo.maiorGanho case final g?)
-            destaque('Mais rendeu', Icons.emoji_events, g),
+            destaque('Mais rendeu', Icones.trofeu, g),
           if (resumo.maiorPerda case final p?)
-            destaque('Mais perdeu', Icons.trending_down, p),
+            destaque('Mais perdeu', Icones.desce, p),
         ],
       ),
     );
@@ -337,8 +338,8 @@ class _InvestimentoTile extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 )
-              : Icon(
-                  Icons.trending_up,
+              : PhosphorIcon(
+                  Icones.rendimento,
                   color: theme.colorScheme.onPrimaryContainer,
                 ),
         ),

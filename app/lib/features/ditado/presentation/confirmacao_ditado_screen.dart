@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../theme/icones.dart';
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
 import '../../lancamentos/domain/lancamento.dart'
@@ -240,14 +241,14 @@ class _ConfirmacaoDitadoScreenState
     if (_gravandoCampo == campo) {
       return IconButton.filled(
         onPressed: _pararGravacaoCampo,
-        icon: const Icon(Icons.stop),
+        icon: const PhosphorIcon(Icones.pararGravacao),
         color: Theme.of(context).colorScheme.error,
         tooltip: 'Parar',
       );
     }
     return IconButton(
       onPressed: () => _iniciarGravacaoCampo(campo),
-      icon: const Icon(Icons.mic_none),
+      icon: const PhosphorIcon(Icones.ditar),
       tooltip: 'Corrigir por voz',
     );
   }
@@ -369,12 +370,12 @@ class _ConfirmacaoDitadoScreenState
                             segments: const [
                               ButtonSegment(
                                 value: TipoLancamento.despesa,
-                                icon: Icon(Icons.trending_down),
+                                icon: PhosphorIcon(Icones.desce),
                                 label: Text('Despesa'),
                               ),
                               ButtonSegment(
                                 value: TipoLancamento.receita,
-                                icon: Icon(Icons.trending_up),
+                                icon: PhosphorIcon(Icones.sobe),
                                 label: Text('Receita'),
                               ),
                             ],
@@ -398,7 +399,7 @@ class _ConfirmacaoDitadoScreenState
                             textCapitalization: TextCapitalization.sentences,
                             decoration: const InputDecoration(
                               labelText: 'Descrição',
-                              prefixIcon: Icon(Icons.description_outlined),
+                              prefixIcon: PhosphorIcon(Icones.descricao),
                             ),
                             validator: validateDescricao,
                           ),
@@ -426,7 +427,7 @@ class _ConfirmacaoDitadoScreenState
                             ],
                             decoration: const InputDecoration(
                               labelText: 'Valor (R\$)',
-                              prefixIcon: Icon(Icons.attach_money),
+                              prefixIcon: PhosphorIcon(Icones.valor),
                             ),
                             validator: validateValor,
                           ),
@@ -444,7 +445,7 @@ class _ConfirmacaoDitadoScreenState
                             initialValue: _categoria,
                             decoration: const InputDecoration(
                               labelText: 'Categoria',
-                              prefixIcon: Icon(Icons.category_outlined),
+                              prefixIcon: PhosphorIcon(Icones.categoria),
                             ),
                             items: [
                               for (final c in categorias)
@@ -469,7 +470,7 @@ class _ConfirmacaoDitadoScreenState
                             initialValue: _formaPagamento,
                             decoration: const InputDecoration(
                               labelText: 'Forma de pagamento',
-                              prefixIcon: Icon(Icons.payments_outlined),
+                              prefixIcon: PhosphorIcon(Icones.formaPagamento),
                             ),
                             items: [
                               for (final f in formasPagamento)
@@ -492,7 +493,7 @@ class _ConfirmacaoDitadoScreenState
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: _isSaving ? null : _pickData,
-                            icon: const Icon(Icons.event_outlined),
+                            icon: const PhosphorIcon(Icones.data),
                             label: Text('Data: ${formatoData(_data)}'),
                           ),
                         ),
@@ -508,7 +509,7 @@ class _ConfirmacaoDitadoScreenState
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: _isSaving ? null : _pickVencimento,
-                              icon: const Icon(Icons.schedule_outlined),
+                              icon: const PhosphorIcon(Icones.vencimento),
                               label: Text(
                                 _vencimento == null
                                     ? 'Vencimento (opcional)'
@@ -528,7 +529,7 @@ class _ConfirmacaoDitadoScreenState
                         style: FilledButton.styleFrom(
                           backgroundColor: tema.colorScheme.error,
                         ),
-                        icon: const Icon(Icons.stop),
+                        icon: const PhosphorIcon(Icones.pararGravacao),
                         label: const Text('Toque para parar'),
                       ),
                     ],
@@ -555,7 +556,7 @@ class _ConfirmacaoDitadoScreenState
                                     textCapitalization: TextCapitalization.sentences,
                                     decoration: const InputDecoration(
                                       labelText: 'Item',
-                                      prefixIcon: Icon(Icons.shopping_basket_outlined),
+                                      prefixIcon: PhosphorIcon(Icones.item),
                                     ),
                                     onChanged: (v) => item.descricao = v,
                                     validator: (v) =>
@@ -572,14 +573,14 @@ class _ConfirmacaoDitadoScreenState
                                     ),
                                     decoration: const InputDecoration(
                                       labelText: 'Valor (R\$)',
-                                      prefixIcon: Icon(Icons.attach_money),
+                                      prefixIcon: PhosphorIcon(Icones.valor),
                                     ),
                                     onChanged: (v) => item.valorReais = v.trim().isEmpty ? null : v,
                                   ),
                                 ),
                                 IconButton(
                                   icon:
-                                      const Icon(Icons.delete_outline, color: Colors.red),
+                                      const PhosphorIcon(Icones.excluir, color: Colors.red),
                                   onPressed: () => setState(() => _itens.removeAt(idx)),
                                 ),
                               ],
@@ -622,7 +623,7 @@ class _ConfirmacaoDitadoScreenState
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Icon(Icons.check),
+                              : const PhosphorIcon(Icones.confirmar),
                           label: Text(
                             _isSaving ? 'Lançando…' : 'Lançar',
                           ),

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meubolso/features/investimentos/application/investimentos_providers.dart';
 import 'package:meubolso/features/investimentos/domain/investimento.dart';
 import 'package:meubolso/features/investimentos/presentation/investimentos_screen.dart';
+import 'package:meubolso/theme/icones.dart';
 
 import '../../../support/fake_investimentos_repository.dart';
 
@@ -91,7 +92,7 @@ void main() {
 
     expect(find.byType(FloatingActionButton), findsNothing);
     expect(find.byType(PopupMenuButton<String>), findsNothing);
-    expect(find.byIcon(Icons.sync), findsNothing);
+    expect(find.byIcon(Icones.sincronizar), findsNothing);
   });
 
   testWidgets('mostra aplicado, rendimento, destaques e ranking',

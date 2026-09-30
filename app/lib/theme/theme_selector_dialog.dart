@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'icones.dart';
 import 'theme_controller.dart';
 
 void mostrarDialogoSelecaoTema(BuildContext context) {
@@ -21,7 +22,7 @@ class _ThemeSelectorDialog extends ConsumerWidget {
     return AlertDialog(
       title: const Row(
         children: [
-          Icon(Icons.palette_outlined),
+          PhosphorIcon(Icones.tema),
           SizedBox(width: 8),
           Text('Aparência'),
         ],
@@ -32,7 +33,7 @@ class _ThemeSelectorDialog extends ConsumerWidget {
           RadioListTile<ThemeMode>(
             title: const Text('Sistema'),
             subtitle: const Text('Seguir tema padrão do celular'),
-            secondary: const Icon(Icons.brightness_auto_outlined),
+            secondary: const PhosphorIcon(Icones.temaSistema),
             value: ThemeMode.system,
             groupValue: currentMode,
             onChanged: (mode) {
@@ -45,7 +46,7 @@ class _ThemeSelectorDialog extends ConsumerWidget {
           RadioListTile<ThemeMode>(
             title: const Text('Claro'),
             subtitle: const Text('Tema com fundo claro'),
-            secondary: const Icon(Icons.light_mode_outlined),
+            secondary: const PhosphorIcon(Icones.temaClaro),
             value: ThemeMode.light,
             groupValue: currentMode,
             onChanged: (mode) {
@@ -58,7 +59,7 @@ class _ThemeSelectorDialog extends ConsumerWidget {
           RadioListTile<ThemeMode>(
             title: const Text('Escuro'),
             subtitle: const Text('Tema com fundo escuro'),
-            secondary: const Icon(Icons.dark_mode_outlined),
+            secondary: const PhosphorIcon(Icones.temaEscuro),
             value: ThemeMode.dark,
             groupValue: currentMode,
             onChanged: (mode) {

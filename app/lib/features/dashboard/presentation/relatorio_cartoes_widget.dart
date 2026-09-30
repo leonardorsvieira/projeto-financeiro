@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../theme/icones.dart';
 import '../../cartoes/application/cartoes_providers.dart';
 import '../../cartoes/data/cartoes_repository.dart';
 import '../../cartoes/domain/cartao_credito.dart';
@@ -79,7 +80,7 @@ class RelatorioCartoesWidget extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.pie_chart_outline, color: Theme.of(context).colorScheme.primary),
+                PhosphorIcon(Icones.distribuicao, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   'Despesas por forma de pagamento',
@@ -160,7 +161,7 @@ class RelatorioCartoesWidget extends ConsumerWidget {
                 leading: CircleAvatar(
                   backgroundColor: Caderneta.paletaCategorias(Theme.of(context).brightness)[4],
                   radius: 12,
-                  child: Icon(Icons.flash_on, size: 14, color: Colors.white),
+                  child: PhosphorIcon(Icones.pix, size: 14, color: Colors.white),
                 ),
                 title: const Text('Acumulado Pix'),
                 trailing: Text(
@@ -184,8 +185,8 @@ class RelatorioCartoesWidget extends ConsumerWidget {
                         }
                       }(),
                       radius: 12,
-                      child: const Icon(
-                        Icons.credit_card,
+                      child: const PhosphorIcon(
+                        Icones.cartao,
                         size: 14,
                         color: Colors.white,
                       ),

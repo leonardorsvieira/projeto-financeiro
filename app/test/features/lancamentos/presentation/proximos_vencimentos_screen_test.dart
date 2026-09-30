@@ -12,6 +12,7 @@ import 'package:meubolso/features/lancamentos/presentation/proximos_vencimentos_
 import 'package:meubolso/router/app_router.dart';
 
 import 'package:meubolso/theme/app_theme.dart';
+import 'package:meubolso/theme/icones.dart';
 
 import '../../../support/fake_lancamentos_repository.dart';
 import '../../../support/fake_wrappers.dart';
@@ -128,7 +129,7 @@ void main() {
 
     testWidgets('mostra empty state quando não há vencimentos futuros', (tester) async {
       await tester.pumpWidget(buildScreen());
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byIcon(Icones.menu));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Próximos vencimentos'));
       await tester.pumpAndSettle();
@@ -167,7 +168,7 @@ void main() {
           updatedAt: agora,
         ),
       ]));
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byIcon(Icones.menu));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Próximos vencimentos'));
       await tester.pumpAndSettle();
@@ -211,7 +212,7 @@ void main() {
           updatedAt: agora,
         ),
       ]));
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byIcon(Icones.menu));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Próximos vencimentos'));
       await tester.pumpAndSettle();
@@ -239,7 +240,7 @@ void main() {
           updatedAt: agora,
         ),
       ]));
-      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.tap(find.byIcon(Icones.menu));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Próximos vencimentos'));
       await tester.pumpAndSettle();

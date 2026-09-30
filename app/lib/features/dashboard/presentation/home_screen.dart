@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../theme/icones.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/presentation/lancamentos_list_screen.dart';
@@ -74,14 +75,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             vertical: 4,
           ),
           tabs: const [
-            Tab(icon: Icon(Icons.space_dashboard_outlined), text: 'Resumo'),
-            Tab(icon: Icon(Icons.list_alt_outlined), text: 'Livro-caixa'),
+            Tab(icon: PhosphorIcon(Icones.resumo), text: 'Resumo'),
+            Tab(icon: PhosphorIcon(Icones.livroCaixa), text: 'Livro-caixa'),
           ],
         ),
         actions: [
           PopupMenuButton<String>(
             tooltip: 'Opções',
-            icon: const Icon(Icons.more_vert),
+            icon: const PhosphorIcon(Icones.menu),
             onSelected: (value) {
               if (value == 'historico') {
                 context.push(AppRoutes.historicoMeses);
@@ -111,7 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const PopupMenuItem(
                 value: 'historico',
                 child: ListTile(
-                  leading: Icon(Icons.history_outlined),
+                  leading: PhosphorIcon(Icones.historico),
                   title: Text('Histórico de meses'),
                   dense: true,
                 ),
@@ -119,7 +120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const PopupMenuItem(
                 value: 'relatorios',
                 child: ListTile(
-                  leading: Icon(Icons.bar_chart_outlined),
+                  leading: PhosphorIcon(Icones.relatorio),
                   title: Text('Relatórios e comparativos'),
                   dense: true,
                 ),
@@ -127,7 +128,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const PopupMenuItem(
                 value: 'open_finance',
                 child: ListTile(
-                  leading: Icon(Icons.account_balance),
+                  leading: PhosphorIcon(Icones.banco),
                   title: Text('Bancos e Open Finance'),
                   dense: true,
                 ),
@@ -135,7 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const PopupMenuItem(
                 value: 'investimentos',
                 child: ListTile(
-                  leading: Icon(Icons.pie_chart_outline),
+                  leading: PhosphorIcon(Icones.patrimonio),
                   title: Text('Investimentos'),
                   dense: true,
                 ),
@@ -143,7 +144,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const PopupMenuItem(
                 value: 'metas',
                 child: ListTile(
-                  leading: Icon(Icons.track_changes_outlined),
+                  leading: PhosphorIcon(Icones.meta),
                   title: Text('Metas'),
                   dense: true,
                 ),
@@ -151,7 +152,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const PopupMenuItem(
                 value: 'vencimentos',
                 child: ListTile(
-                  leading: Icon(Icons.event_outlined),
+                  leading: PhosphorIcon(Icones.vencimento),
                   title: Text('Próximos vencimentos'),
                   dense: true,
                 ),
@@ -159,7 +160,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const PopupMenuItem(
                 value: 'cartoes',
                 child: ListTile(
-                  leading: Icon(Icons.credit_card_outlined),
+                  leading: PhosphorIcon(Icones.cartao),
                   title: Text('Cartões de crédito'),
                   dense: true,
                 ),
@@ -167,7 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const PopupMenuItem(
                 value: 'tema',
                 child: ListTile(
-                  leading: Icon(Icons.palette_outlined),
+                  leading: PhosphorIcon(Icones.tema),
                   title: Text('Aparência'),
                   dense: true,
                 ),
@@ -178,7 +179,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 const PopupMenuItem(
                   value: 'lembretes',
                   child: ListTile(
-                    leading: Icon(Icons.notifications_outlined),
+                    leading: PhosphorIcon(Icones.notificacao),
                     title: Text('Lembretes'),
                     dense: true,
                   ),
@@ -186,7 +187,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 const PopupMenuItem(
                   value: 'biometria',
                   child: ListTile(
-                    leading: Icon(Icons.fingerprint),
+                    leading: PhosphorIcon(Icones.seguranca),
                     title: Text('Segurança e biometria'),
                     dense: true,
                   ),
@@ -196,7 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const PopupMenuItem(
                 value: 'signout',
                 child: ListTile(
-                  leading: Icon(Icons.logout),
+                  leading: PhosphorIcon(Icones.sair),
                   title: Text('Sair'),
                   dense: true,
                 ),
@@ -219,7 +220,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           FloatingActionButton.extended(
             heroTag: 'ditar',
             onPressed: () => context.push(AppRoutes.lancamentoDitado),
-            icon: const Icon(Icons.mic),
+            icon: const PhosphorIcon(Icones.ditar),
             label: const Text('Ditar'),
           ),
           const SizedBox(height: 12),
@@ -227,7 +228,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             heroTag: 'novo',
             tooltip: 'Novo lançamento',
             onPressed: () => context.push(AppRoutes.lancamentoNovo),
-            child: const Icon(Icons.add),
+            child: const PhosphorIcon(Icones.adicionar),
           ),
         ],
       ),

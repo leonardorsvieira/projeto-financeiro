@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../theme/icones.dart';
 import '../application/investimentos_providers.dart';
 import '../domain/investimento.dart';
 
@@ -84,12 +85,12 @@ class __RebalanceamentoModalState
       appBar: AppBar(
         title: const Text('Calculadora de Rebalanceamento'),
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const PhosphorIcon(Icones.fechar),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           IconButton(
-            icon: Icon(_editandoMetas ? Icons.check : Icons.tune),
+            icon: PhosphorIcon(_editandoMetas ? Icones.confirmar : Icones.ajustar),
             tooltip: _editandoMetas ? 'Salvar metas' : 'Ajustar metas %',
             onPressed: () {
               if (_editandoMetas) {
@@ -116,7 +117,7 @@ class __RebalanceamentoModalState
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.account_balance_wallet_outlined),
+                      const PhosphorIcon(Icones.carteira),
                       const SizedBox(width: 8),
                       Text(
                         'Valor para Aportar (R\$)',

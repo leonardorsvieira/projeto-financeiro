@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../theme/icones.dart';
 import '../application/biometria_providers.dart';
 
 class BiometricLockWrapper extends ConsumerStatefulWidget {
@@ -112,8 +113,8 @@ class _BiometricLockWrapperState extends ConsumerState<BiometricLockWrapper>
                     ),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.fingerprint,
+                  child: PhosphorIcon(
+                    Icones.biometria,
                     size: 72,
                     color: theme.colorScheme.primary,
                   ),
@@ -137,7 +138,7 @@ class _BiometricLockWrapperState extends ConsumerState<BiometricLockWrapper>
                   height: 48,
                   child: FilledButton.icon(
                     onPressed: _autenticando ? null : _solicitarAutenticacao,
-                    icon: const Icon(Icons.lock_open),
+                    icon: const PhosphorIcon(Icones.desbloquear),
                     label: Text(
                       _autenticando ? 'Aguardando biometria…' : 'Desbloquear',
                     ),

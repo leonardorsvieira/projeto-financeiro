@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../theme/icones.dart';
 import '../../application/open_finance_providers.dart';
 
 /// Mostra se o Open Finance está disponível. As credenciais da Pluggy ficam só
@@ -36,8 +37,8 @@ class _StatusPluggyDialog extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  configurado ? Icons.verified_user : Icons.cloud_off,
+                PhosphorIcon(
+                  configurado ? Icones.verificado : Icones.semConexao,
                   color: configurado
                       ? Colors.green.shade600
                       : theme.colorScheme.error,

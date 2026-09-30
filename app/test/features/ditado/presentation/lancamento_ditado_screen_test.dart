@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meubolso/features/auth/domain/auth_state.dart';
 import 'package:meubolso/features/ditado/domain/ditado_repository.dart';
 import 'package:meubolso/features/ditado/domain/rascunho_lancamento.dart';
 import 'package:meubolso/features/ditado/presentation/confirmacao_ditado_screen.dart';
 import 'package:meubolso/main.dart';
+import 'package:meubolso/theme/icones.dart';
 
 import '../../../support/fake_audio_recorder_service.dart';
 import '../../../support/fake_ditado_providers.dart';
@@ -67,12 +67,12 @@ void main() {
 
     expect(find.text('Toque para gravar'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.mic_none));
+    await tester.tap(find.byIcon(Icones.ditar));
     await tester.pump();
     expect(find.text('Toque para parar'), findsOneWidget);
     relogio.avancar(const Duration(seconds: 2));
 
-    await tester.tap(find.byIcon(Icons.stop));
+    await tester.tap(find.byIcon(Icones.pararGravacao));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 60));
     expect(find.text('Lançando no livro…'), findsOneWidget);
@@ -87,7 +87,7 @@ void main() {
     final (fakeAudio, _, _) = await pumpAteDitado(tester);
     fakeAudio.permitido = false;
 
-    await tester.tap(find.byIcon(Icons.mic_none));
+    await tester.tap(find.byIcon(Icones.ditar));
     await tester.pump();
 
     expect(
@@ -102,9 +102,9 @@ void main() {
       (tester) async {
     final (_, fake, _) = await pumpAteDitado(tester);
 
-    await tester.tap(find.byIcon(Icons.mic_none));
+    await tester.tap(find.byIcon(Icones.ditar));
     await tester.pump();
-    await tester.tap(find.byIcon(Icons.stop));
+    await tester.tap(find.byIcon(Icones.pararGravacao));
     await tester.pumpAndSettle();
 
     expect(find.text('Toque para gravar'), findsOneWidget);
@@ -118,10 +118,10 @@ void main() {
     );
     final (_, _, relogio) = await pumpAteDitado(tester, ditado: fakeDitado);
 
-    await tester.tap(find.byIcon(Icons.mic_none));
+    await tester.tap(find.byIcon(Icones.ditar));
     await tester.pump();
     relogio.avancar(const Duration(seconds: 2));
-    await tester.tap(find.byIcon(Icons.stop));
+    await tester.tap(find.byIcon(Icones.pararGravacao));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('indisponível'), findsOneWidget);

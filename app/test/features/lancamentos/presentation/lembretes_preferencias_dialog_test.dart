@@ -9,6 +9,7 @@ import 'package:meubolso/features/lancamentos/application/lembretes_controller.d
 import 'package:meubolso/features/lancamentos/application/lancamentos_providers.dart';
 import 'package:meubolso/features/lancamentos/application/preferencias_service.dart';
 import 'package:meubolso/theme/app_theme.dart';
+import 'package:meubolso/theme/icones.dart';
 
 import '../../../support/fake_lancamentos_repository.dart';
 
@@ -65,7 +66,7 @@ void main() {
     await tester.pumpWidget(_buildApp(controller, fakeRepo));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.tap(find.byIcon(Icones.menu));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Lembretes'));
     await tester.pumpAndSettle();
@@ -75,7 +76,7 @@ void main() {
     expect(find.text('3'), findsOneWidget);
 
     // Incrementa para 4 e salva.
-    await tester.tap(find.byIcon(Icons.add_circle_outline));
+    await tester.tap(find.byIcon(Icones.aumentar));
     await tester.pump();
     expect(find.text('4'), findsOneWidget);
 
@@ -105,7 +106,7 @@ void main() {
     await tester.pumpWidget(_buildApp(controller, fakeRepo));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.tap(find.byIcon(Icones.menu));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Lembretes'));
     await tester.pumpAndSettle();
@@ -113,7 +114,7 @@ void main() {
     expect(find.text('Apenas no dia do vencimento'), findsOneWidget);
     // Botão de diminuir desabilitado no mínimo.
     final minus = tester.widget<IconButton>(
-      find.widgetWithIcon(IconButton, Icons.remove_circle_outline),
+      find.widgetWithIcon(IconButton, Icones.remover),
     );
     expect(minus.onPressed, isNull);
   });

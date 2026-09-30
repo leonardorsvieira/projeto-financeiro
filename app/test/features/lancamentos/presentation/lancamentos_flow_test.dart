@@ -5,6 +5,7 @@ import 'package:meubolso/features/auth/domain/auth_state.dart';
 import 'package:meubolso/features/lancamentos/domain/lancamento.dart';
 import 'package:meubolso/features/lancamentos/presentation/lancamento_form_screen.dart';
 import 'package:meubolso/main.dart';
+import 'package:meubolso/theme/icones.dart';
 
 import '../../../support/fake_wrappers.dart';
 
@@ -77,7 +78,7 @@ void main() {
       (tester) async {
     final fake = await pumpApp(tester);
 
-    await tester.tap(find.widgetWithIcon(FloatingActionButton, Icons.add));
+    await tester.tap(find.widgetWithIcon(FloatingActionButton, Icones.adicionar));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField).at(0), 'Mercado');
@@ -95,7 +96,7 @@ void main() {
   testWidgets('T4: validação bloqueia submit sem criar', (tester) async {
     final fake = await pumpApp(tester);
 
-    await tester.tap(find.widgetWithIcon(FloatingActionButton, Icons.add));
+    await tester.tap(find.widgetWithIcon(FloatingActionButton, Icones.adicionar));
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.widgetWithText(FilledButton, 'Salvar'));
@@ -164,7 +165,7 @@ void main() {
   testWidgets('T7: criar receita via formulário persiste tipo', (tester) async {
     final fake = await pumpApp(tester);
 
-    await tester.tap(find.widgetWithIcon(FloatingActionButton, Icons.add));
+    await tester.tap(find.widgetWithIcon(FloatingActionButton, Icones.adicionar));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Receita'));

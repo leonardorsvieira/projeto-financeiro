@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../theme/icones.dart';
 import '../../home/domain/app_routes.dart';
 import '../application/lancamentos_providers.dart';
 import '../domain/lancamento.dart';
@@ -53,8 +54,8 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.cloud_off_outlined,
+            PhosphorIcon(
+              Icones.semConexao,
               size: 48,
               color: theme.colorScheme.error,
             ),
@@ -84,8 +85,8 @@ class _EmptyState extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.receipt_long_outlined,
+                PhosphorIcon(
+                  Icones.livroCaixa,
                   size: 64,
                   color: theme.colorScheme.primary,
                 ),
@@ -262,10 +263,10 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
                   hintText: 'Buscar lançamento',
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const PhosphorIcon(Icones.buscar),
                   suffixIcon: _buscaController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear),
+                          icon: const PhosphorIcon(Icones.limpar),
                           onPressed: () => setState(() => _buscaController.clear()),
                         )
                       : null,
@@ -298,7 +299,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
                   const Spacer(),
                   IconButton(
                     tooltip: 'Exportar para CSV (Excel)',
-                    icon: const Icon(Icons.download_outlined),
+                    icon: const PhosphorIcon(Icones.exportar),
                     onPressed: () => _exportarCSV(filtrados),
                   ),
                 ],
@@ -355,19 +356,19 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
                       if (hasVencimento)
                         _Badge(
                           label: 'Vence ${formatoData(item.vencimento!)}',
-                          icon: Icons.schedule_outlined,
+                          icon: Icones.vencimento,
                           color: theme.colorScheme.tertiary,
                         ),
                       if (isFixa)
                         _Badge(
                           label: 'Fixa mensal',
-                          icon: Icons.repeat_outlined,
+                          icon: Icones.fixaMensal,
                           color: theme.colorScheme.primary,
                         ),
                       if (ehReceita)
                         _Badge(
                           label: 'Receita',
-                          icon: Icons.arrow_downward,
+                          icon: Icones.entrada,
                           color: Caderneta.corReceita(context),
                         ),
                     ],
@@ -396,7 +397,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
                     const PopupMenuItem(
                       value: 'delete',
                       child: ListTile(
-                        leading: Icon(Icons.delete_outline),
+                        leading: PhosphorIcon(Icones.excluir),
                         title: Text('Excluir'),
                         dense: true,
                       ),
@@ -437,7 +438,7 @@ class _Badge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          PhosphorIcon(icon, size: 12, color: color),
           const SizedBox(width: 4),
           Text(
             label,

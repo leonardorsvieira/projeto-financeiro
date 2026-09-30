@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../theme/icones.dart';
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../application/dashboard_providers.dart';
@@ -23,7 +24,7 @@ class HistoricoMesesScreen extends ConsumerWidget {
         title: const Text('Histórico de Meses'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.bar_chart),
+            icon: const PhosphorIcon(Icones.relatorio),
             tooltip: 'Gráficos e comparativos',
             onPressed: () => context.push(AppRoutes.relatorios),
           ),
@@ -38,7 +39,7 @@ class HistoricoMesesScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const Icon(Icons.history_outlined, size: 32),
+                  const PhosphorIcon(Icones.historico, size: 32),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -155,7 +156,7 @@ class _CardMesHistorico extends StatelessWidget {
                         color: theme.colorScheme.onPrimaryContainer,
                       ),
                     ),
-                  const Icon(Icons.chevron_right),
+                  const PhosphorIcon(Icones.proximo),
                 ],
               ),
               const SizedBox(height: 12),

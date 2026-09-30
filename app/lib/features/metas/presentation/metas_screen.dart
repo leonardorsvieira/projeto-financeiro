@@ -2,6 +2,7 @@ import '../../../theme/caderneta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../theme/icones.dart';
 import '../../dashboard/presentation/dashboard_screen.dart'
     show textoUtilizacaoOrcamento;
 import '../../lancamentos/domain/lancamento_converter.dart';
@@ -99,7 +100,7 @@ class _MetasScreenState extends ConsumerState<MetasScreen> {
       appBar: AppBar(title: const Text('Metas')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _abrirDialog(),
-        icon: const Icon(Icons.add),
+        icon: const PhosphorIcon(Icones.adicionar),
         label: const Text('Nova meta'),
       ),
       body: metas.isEmpty
@@ -136,8 +137,8 @@ class _EmptyState extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.track_changes_outlined,
+                PhosphorIcon(
+                  Icones.meta,
                   size: 64,
                   color: theme.colorScheme.primary,
                 ),

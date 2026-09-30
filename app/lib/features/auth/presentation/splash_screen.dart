@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../theme/icones.dart';
+
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
@@ -11,8 +13,8 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.account_balance_wallet_outlined,
+            PhosphorIcon(
+              Icones.carteira,
               size: 72,
               color: theme.colorScheme.primary,
             ),

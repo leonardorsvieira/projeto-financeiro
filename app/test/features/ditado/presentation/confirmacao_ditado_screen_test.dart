@@ -9,6 +9,7 @@ import 'package:meubolso/features/ditado/presentation/lancamento_ditado_screen.d
 import 'package:meubolso/features/lancamentos/domain/lancamento.dart'
     show TipoLancamento;
 import 'package:meubolso/main.dart';
+import 'package:meubolso/theme/icones.dart';
 
 import '../../../support/fake_audio_recorder_service.dart';
 import '../../../support/fake_ditado_providers.dart';
@@ -55,10 +56,10 @@ void main() {
 
     await tester.tap(find.text('Ditar'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.mic_none));
+    await tester.tap(find.byIcon(Icones.ditar));
     await tester.pump();
     relogio.avancar(const Duration(seconds: 2));
-    await tester.tap(find.byIcon(Icons.stop));
+    await tester.tap(find.byIcon(Icones.pararGravacao));
     await tester.pumpAndSettle();
 
     return (fakeLancamentos, fakeDitado);
@@ -100,7 +101,7 @@ void main() {
     );
     await pumpConfirmacao(tester, ditado: ditado);
 
-    final micCampoValor = find.byIcon(Icons.mic_none).at(2);
+    final micCampoValor = find.byIcon(Icones.ditar).at(2);
     await tester.ensureVisible(micCampoValor);
     await tester.tap(micCampoValor);
     await tester.pump();
@@ -188,10 +189,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ditar'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.mic_none));
+    await tester.tap(find.byIcon(Icones.ditar));
     await tester.pump();
     relogio.avancar(const Duration(seconds: 2));
-    await tester.tap(find.byIcon(Icons.stop));
+    await tester.tap(find.byIcon(Icones.pararGravacao));
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.widgetWithText(FilledButton, 'Lançar'));
@@ -258,7 +259,7 @@ void main() {
     );
     await pumpConfirmacao(tester, ditado: ditado);
 
-    final micCampoTipo = find.byIcon(Icons.mic_none).at(0);
+    final micCampoTipo = find.byIcon(Icones.ditar).at(0);
     await tester.tap(micCampoTipo);
     await tester.pump();
 

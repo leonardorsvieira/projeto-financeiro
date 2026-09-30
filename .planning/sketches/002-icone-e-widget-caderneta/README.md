@@ -2,7 +2,7 @@
 sketch: 002
 name: icone-e-widget-caderneta
 question: "Como ficam o ícone do app e o widget da tela inicial na identidade Caderneta?"
-winner: "A (ícone Carimbo)"
+winner: "Ícone A (Carimbo) + widget Agenda 4×2 (só Android)"
 tags: [identidade, caderneta, icone, launcher, widget, home-widget]
 ---
 

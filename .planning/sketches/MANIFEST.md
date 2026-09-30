@@ -11,4 +11,4 @@ Nenhuma referência externa dada; o usuário pediu ~5 modelos com mais identidad
 | # | Name | Design Question | Winner | Tags |
 |---|------|----------------|--------|------|
 | 001 | identidade-visual-e-voz | Qual personalidade (visual + tom de voz) dá identidade própria ao app? | B · Caderneta | identidade, marca, tom-de-voz |
-| 002 | icone-e-widget-caderneta | Como ficam o ícone do app e o widget da tela inicial na identidade Caderneta? | Ícone A · Carimbo (widget em aberto) | icone, widget, caderneta |
+| 002 | icone-e-widget-caderneta | Como ficam o ícone do app e o widget da tela inicial na identidade Caderneta? | Ícone A · Carimbo + widget Agenda 4×2 (Android) | icone, widget, caderneta |

@@ -67,7 +67,7 @@ class __RebalanceamentoModalState
       _editandoMetas = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Metas de alocação salvas com sucesso!')),
+      const SnackBar(content: Text('Metas de alocação salvas.')),
     );
   }
 
@@ -90,7 +90,7 @@ class __RebalanceamentoModalState
         actions: [
           IconButton(
             icon: Icon(_editandoMetas ? Icons.check : Icons.tune),
-            tooltip: _editandoMetas ? 'Salvar Metas' : 'Ajustar Metas %',
+            tooltip: _editandoMetas ? 'Salvar metas' : 'Ajustar metas %',
             onPressed: () {
               if (_editandoMetas) {
                 _salvarMetas();
@@ -202,7 +202,7 @@ class __RebalanceamentoModalState
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: _salvarMetas,
-                        child: const Text('Salvar Metas %'),
+                        child: const Text('Salvar metas %'),
                       ),
                     ),
                   ],
@@ -248,7 +248,7 @@ class __RebalanceamentoModalState
                           child: Text(
                             s.valorSugeridoCents > 0
                                 ? '+ ${fmtBrl.format(s.valorSugeridoReais)}'
-                                : 'Sem Aporte',
+                                : 'Sem aporte',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,

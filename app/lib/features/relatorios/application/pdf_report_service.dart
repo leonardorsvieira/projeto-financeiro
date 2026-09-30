@@ -57,7 +57,7 @@ class PdfReportService {
                       ),
                     ),
                     pw.Text(
-                      'Relatório Financeiro Comparativo & Evolução',
+                      'Relatório financeiro: comparativo e evolução',
                       style: const pw.TextStyle(
                         fontSize: 12,
                         color: PdfColors.grey700,
@@ -89,19 +89,19 @@ class PdfReportService {
             pw.Row(
               children: [
                 _buildKpiCard(
-                  rotulo: 'Total Receitas',
+                  rotulo: 'Total de receitas',
                   valor: fmtBrl.format(dados.totalEntradasCents / 100),
                   cor: PdfColors.green700,
                 ),
                 pw.SizedBox(width: 8),
                 _buildKpiCard(
-                  rotulo: 'Total Despesas',
+                  rotulo: 'Total de despesas',
                   valor: fmtBrl.format(dados.totalSaidasCents / 100),
                   cor: PdfColors.red700,
                 ),
                 pw.SizedBox(width: 8),
                 _buildKpiCard(
-                  rotulo: 'Saldo Líquido',
+                  rotulo: 'Saldo líquido',
                   valor: fmtBrl.format(dados.saldoTotalCents / 100),
                   cor: dados.saldoTotalCents >= 0
                       ? PdfColors.green700
@@ -109,7 +109,7 @@ class PdfReportService {
                 ),
                 pw.SizedBox(width: 8),
                 _buildKpiCard(
-                  rotulo: 'Patrimônio Atual',
+                  rotulo: 'Patrimônio atual',
                   valor: fmtBrl.format(dados.patrimonioAtualCents / 100),
                   cor: PdfColors.blue800,
                 ),
@@ -119,7 +119,7 @@ class PdfReportService {
 
             // Tabela Comparativa Mensal
             pw.Text(
-              'Histórico Comparativo Mês a Mês',
+              'Histórico comparativo, mês a mês',
               style: pw.TextStyle(
                 fontSize: 14,
                 fontWeight: pw.FontWeight.bold,
@@ -132,7 +132,7 @@ class PdfReportService {
                 'Entradas (Receitas)',
                 'Saídas (Despesas)',
                 'Saldo do Mês',
-                'Patrimônio Acumulado'
+                'Patrimônio acumulado'
               ],
               headerStyle: pw.TextStyle(
                 fontWeight: pw.FontWeight.bold,

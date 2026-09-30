@@ -59,7 +59,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
         abriu
             ? SnackBar(
                 content: const Text(
-                  'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar Agora".',
+                  'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar agora".',
                 ),
                 backgroundColor: Colors.purple.shade700,
                 duration: const Duration(seconds: 10),
@@ -174,7 +174,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Open Finance & Bancos'),
+        title: const Text('Bancos e Open Finance'),
         actions: [
           IconButton(
             icon: _sincronizando
@@ -240,7 +240,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                           children: [
                             Text(
                               pluggyConfigurado
-                                  ? 'Integração Pluggy Ativa'
+                                  ? 'Integração Pluggy ativa'
                                   : 'Open Finance indisponível',
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -308,8 +308,8 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                               : const Icon(Icons.sync, size: 18),
                           label: Text(
                             _sincronizando
-                                ? 'Sincronizando...'
-                                : 'Sincronizar Agora',
+                                ? 'Sincronizando…'
+                                : 'Sincronizar agora',
                           ),
                         ),
                         OutlinedButton.icon(
@@ -385,12 +385,12 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
             const SizedBox(height: 16),
           ],
 
-          // Seção: Instituições Conectadas
+          // Seção: Instituições conectadas
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Instituições Conectadas',
+                'Instituições conectadas',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -459,7 +459,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                                 onPressed: () =>
                                     mostrarDialogoConectarBanco(context),
                                 icon: const Icon(Icons.add, size: 18),
-                                label: const Text('Adicionar Bancos / Item ID'),
+                                label: const Text('Adicionar banco ou Item ID'),
                               ),
                             ] else ...[
                               FilledButton.icon(
@@ -524,7 +524,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Importar Extrato Bancário (.OFX)',
+                              'Importar extrato bancário (.OFX)',
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -544,7 +544,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => _mostrarDialogoOFX(context, ref),
                       icon: const Icon(Icons.upload_file),
-                      label: const Text('Importar Arquivo OFX'),
+                      label: const Text('Importar arquivo OFX'),
                     ),
                   ),
                 ],
@@ -561,7 +561,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Importar Extrato OFX'),
+        title: const Text('Importar extrato OFX'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -595,14 +595,14 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('$qtd transações importadas com sucesso!'),
+                      content: Text('$qtd transações importadas.'),
                       backgroundColor: Caderneta.corReceita(context),
                     ),
                   );
                 }
               }
             },
-            child: const Text('Importar Transações'),
+            child: const Text('Importar transações'),
           ),
         ],
       ),

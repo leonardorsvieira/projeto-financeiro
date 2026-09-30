@@ -23,7 +23,7 @@ class _ThemeSelectorDialog extends ConsumerWidget {
         children: [
           Icon(Icons.palette_outlined),
           SizedBox(width: 8),
-          Text('Aparência & Tema'),
+          Text('Aparência'),
         ],
       ),
       content: Column(

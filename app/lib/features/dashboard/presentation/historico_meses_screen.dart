@@ -24,7 +24,7 @@ class HistoricoMesesScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.bar_chart),
-            tooltip: 'Gráficos & Comparativos',
+            tooltip: 'Gráficos e comparativos',
             onPressed: () => context.push(AppRoutes.relatorios),
           ),
         ],
@@ -147,7 +147,7 @@ class _CardMesHistorico extends StatelessWidget {
                   ),
                   if (isSelecionado)
                     Chip(
-                      label: const Text('Mês Atual'),
+                      label: const Text('Mês atual'),
                       visualDensity: VisualDensity.compact,
                       backgroundColor: theme.colorScheme.primaryContainer,
                       labelStyle: TextStyle(

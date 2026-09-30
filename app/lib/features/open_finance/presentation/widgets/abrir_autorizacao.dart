@@ -17,7 +17,7 @@ SnackBar snackBarAbrirAutorizacao(Uri url) {
   return SnackBar(
     content: const Text(
       'Autorização pronta! Toque em "Abrir", clique em "Permitir" no '
-      'meu.pluggy.ai e depois em "Sincronizar Agora".',
+      'meu.pluggy.ai e depois em "Sincronizar agora".',
     ),
     backgroundColor: Colors.purple.shade700,
     duration: const Duration(seconds: 60),

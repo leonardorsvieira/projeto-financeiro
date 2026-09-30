@@ -27,7 +27,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Conteúdo do App'), findsOneWidget);
-    expect(find.text('Meu Bolso Bloqueado'), findsNothing);
+    expect(find.text('Meu Bolso bloqueado'), findsNothing);
   });
 
   testWidgets('exibe tela de bloqueio quando biometria ativa e falhar', (tester) async {
@@ -48,7 +48,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Meu Bolso Bloqueado'), findsOneWidget);
+    expect(find.text('Meu Bolso bloqueado'), findsOneWidget);
     expect(find.text('Conteúdo Protegido'), findsNothing);
   });
 }

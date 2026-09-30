@@ -27,7 +27,7 @@ class RelatoriosScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Relatórios & Comparativos'),
+        title: const Text('Relatórios e comparativos'),
         actions: [
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
@@ -36,7 +36,7 @@ class RelatoriosScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.table_chart_outlined),
-            tooltip: 'Exportar Excel (CSV)',
+            tooltip: 'Exportar planilha (CSV)',
             onPressed: () => _exportarCSV(context, dados),
           ),
         ],
@@ -87,7 +87,7 @@ class RelatoriosScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // 2. Evolução Patrimonial (Linha do Tempo)
+          // 2. Evolução patrimonial (Linha do Tempo)
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -101,13 +101,13 @@ class RelatoriosScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Evolução Patrimonial',
+                            'Evolução patrimonial',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            'Patrimônio Líquido Acumulado',
+                            'Patrimônio líquido acumulado',
                             style: theme.textTheme.bodySmall,
                           ),
                         ],
@@ -155,12 +155,12 @@ class RelatoriosScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _ValorResumoItem(
-                        rotulo: 'Patrimônio Atual',
+                        rotulo: 'Patrimônio atual',
                         valor: fmtBrl.format(dados.patrimonioAtualCents / 100),
                         cor: theme.colorScheme.primary,
                       ),
                       _ValorResumoItem(
-                        rotulo: 'Patrimônio Inicial',
+                        rotulo: 'Patrimônio inicial',
                         valor:
                             fmtBrl.format(dados.patrimonioInicialCents / 100),
                         cor: theme.colorScheme.onSurfaceVariant,
@@ -175,7 +175,7 @@ class RelatoriosScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // 3. Comparativo Mensal (Entradas vs Saídas)
+          // 3. Comparativo mensal (receitas e despesas)
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -183,7 +183,7 @@ class RelatoriosScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Comparativo Mensal (Entradas vs Saídas)',
+                    'Comparativo mensal (receitas e despesas)',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -240,7 +240,7 @@ class RelatoriosScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Exportar Relatórios',
+                              'Exportar relatórios',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -290,7 +290,7 @@ class RelatoriosScreen extends ConsumerWidget {
     List<dynamic> lancamentos,
   ) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Gerando relatório em PDF...')),
+      const SnackBar(content: Text('Gerando relatório em PDF…')),
     );
     await PdfReportService.gerarECompartilharPDF(
       dados: dados,

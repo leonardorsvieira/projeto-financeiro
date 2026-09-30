@@ -19,10 +19,10 @@ String friendlyAuthError(Object error) {
       return 'Confirme seu e-mail antes de entrar.';
     }
     if (message.contains('rate limit')) {
-      return 'Muitas tentativas. Aguarde alguns segundos e tente de novo.';
+      return 'Muitas tentativas. Aguarde alguns segundos e tente novamente.';
     }
     if (message.contains('network')) {
-      return 'Falha de conexão. Verifique sua internet.';
+      return 'Sem conexão. Verifique sua internet e tente novamente.';
     }
   }
   return 'Não foi possível concluir. Tente novamente.';

@@ -23,11 +23,11 @@ class CartoesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meus Cartões de Crédito'),
+        title: const Text('Cartões de crédito'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Novo Cartão',
+            tooltip: 'Novo cartão',
             onPressed: () => _abrirDialogoFormulario(context, ref, null),
           ),
         ],
@@ -52,7 +52,7 @@ class CartoesScreen extends ConsumerWidget {
                     ElevatedButton.icon(
                       onPressed: () => _abrirDialogoFormulario(context, ref, null),
                       icon: const Icon(Icons.add),
-                      label: const Text('Cadastrar Cartão'),
+                      label: const Text('Cadastrar cartão'),
                     ),
                   ],
                 ),
@@ -276,7 +276,7 @@ class __FormularioCartaoDialogState
     final isEdit = widget.cartao != null;
 
     return AlertDialog(
-      title: Text(isEdit ? 'Editar Cartão' : 'Novo Cartão de Crédito'),
+      title: Text(isEdit ? 'Editar cartão' : 'Novo cartão de crédito'),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,

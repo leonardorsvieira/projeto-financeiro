@@ -81,7 +81,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
         abriu
             ? SnackBar(
                 content: const Text(
-                  'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar Agora".',
+                  'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar agora".',
                 ),
                 backgroundColor: Colors.purple.shade700,
                 duration: const Duration(seconds: 10),
@@ -124,7 +124,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Pluggy Connect aberto no navegador! Autorize sua instituição bancária e clique em "Sincronizar Agora".',
+            'Pluggy Connect aberto no navegador. Autorize sua instituição bancária e clique em "Sincronizar agora".',
           ),
           backgroundColor: Colors.green.shade700,
           duration: const Duration(seconds: 7),
@@ -175,7 +175,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${conta.nomeBanco} vinculado e sincronizado com sucesso!'),
+          content: Text('${conta.nomeBanco} vinculado e sincronizado.'),
           backgroundColor: Colors.green.shade700,
         ),
       );
@@ -213,7 +213,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${_bancoSelecionado!.nome} conectado com sucesso via Open Finance!',
+            '${_bancoSelecionado!.nome} conectado via Open Finance.',
           ),
           backgroundColor: Colors.green.shade700,
         ),
@@ -235,7 +235,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Conectar Banco (Open Finance)'),
+        title: const Text('Conectar banco (Open Finance)'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
@@ -336,7 +336,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Conectar Banco via Pluggy Connect',
+                              'Conectar banco via Pluggy Connect',
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -356,7 +356,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
                     child: OutlinedButton.icon(
                       onPressed: _conectando ? null : () => _abrirPluggyConnectGeral(),
                       icon: const Icon(Icons.launch, size: 18),
-                      label: const Text('Abrir Catálogo de Bancos Pluggy'),
+                      label: const Text('Abrir catálogo de bancos Pluggy'),
                     ),
                   ),
                 ],
@@ -369,7 +369,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
           ExpansionTile(
             leading: const Icon(Icons.pin_outlined),
             title: const Text(
-              'Vincular Conexão por Item ID',
+              'Vincular conexão por Item ID',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             subtitle: const Text(

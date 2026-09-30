@@ -686,7 +686,7 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Análise Inteligente (IA)',
+                    'Análise do mês (IA)',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -709,7 +709,7 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
               OutlinedButton.icon(
                 onPressed: _gerarAnalise,
                 icon: const Icon(Icons.psychology_outlined),
-                label: const Text('Gerar Diagnóstico por IA'),
+                label: const Text('Gerar análise por IA'),
               ),
             ] else if (_carregando) ...[
               const Row(
@@ -721,7 +721,7 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
                   ),
                   SizedBox(width: 12),
                   Expanded(
-                    child: Text('A IA está analisando seu orçamento...'),
+                    child: Text('Analisando seu orçamento…'),
                   ),
                 ],
               ),

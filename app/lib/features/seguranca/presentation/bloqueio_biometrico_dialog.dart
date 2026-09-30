@@ -52,7 +52,7 @@ class __BloqueioBiometricoDialogState
           SnackBar(
             content: Text(
               novoValor
-                  ? 'Bloqueio por biometria ativado com sucesso!'
+                  ? 'Bloqueio por biometria ativado.'
                   : 'Bloqueio por biometria desativado.',
             ),
           ),

@@ -120,7 +120,7 @@ class _BiometricLockWrapperState extends ConsumerState<BiometricLockWrapper>
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Meu Bolso Bloqueado',
+                  'Meu Bolso bloqueado',
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -139,7 +139,7 @@ class _BiometricLockWrapperState extends ConsumerState<BiometricLockWrapper>
                     onPressed: _autenticando ? null : _solicitarAutenticacao,
                     icon: const Icon(Icons.lock_open),
                     label: Text(
-                      _autenticando ? 'Aguardando digital...' : 'Desbloquear',
+                      _autenticando ? 'Aguardando biometria…' : 'Desbloquear',
                     ),
                   ),
                 ),

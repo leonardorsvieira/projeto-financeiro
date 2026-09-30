@@ -4,8 +4,6 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-buildDir = file("C:/build/meubolso/app")
-
 android {
     namespace = "br.com.meubolso.meubolso"
     compileSdk = 36

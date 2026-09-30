@@ -388,6 +388,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
                 ),
                 PopupMenuButton<String>(
                   tooltip: 'Ações',
+                  icon: const PhosphorIcon(Icones.menu),
                   onSelected: (value) {
                     if (value == 'delete') {
                       _confirmarExclusao(context, ref, item);

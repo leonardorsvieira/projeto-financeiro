@@ -486,6 +486,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
+              icon: const PhosphorIcon(Icones.abrirLista),
               value: _tipoConta,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),

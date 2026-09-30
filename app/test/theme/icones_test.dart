@@ -111,4 +111,64 @@ void main() {
       expect(find.byIcon(Icones.confirmar), findsOneWidget);
     });
   });
+
+  group('lib sem ícones Material', () {
+    // `phosphor_icon.dart` é o único lugar que monta `Icon(` de propósito: ele
+    // desenha a camada de preenchimento do duotone.
+    const permitidos = {'lib/theme/phosphor_icon.dart'};
+
+    List<({String arquivo, int linha, String texto})> linhasDeCodigo() {
+      final resultado = <({String arquivo, int linha, String texto})>[];
+      final arquivos = Directory('lib')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart'));
+      for (final f in arquivos) {
+        final caminho = f.path.replaceAll(r'\', '/');
+        if (permitidos.contains(caminho)) continue;
+        final linhas = f.readAsLinesSync();
+        for (var i = 0; i < linhas.length; i++) {
+          if (linhas[i].trimLeft().startsWith('//')) continue;
+          resultado.add((arquivo: caminho, linha: i + 1, texto: linhas[i]));
+        }
+      }
+      return resultado;
+    }
+
+    test('nenhum Icons.* nem Icon( puro: tudo é PhosphorIcon(Icones.*)', () {
+      final material = RegExp(r'\bIcons\.');
+      final iconPuro = RegExp(r'(?<![A-Za-z0-9_])Icon\(');
+      final achados = [
+        for (final l in linhasDeCodigo())
+          if (material.hasMatch(l.texto) || iconPuro.hasMatch(l.texto))
+            '${l.arquivo}:${l.linha}: ${l.texto.trim()}',
+      ];
+      expect(achados, isEmpty, reason: achados.join('\n'));
+    });
+
+    test(
+      'PopupMenuButton e dropdowns trazem ícone próprio (não o do Material)',
+      () {
+        final achados = <String>[];
+        final linhas = linhasDeCodigo();
+        for (var i = 0; i < linhas.length; i++) {
+          final l = linhas[i];
+          final popup = l.texto.contains('PopupMenuButton<');
+          final dropdown = l.texto.contains('DropdownButtonFormField<');
+          if (!popup && !dropdown) continue;
+          final proximas = linhas
+              .skip(i)
+              .take(7)
+              .where((x) => x.arquivo == l.arquivo)
+              .map((x) => x.texto)
+              .join('\n');
+          final ok = popup
+              ? proximas.contains('icon:') || proximas.contains('child:')
+              : proximas.contains('icon:');
+          if (!ok) achados.add('${l.arquivo}:${l.linha}: ${l.texto.trim()}');
+        }
+        expect(achados, isEmpty, reason: achados.join('\n'));
+      },
+    );
+  });
 }

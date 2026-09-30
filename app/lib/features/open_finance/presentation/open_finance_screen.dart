@@ -693,6 +693,7 @@ class _CardContaBancaria extends StatelessWidget {
         isThreeLine: true,
         trailing: PopupMenuButton<String>(
           tooltip: 'Opções',
+          icon: const PhosphorIcon(Icones.menu),
           onSelected: (val) {
             if (val == 'sync') onSincronizar();
             if (val == 'remover') onRemover();

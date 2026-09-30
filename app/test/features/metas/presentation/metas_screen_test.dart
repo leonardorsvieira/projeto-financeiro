@@ -8,6 +8,7 @@ import 'package:meubolso/features/metas/application/metas_providers.dart';
 import 'package:meubolso/features/metas/domain/meta.dart';
 import 'package:meubolso/features/metas/presentation/metas_screen.dart';
 import 'package:meubolso/theme/app_theme.dart';
+import 'package:meubolso/theme/icones.dart';
 
 import '../../../support/fake_lancamentos_repository.dart';
 import '../../../support/fake_metas_repository.dart';
@@ -126,7 +127,7 @@ void main() {
     await _pump(tester, lancamentos: lancamentos, metas: metas);
 
     // Editar.
-    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.tap(find.byIcon(Icones.menu));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Editar'));
     await tester.pumpAndSettle();
@@ -140,7 +141,7 @@ void main() {
     expect(metas.items.single.valorLimiteCents, 60000);
 
     // Excluir.
-    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.tap(find.byIcon(Icones.menu));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Excluir'));
     await tester.pumpAndSettle();

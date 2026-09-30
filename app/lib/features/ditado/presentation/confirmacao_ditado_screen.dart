@@ -442,6 +442,7 @@ class _ConfirmacaoDitadoScreenState
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
+                            icon: const PhosphorIcon(Icones.abrirLista),
                             initialValue: _categoria,
                             decoration: const InputDecoration(
                               labelText: 'Categoria',
@@ -467,6 +468,7 @@ class _ConfirmacaoDitadoScreenState
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
+                            icon: const PhosphorIcon(Icones.abrirLista),
                             initialValue: _formaPagamento,
                             decoration: const InputDecoration(
                               labelText: 'Forma de pagamento',

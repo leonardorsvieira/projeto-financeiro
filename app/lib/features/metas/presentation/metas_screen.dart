@@ -202,6 +202,7 @@ class _MetaTile extends StatelessWidget {
                 ),
                 PopupMenuButton<String>(
                   tooltip: 'Ações',
+                  icon: const PhosphorIcon(Icones.menu),
                   onSelected: (value) {
                     if (value == 'editar') onEditar();
                     if (value == 'excluir') onExcluir();
@@ -308,6 +309,7 @@ class _MetaDialogState extends State<_MetaDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           DropdownButtonFormField<String>(
+            icon: const PhosphorIcon(Icones.abrirLista),
             initialValue: _categoria,
             decoration: const InputDecoration(labelText: 'Categoria'),
             items: [

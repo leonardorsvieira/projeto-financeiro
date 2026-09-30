@@ -394,6 +394,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                       const SizedBox(height: 16),
                     ],
                     DropdownButtonFormField<String>(
+                      icon: const PhosphorIcon(Icones.abrirLista),
                       initialValue: _categoria,
                       decoration: const InputDecoration(
                         labelText: 'Categoria',
@@ -424,6 +425,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                             : opcoesForma.first;
 
                         return DropdownButtonFormField<String>(
+                          icon: const PhosphorIcon(Icones.abrirLista),
                           initialValue: formaValida,
                           decoration: const InputDecoration(
                             labelText: 'Forma de pagamento',

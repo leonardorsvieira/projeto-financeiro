@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meu Bolso · Identidades</title>
+<link rel="stylesheet" href="../themes/default.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=Fredoka:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Nunito:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding-top: 58px; background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); }
+
+  /* ---------- barra de variantes (fora do design) ---------- */
+  #variant-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 9998; background: #fff; border-bottom: 1px solid var(--color-border); padding: 10px 16px; display: flex; gap: 8px; overflow-x: auto; font-family: Inter, system-ui; }
+  .variant-tab { border: 1px solid var(--color-border); background: #fff; border-radius: 999px; padding: 7px 14px; font: 500 13px Inter, system-ui; cursor: pointer; white-space: nowrap; transition: all .15s ease; }
+  .variant-tab:hover { border-color: #999; }
+  .variant-tab.active { background: #1c1b19; color: #fff; border-color: #1c1b19; }
+
+  main { padding: 20px 16px 60px; min-height: calc(100vh - 58px); }
+  .wrap { max-width: 1240px; margin: 0 auto; }
+
+  /* ---------- ficha da identidade ---------- */
+  .ficha { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; background: var(--surface); color: var(--ink); border: var(--borda); border-radius: var(--r-card); box-shadow: var(--sombra); padding: 20px 24px; margin-bottom: 24px; }
+  .ficha .logo { width: 64px; height: 64px; }
+  .ficha h1 { font-family: var(--f-display); font-weight: var(--w-display); margin: 0; font-size: 30px; letter-spacing: var(--ls-display); }
+  .ficha .tag { margin: 2px 0 8px; color: var(--muted); font-size: 15px; }
+  .ficha .voz { font-size: 14px; margin: 0; }
+  .ficha .voz b { color: var(--primary-ink); }
+  .paleta { display: flex; gap: 6px; }
+  .paleta span { width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(0,0,0,.12); }
+  .fontes { font-size: 12px; color: var(--muted); margin-top: 8px; text-align: right; }
+  @media (max-width: 760px) { .ficha { grid-template-columns: auto 1fr; } .ficha .direita { grid-column: 1 / -1; } .fontes { text-align: left; } }
+
+  /* ---------- celulares ---------- */
+  .phones { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; }
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-col .rotulo { font: 600 12px Inter, system-ui; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .phone { width: 360px; max-width: calc(100vw - 32px); height: 740px; border-radius: 44px; padding: 10px; background: #111; box-shadow: 0 30px 60px -20px rgba(0,0,0,.35); }
+  .screen { position: relative; height: 100%; border-radius: 34px; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--f-body); display: flex; flex-direction: column; }
+  .scroll { flex: 1; overflow-y: auto; padding: 18px 18px 24px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .status { height: 30px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 0 26px; font: 600 12px Inter, system-ui; color: var(--ink); }
+
+  /* componentes base (cada identidade muda via variáveis) */
+  .topo { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .topo .logo { width: 34px; height: 34px; flex: none; }
+  .topo .ola { font-family: var(--f-display); font-weight: var(--w-display); font-size: 22px; letter-spacing: var(--ls-display); line-height: 1.1; }
+  .topo .sub { font-size: 13px; color: var(--muted); }
+  .avatar { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; background: var(--chip); color: var(--ink); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+
+  .card { background: var(--surface); border: var(--borda); border-radius: var(--r-card); box-shadow: var(--sombra); padding: 16px; margin-bottom: 14px; }
+  .card h3 { margin: 0 0 12px; font-family: var(--f-display); font-weight: var(--w-display); font-size: 16px; letter-spacing: var(--ls-display); }
+  .hero { background: var(--hero-bg); color: var(--hero-ink); position: relative; overflow: hidden; }
+  .hero .rot { font-size: 13px; opacity: .85; }
+  .hero .valor { font-family: var(--f-num); font-weight: var(--w-num); font-size: 40px; letter-spacing: -0.02em; margin: 4px 0 12px; }
+  .hero .linha { display: flex; gap: 18px; font-size: 13px; }
+  .hero .linha b { display: block; font-family: var(--f-num); font-size: 15px; }
+  .alerta { display: flex; gap: 10px; align-items: center; background: var(--alerta-bg); color: var(--alerta-ink); border-radius: var(--r-chip); padding: 11px 14px; font-size: 13px; font-weight: 600; margin-bottom: 14px; border: var(--alerta-borda, none); cursor: pointer; transition: transform .15s ease; }
+  .alerta:hover { transform: translateY(-1px); }
+  .alerta .ic { font-size: 16px; }
+  .cat { display: grid; grid-template-columns: 92px 1fr 72px; align-items: center; gap: 8px; font-size: 13px; margin: 8px 0; }
+  .cat .barra { height: var(--barra-h); background: var(--trilho); border-radius: var(--r-barra); overflow: hidden; }
+  .cat .barra i { display: block; height: 100%; border-radius: var(--r-barra); }
+  .cat .v { text-align: right; font-family: var(--f-num); font-size: 12px; }
+  .meta .trilho { height: 10px; border-radius: var(--r-barra); background: var(--trilho); overflow: hidden; margin: 8px 0; }
+  .meta .trilho i { display: block; height: 100%; width: 83%; background: var(--aviso); border-radius: var(--r-barra); }
+  .meta p { margin: 0; font-size: 13px; color: var(--muted); }
+  .meta .nums { display: flex; justify-content: space-between; font-family: var(--f-num); font-size: 12px; }
+
+  .nav { flex: none; display: flex; justify-content: space-around; align-items: center; padding: 10px 12px 18px; background: var(--nav-bg); border-top: var(--nav-borda); }
+  .nav button { border: 0; background: none; color: var(--muted); font: 600 11px var(--f-body); display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 10px; border-radius: 12px; transition: all .15s ease; }
+  .nav button .i { font-size: 18px; line-height: 1; }
+  .nav button:hover { color: var(--ink); }
+  .nav button.on { color: var(--primary-ink); }
+  .nav button.mic { width: 56px; height: 56px; margin-top: -26px; border-radius: var(--r-mic); background: var(--primary); color: var(--on-primary); box-shadow: var(--mic-sombra); justify-content: center; }
+  .nav button.mic .i { font-size: 22px; }
+
+  /* ditado */
+  .ditado { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 18px; min-height: 100%; }
+  .ditado h2 { font-family: var(--f-display); font-weight: var(--w-display); letter-spacing: var(--ls-display); font-size: 26px; margin: 0 0 6px; }
+  .ditado .dica { color: var(--muted); font-size: 14px; margin: 0 0 30px; max-width: 260px; }
+  .bigmic { width: 150px; height: 150px; border-radius: var(--r-mic); border: 0; background: var(--primary); color: var(--on-primary); font-size: 54px; cursor: pointer; box-shadow: var(--mic-sombra); position: relative; transition: transform .15s ease; }
+  .bigmic:hover { transform: scale(1.03); }
+  .bigmic.gravando::before, .bigmic.gravando::after { content: ''; position: absolute; inset: -14px; border-radius: inherit; border: 3px solid var(--primary); animation: pulso 1.4s ease-out infinite; }
+  .bigmic.gravando::after { animation-delay: .7s; }
+  @keyframes pulso { from { opacity: .7; transform: scale(.9); } to { opacity: 0; transform: scale(1.35); } }
+  .estado { margin-top: 26px; font-weight: 700; font-size: 15px; min-height: 22px; }
+  .timer { font-family: var(--f-num); color: var(--muted); font-size: 13px; }
+  .transcricao { margin-top: 14px; font-style: italic; color: var(--muted); font-size: 14px; min-height: 60px; max-width: 280px; }
+  .ondas { display: flex; gap: 4px; height: 30px; align-items: center; margin-top: 10px; }
+  .ondas i { width: 4px; background: var(--primary); border-radius: 2px; animation: onda .9s ease-in-out infinite; }
+  @keyframes onda { 0%,100% { height: 6px; } 50% { height: 28px; } }
+  .rascunho { width: 100%; text-align: left; animation: sobe .3s ease; }
+  @keyframes sobe { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .rascunho .val { font-family: var(--f-num); font-weight: var(--w-num); font-size: 34px; margin: 2px 0 10px; }
+  .campo { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: var(--divisor); font-size: 14px; }
+  .campo span:first-child { color: var(--muted); }
+  .itens { font-size: 13px; margin-top: 10px; }
+  .itens div { display: flex; justify-content: space-between; padding: 3px 0; }
+  .acoes { display: flex; gap: 10px; margin-top: 16px; }
+  .btn { flex: 1; border: 0; border-radius: var(--r-btn); padding: 13px; font: 700 14px var(--f-body); cursor: pointer; transition: all .15s ease; }
+  .btn.pri { background: var(--primary); color: var(--on-primary); box-shadow: var(--btn-sombra); }
+  .btn.sec { background: var(--chip); color: var(--ink); }
+  .btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+
+  /* extrato */
+  .titulo { font-family: var(--f-display); font-weight: var(--w-display); letter-spacing: var(--ls-display); font-size: 28px; margin: 4px 0 14px; }
+  .busca { width: 100%; border: var(--borda-input); background: var(--surface); color: var(--ink); border-radius: var(--r-chip); padding: 11px 14px; font: 14px var(--f-body); margin-bottom: 12px; outline: none; transition: border-color .15s ease; }
+  .busca:focus { border-color: var(--primary-ink); }
+  .chips { display: flex; gap: 8px; margin-bottom: 16px; }
+  .chip { border: var(--chip-borda); background: var(--chip); color: var(--ink); border-radius: var(--r-chip); padding: 7px 14px; font: 600 13px var(--f-body); cursor: pointer; transition: all .15s ease; }
+  .chip.on { background: var(--ink); color: var(--bg); }
+  .dia { font-size: 12px; text-transform: var(--dia-caps); letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; font-weight: 700; }
+  .lanc { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: var(--divisor); cursor: pointer; transition: background .15s ease; }
+  .lanc:hover { background: var(--hover); }
+  .lanc .ico { width: 38px; height: 38px; border-radius: var(--r-ico); display: grid; place-items: center; font-size: 17px; flex: none; }
+  .lanc .d { flex: 1; min-width: 0; }
+  .lanc .d b { display: block; font-size: 14px; font-weight: 600; }
+  .lanc .d small { color: var(--muted); font-size: 12px; }
+  .lanc .v { font-family: var(--f-num); font-weight: 600; font-size: 14px; white-space: nowrap; }
+  .lanc .v.in { color: var(--ok); }
+  .vazio { text-align: center; padding: 50px 16px; color: var(--muted); }
+  .vazio .e { font-size: 42px; margin-bottom: 8px; }
+  .vazio b { display: block; font-family: var(--f-display); font-weight: var(--w-display); color: var(--ink); font-size: 18px; margin-bottom: 4px; }
+
+  .toast { position: absolute; left: 50%; bottom: 96px; transform: translate(-50%, 20px); opacity: 0; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: var(--r-chip); font-weight: 700; font-size: 13px; white-space: nowrap; transition: all .25s ease; pointer-events: none; z-index: 5; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* =====================================================================
+     A · PARCEIRO — amigo próximo, caloroso, bem-humorado
+     ===================================================================== */
+  .v-parceiro { --bg: #fff5ea; --surface: #ffffff; --ink: #2b1d14; --muted: #8a7263; --primary: #ff6b4a; --primary-ink: #e2502f; --on-primary: #fff;
+    --hero-bg: #ff6b4a; --hero-ink: #fff; --chip: #ffe7d6; --trilho: #ffe7d6; --aviso: #ffb627; --ok: #1f9d6b; --hover: #fff1e6;
+    --alerta-bg: #ffd66b; --alerta-ink: #3d2a00; --borda: 2px solid #2b1d14; --borda-input: 2px solid #2b1d14; --chip-borda: 2px solid #2b1d14; --divisor: 1.5px dashed #f0d3bf;
+    --sombra: 4px 4px 0 #2b1d14; --btn-sombra: 3px 3px 0 #2b1d14; --mic-sombra: 4px 4px 0 #2b1d14;
+    --r-card: 24px; --r-chip: 999px; --r-btn: 999px; --r-mic: 50%; --r-barra: 999px; --r-ico: 14px; --barra-h: 12px;
+    --f-display: 'Fredoka', sans-serif; --w-display: 700; --ls-display: 0; --f-body: 'Nunito', sans-serif; --f-num: 'Fredoka', sans-serif; --w-num: 700;
+    --nav-bg: #fff; --nav-borda: 2px solid #2b1d14; --dia-caps: none; }
+  .v-parceiro main, main.v-parceiro { background: #ffe3cf; }
+  .v-parceiro .hero .mascote { position: absolute; right: -8px; bottom: -14px; width: 96px; opacity: .95; }
+
+  /* =====================================================================
+     B · CADERNETA — livro-caixa, papel e tinta, confiável
+     ===================================================================== */
+  .v-caderneta { --bg: #f4ecd8; --surface: #fbf6ea; --ink: #1d2a47; --muted: #6f6a5c; --primary: #1d2a47; --primary-ink: #b3261e; --on-primary: #f4ecd8;
+    --hero-bg: #fbf6ea; --hero-ink: #1d2a47; --chip: #ebe1c7; --trilho: #e4d9bd; --aviso: #b3261e; --ok: #2d6a3e; --hover: #efe5cc;
+    --alerta-bg: transparent; --alerta-ink: #b3261e; --alerta-borda: 1.5px solid #b3261e; --borda: 1.5px solid #1d2a47; --borda-input: 1.5px solid #1d2a47; --chip-borda: 1.5px solid #1d2a47; --divisor: 1px solid #cdbf9c;
+    --sombra: none; --btn-sombra: none; --mic-sombra: 0 0 0 6px #f4ecd8, 0 0 0 7.5px #1d2a47;
+    --r-card: 4px; --r-chip: 3px; --r-btn: 3px; --r-mic: 50%; --r-barra: 0; --r-ico: 50%; --barra-h: 8px;
+    --f-display: 'Fraunces', serif; --w-display: 600; --ls-display: -0.01em; --f-body: 'Inter', sans-serif; --f-num: 'IBM Plex Mono', monospace; --w-num: 600;
+    --nav-bg: #fbf6ea; --nav-borda: 1.5px solid #1d2a47; --dia-caps: uppercase; }
+  main.v-caderneta { background: #e9dfc4; }
+  .v-caderneta .hero { background-image: repeating-linear-gradient(#fbf6ea 0 27px, #d9ccaa 27px 28px); border-left: 6px double #b3261e; }
+  .v-caderneta .hero .valor { font-size: 34px; }
+  .v-caderneta .lista { background: repeating-linear-gradient(#f4ecd8 0 59px, #d9ccaa 59px 60px); border-left: 2px solid #b3261e; padding-left: 10px; }
+  .v-caderneta .lanc .ico { border: 1.5px solid #1d2a47; background: transparent !important; }
+  .v-caderneta .titulo { font-style: italic; }
+
+  /* =====================================================================
+     C · PULSO — escuro, neon, direto ao ponto
+     ===================================================================== */
+  .v-pulso { --bg: #0b0b0d; --surface: #161619; --ink: #f2f2ee; --muted: #8b8b92; --primary: #c6ff3d; --primary-ink: #c6ff3d; --on-primary: #0b0b0d;
+    --hero-bg: #161619; --hero-ink: #f2f2ee; --chip: #222226; --trilho: #26262b; --aviso: #ff4d6d; --ok: #c6ff3d; --hover: #151518;
+    --alerta-bg: #2a0f16; --alerta-ink: #ff8aa0; --borda: 1px solid #2a2a30; --borda-input: 1px solid #2a2a30; --chip-borda: 1px solid #2a2a30; --divisor: 1px solid #1f1f24;
+    --sombra: none; --btn-sombra: 0 0 24px rgba(198,255,61,.35); --mic-sombra: 0 0 40px rgba(198,255,61,.45);
+    --r-card: 20px; --r-chip: 10px; --r-btn: 14px; --r-mic: 28px; --r-barra: 2px; --r-ico: 12px; --barra-h: 6px;
+    --f-display: 'Space Grotesk', sans-serif; --w-display: 700; --ls-display: -0.03em; --f-body: 'Space Grotesk', sans-serif; --f-num: 'Space Grotesk', sans-serif; --w-num: 700;
+    --nav-bg: #0b0b0d; --nav-borda: 1px solid #1f1f24; --dia-caps: uppercase; }
+  main.v-pulso { background: #1a1a1e; }
+  .v-pulso .hero .valor { font-size: 42px; color: #c6ff3d; line-height: 1; }
+  .v-pulso .hero .rot { letter-spacing: .2em; font-size: 11px; }
+  .v-pulso .topo .ola { font-size: 30px; }
+  .v-pulso .titulo { font-size: 40px; text-transform: uppercase; }
+  .v-pulso .ditado h2 { font-size: 34px; text-transform: uppercase; }
+  .v-pulso .chip.on { background: #c6ff3d; color: #0b0b0d; }
+  .v-pulso .lanc .v:not(.in) { color: #f2f2ee; }
+
+  /* =====================================================================
+     D · FEIRA — brasileiro, colorido, azulejo e sol
+     ===================================================================== */
+  .v-feira { --bg: #fff8ea; --surface: #ffffff; --ink: #1a2b22; --muted: #6b7a70; --primary: #127a3a; --primary-ink: #127a3a; --on-primary: #fff;
+    --hero-bg: #1d4ed8; --hero-ink: #fff; --chip: #ffeab3; --trilho: #f3ead2; --aviso: #ff5c8a; --ok: #127a3a; --hover: #fff1cc;
+    --alerta-bg: #ff5c8a; --alerta-ink: #fff; --borda: none; --borda-input: 2px solid #f0dca8; --chip-borda: none; --divisor: 1px solid #f3e6c4;
+    --sombra: 0 10px 24px -14px rgba(26,43,34,.35); --btn-sombra: 0 8px 18px -8px rgba(18,122,58,.6); --mic-sombra: 0 0 0 6px #ffc21a, 0 12px 26px -8px rgba(18,122,58,.6);
+    --r-card: 28px; --r-chip: 999px; --r-btn: 999px; --r-mic: 50%; --r-barra: 999px; --r-ico: 50%; --barra-h: 14px;
+    --f-display: 'Bricolage Grotesque', sans-serif; --w-display: 800; --ls-display: -0.02em; --f-body: 'Nunito', sans-serif; --f-num: 'Bricolage Grotesque', sans-serif; --w-num: 800;
+    --nav-bg: #fff; --nav-borda: 0; --dia-caps: none; }
+  main.v-feira { background: #ffe9b8; }
+  .v-feira .hero { background-color: #1d4ed8; background-image:
+      radial-gradient(circle at 100% 0, #ffc21a 0 46px, transparent 47px),
+      conic-gradient(from 45deg at 88% 110%, #ff5c8a 0 25%, transparent 0 100%),
+      repeating-conic-gradient(from 45deg at 20px 20px, rgba(255,255,255,.07) 0 25%, transparent 0 50%);
+    background-size: auto, auto, 40px 40px; }
+  .v-feira .topo .ola { color: #127a3a; }
+  .v-feira .alerta { border-radius: 20px; }
+
+  /* =====================================================================
+     E · CALMA — sereno, arejado, sem ansiedade
+     ===================================================================== */
+  .v-calma { --bg: #f5f2ec; --surface: #fbfaf7; --ink: #2e332f; --muted: #8b8f88; --primary: #5f7a64; --primary-ink: #5f7a64; --on-primary: #fbfaf7;
+    --hero-bg: transparent; --hero-ink: #2e332f; --chip: #ebe7de; --trilho: #e7e3d9; --aviso: #c08a5b; --ok: #5f7a64; --hover: #f0ece4;
+    --alerta-bg: #efe8dc; --alerta-ink: #7a5a3c; --borda: 1px solid #e3ded3; --borda-input: 1px solid #e3ded3; --chip-borda: 1px solid #e3ded3; --divisor: 1px solid #ebe7de;
+    --sombra: none; --btn-sombra: none; --mic-sombra: 0 0 0 14px rgba(95,122,100,.10), 0 0 0 28px rgba(95,122,100,.06);
+    --r-card: 18px; --r-chip: 999px; --r-btn: 999px; --r-mic: 50%; --r-barra: 999px; --r-ico: 50%; --barra-h: 4px;
+    --f-display: 'Instrument Serif', serif; --w-display: 400; --ls-display: 0; --f-body: 'Inter', sans-serif; --f-num: 'Instrument Serif', serif; --w-num: 400;
+    --nav-bg: #f5f2ec; --nav-borda: 0; --dia-caps: none; }
+  main.v-calma { background: #e9e5dc; }
+  .v-calma .hero { border: 0; padding: 26px 4px 18px; text-align: center; }
+  .v-calma .hero .valor { font-size: 50px; }
+  .v-calma .hero .linha { justify-content: center; color: #8b8f88; }
+  .v-calma .topo .ola { font-size: 26px; }
+  .v-calma .titulo, .v-calma .ditado h2 { font-size: 34px; font-style: italic; }
+  .v-calma .lanc .ico { background: transparent !important; border: 1px solid #e3ded3; filter: grayscale(.6); }
+</style>
+</head>
+<body>
+
+<div id="variant-nav"></div>
+
+<main id="palco">
+  <div class="wrap">
+    <section class="ficha" id="ficha"></section>
+    <div class="phones">
+      <div class="phone-col"><span class="rotulo">Início</span><div class="phone"><div class="screen" data-tela="inicio"></div></div></div>
+      <div class="phone-col"><span class="rotulo">Ditado por voz · clique no microfone</span><div class="phone"><div class="screen" data-tela="ditado"></div></div></div>
+      <div class="phone-col"><span class="rotulo">Extrato · busque e filtre</span><div class="phone"><div class="screen" data-tela="extrato"></div></div></div>
+    </div>
+  </div>
+</main>
+
+<div id="sketch-tools" style="position:fixed;bottom:12px;right:12px;z-index:9999;font:12px system-ui;background:rgba(0,0,0,.75);color:#fff;padding:8px 12px;border-radius:8px;opacity:.45;transition:opacity .2s;display:flex;gap:8px;align-items:center" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.45">
+  <span>Sketch 001</span>
+  <button onclick="document.querySelectorAll('.phone').forEach(p=>p.style.width='360px')" style="font:11px system-ui">Celular</button>
+  <button onclick="document.querySelectorAll('.phone').forEach(p=>p.style.width='420px')" style="font:11px system-ui">Largo</button>
+  <select onchange="document.querySelector('link[href*=themes]').href='../themes/'+this.value+'.css'"><option value="default">default</option></select>
+</div>
+
+<script>
+const brl = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/* Dados fictícios com o formato do app (categorias e formas de pagamento reais). */
+const LANC = [
+  { d: '30/09', desc: 'Pão de Açúcar', cat: 'Mercado', forma: 'Cartão: Nubank', v: -186.40 },
+  { d: '30/09', desc: 'Uber', cat: 'Transporte', forma: 'Pix', v: -23.90 },
+  { d: '29/09', desc: 'Salário', cat: 'Receita', forma: 'Transferência', v: 6800 },
+  { d: '29/09', desc: 'iFood', cat: 'Alimentação', forma: 'Cartão: Nubank', v: -58.70 },
+  { d: '28/09', desc: 'Drogasil', cat: 'Saúde', forma: 'Débito', v: -47.30 },
+  { d: '27/09', desc: 'Cinema', cat: 'Lazer', forma: 'Cartão: Nubank', v: -64.00 },
+  { d: '26/09', desc: 'Freela — site', cat: 'Receita', forma: 'Pix', v: 1200 },
+  { d: '25/09', desc: 'Aluguel', cat: 'Moradia', forma: 'Boleto', v: -1900 },
+];
+const CATS = [['Moradia', 1900], ['Mercado', 1240], ['Transporte', 410], ['Lazer', 380], ['Saúde', 190]];
+const ICO = { Mercado: '🛒', Transporte: '🚗', Receita: '💰', Alimentação: '🍔', Saúde: '💊', Lazer: '🎬', Moradia: '🏠' };
+const RASCUNHO = { valor: 42.90, desc: 'Padaria', cat: 'Alimentação', forma: 'Pix', data: 'Hoje, 30/09', itens: [['Pão francês', 12.00], ['Leite', 8.90], ['Café', 22.00]] };
+const FALA = 'Gastei quarenta e dois e noventa na padaria no Pix: pão, leite e café.';
+
+const LOGOS = {
+  parceiro: c => `<svg class="logo" viewBox="0 0 64 64"><path d="M10 14h44v22a22 22 0 0 1-44 0z" fill="${c.p}" stroke="#2b1d14" stroke-width="3.5"/><path d="M10 14h44" stroke="#2b1d14" stroke-width="3.5"/><path d="M18 14v8a14 6 0 0 0 28 0v-8" fill="none" stroke="#2b1d14" stroke-width="3"/><circle cx="25" cy="35" r="3" fill="#2b1d14"/><circle cx="39" cy="35" r="3" fill="#2b1d14"/><path d="M25 44q7 6 14 0" fill="none" stroke="#2b1d14" stroke-width="3" stroke-linecap="round"/></svg>`,
+  caderneta: c => `<svg class="logo" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="#b3261e" stroke-width="2.5"/><circle cx="32" cy="32" r="24" fill="none" stroke="#b3261e" stroke-width="1" stroke-dasharray="2 3"/><text x="32" y="40" text-anchor="middle" font-family="Fraunces" font-weight="800" font-size="22" fill="#1d2a47">MB</text></svg>`,
+  pulso: c => `<svg class="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#c6ff3d"/><path d="M8 34h10l5-14 8 26 7-20 4 8h14" fill="none" stroke="#0b0b0d" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  feira: c => `<svg class="logo" viewBox="0 0 64 64"><circle cx="46" cy="16" r="11" fill="#ffc21a"/><path d="M8 22h40v18a20 20 0 0 1-40 0z" fill="#127a3a"/><path d="M8 22l10 10 10-10 10 10 10-10" fill="none" stroke="#fff8ea" stroke-width="3"/><circle cx="28" cy="44" r="5" fill="#ff5c8a"/></svg>`,
+  calma: c => `<svg class="logo" viewBox="0 0 64 64"><path d="M52 20A24 24 0 1 0 54 38" fill="none" stroke="#5f7a64" stroke-width="4.5" stroke-linecap="round"/><circle cx="32" cy="32" r="5" fill="#c08a5b"/></svg>`,
+};
+
+const V = {
+  parceiro: {
+    nome: 'Parceiro', aba: 'A · Parceiro', tag: 'Seu parceiro pra grana do dia a dia.',
+    voz: 'Amigo próximo: informal, chama pelo nome, bem-humorado, <b>nunca julga</b> o gasto.',
+    fontes: 'Fredoka + Nunito · contorno grosso e sombra sólida', paleta: ['#ff6b4a', '#ffd66b', '#2b1d14', '#fff5ea', '#1f9d6b'], p: '#ff6b4a',
+    cores: ['#ff6b4a', '#ffb627', '#4aa3ff', '#b57bff', '#1f9d6b'],
+    ola: 'E aí, Leo! 👋', sub: 'Bora ver como tá o bolso?', saldo: 'Sobrou no bolso em setembro', in: 'Entrou', out: 'Saiu',
+    alerta: 'Ô, a conta de luz vence amanhã! R$ 187,40', alertaIc: '⚡',
+    catT: 'Pra onde foi a grana', metaT: 'Meta do mercado', metaM: 'Tá quase no limite. Segura a onda até dia 30 😅',
+    mic: 'Fala que eu anoto', dica: 'Ex.: “gastei 30 no almoço no Pix”', grav: 'Tô ouvindo…', proc: 'Anotando aqui…',
+    rasc: 'Entendi isso aqui, confere?', salvar: 'Isso aí, salva!', refazer: 'Falar de novo', salvo: 'Anotado! ✔',
+    extrato: 'Extrato', busca: 'Procurar um gasto…', vazioE: '🫙', vazioT: 'Nada por aqui ainda', vazioM: 'Aperta o microfone e me conta o primeiro gasto.',
+    nav: ['Início', 'Falar', 'Extrato'], chips: ['Tudo', 'Saídas', 'Entradas'],
+  },
+  caderneta: {
+    nome: 'Caderneta', aba: 'B · Caderneta ★ Escolhida', tag: 'Suas contas organizadas como numa boa caderneta.',
+    voz: 'Contador de confiança: claro, preciso e cordial. <b>Números sempre em destaque</b>, sem gírias.',
+    fontes: 'Fraunces + Inter + IBM Plex Mono · papel pautado e tinta', paleta: ['#1d2a47', '#b3261e', '#f4ecd8', '#fbf6ea', '#2d6a3e'], p: '#1d2a47',
+    cores: ['#1d2a47', '#b3261e', '#2d6a3e', '#8a6d2f', '#5c5c7a'],
+    ola: 'Boa tarde, Leonardo.', sub: 'Terça-feira, 30 de setembro', saldo: 'Saldo do mês', in: 'Receitas', out: 'Despesas',
+    alerta: 'Vence amanhã: Conta de luz, R$ 187,40', alertaIc: '§',
+    catT: 'Despesas por categoria', metaT: 'Orçamento · Mercado', metaM: '83% utilizado. Restam R$ 260,00 até o fim do mês.',
+    mic: 'Ditar lançamento', dica: 'Diga o valor, a descrição e a forma de pagamento.', grav: 'Gravando ditado…', proc: 'Lançando no livro…',
+    rasc: 'Confira o lançamento', salvar: 'Lançar', refazer: 'Ditar novamente', salvo: 'Lançamento registrado.',
+    extrato: 'Livro-caixa', busca: 'Buscar lançamento', vazioE: '📖', vazioT: 'Página em branco', vazioM: 'Os lançamentos do período aparecerão aqui.',
+    nav: ['Resumo', 'Ditar', 'Livro'], chips: ['Todos', 'Despesas', 'Receitas'],
+  },
+  pulso: {
+    nome: 'Pulso', aba: 'C · Pulso', tag: 'Seu dinheiro no volume máximo.',
+    voz: 'Direto e confiante: frases curtas, <b>verbos no imperativo</b>, zero enrolação.',
+    fontes: 'Space Grotesk · escuro com verde-limão neon', paleta: ['#0b0b0d', '#c6ff3d', '#ff4d6d', '#161619', '#f2f2ee'], p: '#c6ff3d',
+    cores: ['#c6ff3d', '#ff4d6d', '#7c5cff', '#2de2e6', '#f2f2ee'],
+    ola: 'Leo.', sub: 'Setembro em tempo real', saldo: 'SALDO DO MÊS', in: 'Entra', out: 'Sai',
+    alerta: 'Luz vence amanhã · R$ 187,40', alertaIc: '●',
+    catT: 'Onde o dinheiro queimou', metaT: 'Teto · Mercado', metaM: '83% do teto. Freia.',
+    mic: 'Manda o áudio', dica: 'Fala do seu jeito. O resto é com a gente.', grav: 'Gravando', proc: 'Processando',
+    rasc: 'Pronto pra lançar', salvar: 'Lançar', refazer: 'Regravar', salvo: 'Feito. ✓',
+    extrato: 'Fluxo', busca: 'Buscar', vazioE: '∅', vazioT: 'Zero movimento.', vazioM: 'Manda um áudio e começa.',
+    nav: ['Pulso', 'Áudio', 'Fluxo'], chips: ['Tudo', 'Sai', 'Entra'],
+  },
+  feira: {
+    nome: 'Feira', aba: 'D · Feira', tag: 'Finanças com cor, sabor e sotaque.',
+    voz: 'Brasileiro e alegre: <b>metáforas de feira e do cotidiano</b>, calor humano e bom humor.',
+    fontes: 'Bricolage Grotesque + Nunito · azulejo, sol e cores de feira', paleta: ['#127a3a', '#ffc21a', '#1d4ed8', '#ff5c8a', '#fff8ea'], p: '#127a3a',
+    cores: ['#1d4ed8', '#127a3a', '#ffc21a', '#ff5c8a', '#ff8a3d'],
+    ola: 'Oi, Leo! ☀️', sub: 'Setembro tá fechando bonito', saldo: 'Tá sobrando', in: 'Chegou', out: 'Foi embora',
+    alerta: 'Amanhã tem conta de luz: R$ 187,40', alertaIc: '🔔',
+    catT: 'Sua feira do mês', metaT: 'Teto do mercado', metaM: 'Faltam R$ 260 pro teto. Dá pra fechar a conta!',
+    mic: 'Conta pra mim', dica: 'Do jeito que você fala: “paguei 42 na padaria”', grav: 'Pode falar…', proc: 'Separando cada coisa na barraca certa…',
+    rasc: 'Olha o que eu entendi', salvar: 'Guardar', refazer: 'Contar de novo', salvo: 'Guardado na sacola! 🧺',
+    extrato: 'Sacola', busca: 'Achar na sacola…', vazioE: '🧺', vazioT: 'Sacola vazia', vazioM: 'Conta um gasto e ele aparece aqui, fresquinho.',
+    nav: ['Início', 'Contar', 'Sacola'], chips: ['Tudo', 'Foi embora', 'Chegou'],
+  },
+  calma: {
+    nome: 'Calma', aba: 'E · Calma', tag: 'Dinheiro com clareza, sem ansiedade.',
+    voz: 'Acolhedor e sereno: <b>sem alarmes nem julgamento</b>; muito espaço em branco e foco no essencial.',
+    fontes: 'Instrument Serif + Inter · areia, sálvia e argila', paleta: ['#5f7a64', '#c08a5b', '#f5f2ec', '#2e332f', '#ebe7de'], p: '#5f7a64',
+    cores: ['#5f7a64', '#c08a5b', '#9aa9b8', '#b8a88f', '#8b8f88'],
+    ola: 'Olá, Leonardo.', sub: 'Um momento para o seu dinheiro.', saldo: 'Seu mês até aqui', in: 'Entradas', out: 'Saídas',
+    alerta: 'Amanhã: conta de luz, R$ 187,40. Tudo pronto para pagar.', alertaIc: '○',
+    catT: 'Como seu dinheiro fluiu', metaT: 'Intenção · Mercado', metaM: 'Você está perto do que planejou. Sem pressa: ainda faltam R$ 260.',
+    mic: 'Registrar em voz', dica: 'Fale com calma. Eu organizo para você.', grav: 'Ouvindo…', proc: 'Organizando…',
+    rasc: 'Está correto?', salvar: 'Confirmar', refazer: 'Falar de novo', salvo: 'Registrado.',
+    extrato: 'Registros', busca: 'Buscar', vazioE: '○', vazioT: 'Um espaço em branco', vazioM: 'Quando algo entrar ou sair, aparece aqui.',
+    nav: ['Hoje', 'Voz', 'Registros'], chips: ['Tudo', 'Saídas', 'Entradas'],
+  },
+};
+
+let atual = 'parceiro';
+let estadoDitado = 'idle';
+let timers = [];
+const limpar = () => { timers.forEach(clearTimeout); timers.forEach(clearInterval); timers = []; };
+
+function nav(c, ativa) {
+  const ic = ['⌂', '🎙', '≡'];
+  return `<nav class="nav">${c.nav.map((n, i) => i === 1
+    ? `<button class="mic" data-ir="ditado" title="${n}"><span class="i">🎙</span></button>`
+    : `<button class="${['inicio', '', 'extrato'][i] === ativa ? 'on' : ''}" data-ir="${['inicio', '', 'extrato'][i]}"><span class="i">${ic[i]}</span>${n}</button>`).join('')}</nav>`;
+}
+
+function telaInicio(c) {
+  const entradas = 8000, saidas = CATS.reduce((s, x) => s + x[1], 0), max = CATS[0][1];
+  return `<div class="status"><span>14:32</span><span>●●● ▮</span></div>
+  <div class="scroll">
+    <div class="topo">${LOGOS[atual](c)}<div><div class="ola">${c.ola}</div><div class="sub">${c.sub}</div></div><div class="avatar">LV</div></div>
+    <div class="card hero"><div class="rot">${c.saldo}</div><div class="valor">${brl(entradas - saidas)}</div>
+      <div class="linha"><span>${c.in}<b>${brl(entradas)}</b></span><span>${c.out}<b>${brl(saidas)}</b></span></div>
+      ${atual === 'parceiro' ? LOGOS.parceiro({ p: '#ffd66b' }).replace('class="logo"', 'class="mascote"') : ''}</div>
+    <div class="alerta" data-toast="Lembrete agendado"><span class="ic">${c.alertaIc}</span>${c.alerta}</div>
+    <div class="card"><h3>${c.catT}</h3>${CATS.map(([n, v], i) => `<div class="cat"><span>${n}</span><div class="barra"><i style="width:${v / max * 100}%;background:${c.cores[i]}"></i></div><span class="v">${brl(v)}</span></div>`).join('')}</div>
+    <div class="card meta"><h3>${c.metaT}</h3><div class="nums"><span>${brl(1240)}</span><span>${brl(1500)}</span></div><div class="trilho"><i></i></div><p>${c.metaM}</p></div>
+  </div>${nav(c, 'inicio')}<div class="toast"></div>`;
+}
+
+function corpoDitado(c) {
+  if (estadoDitado === 'rascunho') {
+    return `<div class="card rascunho"><h3>${c.rasc}</h3><div class="val">${brl(RASCUNHO.valor)}</div>
+      <div class="campo"><span>Descrição</span><span>${RASCUNHO.desc}</span></div>
+      <div class="campo"><span>Categoria</span><span>${RASCUNHO.cat}</span></div>
+      <div class="campo"><span>Pagamento</span><span>${RASCUNHO.forma}</span></div>
+      <div class="campo"><span>Data</span><span>${RASCUNHO.data}</span></div>
+      <div class="itens">${RASCUNHO.itens.map(([n, v]) => `<div><span>${n}</span><span>${brl(v)}</span></div>`).join('')}</div>
+      <div class="acoes"><button class="btn sec" data-acao="refazer">${c.refazer}</button><button class="btn pri" data-acao="salvar">${c.salvar}</button></div></div>`;
+  }
+  const grav = estadoDitado === 'gravando', proc = estadoDitado === 'processando';
+  return `<h2>${c.mic}</h2><p class="dica">${c.dica}</p>
+    <button class="bigmic ${grav ? 'gravando' : ''}" data-acao="mic">${proc ? '⏳' : grav ? '■' : '🎙'}</button>
+    <div class="estado">${grav ? c.grav : proc ? c.proc : ''}</div>
+    ${grav ? `<div class="timer" id="timer">0:00</div><div class="ondas">${Array.from({ length: 9 }, (_, i) => `<i style="animation-delay:${i * .09}s"></i>`).join('')}</div>` : ''}
+    <div class="transcricao" id="transc">${proc ? '“' + FALA + '”' : ''}</div>`;
+}
+
+function telaDitado(c) {
+  return `<div class="status"><span>14:32</span><span>●●● ▮</span></div>
+  <div class="scroll"><div class="ditado">${corpoDitado(c)}</div></div>${nav(c, 'ditado')}<div class="toast"></div>`;
+}
+
+function telaExtrato(c, filtro = 0, termo = '') {
+  const lista = LANC.filter(l => (filtro === 0 || (filtro === 1 ? l.v < 0 : l.v > 0)) && (l.desc + l.cat).toLowerCase().includes(termo.toLowerCase()));
+  const porDia = {};
+  lista.forEach(l => (porDia[l.d] ||= []).push(l));
+  const rotDia = d => d === '30/09' ? 'Hoje' : d === '29/09' ? 'Ontem' : d;
+  const corpo = lista.length ? Object.entries(porDia).map(([d, ls]) => `<div class="dia">${rotDia(d)}</div>` + ls.map(l => {
+      const i = Math.max(0, CATS.findIndex(x => x[0] === l.cat));
+      return `<div class="lanc" data-toast="${l.desc} · ${l.forma}"><div class="ico" style="background:${c.cores[i]}22">${ICO[l.cat] || '•'}</div><div class="d"><b>${l.desc}</b><small>${l.cat} · ${l.forma}</small></div><div class="v ${l.v > 0 ? 'in' : ''}">${l.v > 0 ? '+' : '−'} ${brl(Math.abs(l.v))}</div></div>`;
+    }).join('')).join('')
+    : `<div class="vazio"><div class="e">${c.vazioE}</div><b>${c.vazioT}</b>${c.vazioM}</div>`;
+  return `<div class="status"><span>14:32</span><span>●●● ▮</span></div>
+  <div class="scroll"><div class="titulo">${c.extrato}</div>
+    <input class="busca" placeholder="${c.busca}" value="${termo}" data-busca>
+    <div class="chips">${c.chips.map((n, i) => `<button class="chip ${i === filtro ? 'on' : ''}" data-filtro="${i}">${n}</button>`).join('')}</div>
+    <div class="lista">${corpo}</div></div>${nav(c, 'extrato')}<div class="toast"></div>`;
+}
+
+const RENDER = { inicio: telaInicio, ditado: telaDitado, extrato: telaExtrato };
+
+function toast(screen, msg) {
+  const t = screen.querySelector('.toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+function montarTela(screen, qual) {
+  screen.dataset.atual = qual;
+  screen.innerHTML = RENDER[qual](V[atual]);
+}
+
+function iniciarDitado(screen) {
+  const c = V[atual];
+  estadoDitado = 'gravando'; montarTela(screen, 'ditado');
+  let s = 0;
+  timers.push(setInterval(() => { const t = screen.querySelector('#timer'); if (t) t.textContent = '0:0' + (++s); }, 1000));
+  let n = 0;
+  timers.push(setInterval(() => { const t = screen.querySelector('#transc'); if (t && n < FALA.length) t.textContent = '“' + FALA.slice(0, n += 2) + '”'; }, 55));
+  timers.push(setTimeout(() => { limpar(); estadoDitado = 'processando'; montarTela(screen, 'ditado');
+    timers.push(setTimeout(() => { estadoDitado = 'rascunho'; montarTela(screen, 'ditado'); }, 1300)); }, 3200));
+}
+
+document.addEventListener('click', e => {
+  const screen = e.target.closest('.screen'); if (!screen) return;
+  const c = V[atual];
+  const ir = e.target.closest('[data-ir]');
+  if (ir) { limpar(); if (ir.dataset.ir === 'ditado') estadoDitado = 'idle'; montarTela(screen, ir.dataset.ir); return; }
+  const acao = e.target.closest('[data-acao]')?.dataset.acao;
+  if (acao === 'mic') { if (estadoDitado === 'idle') iniciarDitado(screen); else if (estadoDitado === 'gravando') { limpar(); estadoDitado = 'processando'; montarTela(screen, 'ditado'); timers.push(setTimeout(() => { estadoDitado = 'rascunho'; montarTela(screen, 'ditado'); }, 1300)); } return; }
+  if (acao === 'refazer') { estadoDitado = 'idle'; montarTela(screen, 'ditado'); return; }
+  if (acao === 'salvar') { const b = e.target.closest('.btn'); b.textContent = '…'; setTimeout(() => { estadoDitado = 'idle'; montarTela(screen, 'ditado'); toast(screen, c.salvo); }, 600); return; }
+  const f = e.target.closest('[data-filtro]');
+  if (f) { const termo = screen.querySelector('[data-busca]').value; screen.innerHTML = telaExtrato(c, +f.dataset.filtro, termo); return; }
+  const t = e.target.closest('[data-toast]'); if (t) toast(screen, t.dataset.toast);
+});
+document.addEventListener('input', e => {
+  if (!e.target.matches('[data-busca]')) return;
+  const screen = e.target.closest('.screen'), filtro = +(screen.querySelector('.chip.on')?.dataset.filtro || 0);
+  screen.innerHTML = telaExtrato(V[atual], filtro, e.target.value);
+  const inp = screen.querySelector('[data-busca]'); inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
+});
+
+function mostrar(chave) {
+  limpar(); atual = chave; estadoDitado = 'idle';
+  const c = V[chave];
+  const palco = document.getElementById('palco'); palco.className = 'v-' + chave;
+  document.body.style.background = getComputedStyle(palco).backgroundColor;
+  document.querySelectorAll('.variant-tab').forEach(b => b.classList.toggle('active', b.dataset.v === chave));
+  document.getElementById('ficha').innerHTML = `${LOGOS[chave](c)}<div><h1>${c.nome}</h1><p class="tag">${c.tag}</p><p class="voz">${c.voz}</p></div>
+    <div class="direita"><div class="paleta">${c.paleta.map(p => `<span style="background:${p}" title="${p}"></span>`).join('')}</div><div class="fontes">${c.fontes}</div></div>`;
+  document.querySelectorAll('.screen').forEach(s => montarTela(s, s.dataset.tela));
+  try { localStorage.setItem('sketch001', chave); } catch (_) {}
+}
+
+document.getElementById('variant-nav').innerHTML = Object.entries(V).map(([k, c]) => `<button class="variant-tab" data-v="${k}" onclick="mostrar('${k}')">${c.aba}</button>`).join('');
+let inicial = 'caderneta';
+try { inicial = localStorage.getItem('sketch001') || inicial; } catch (_) {}
+mostrar(V[inicial] ? inicial : 'parceiro');
+</script>
+</body>
+</html>

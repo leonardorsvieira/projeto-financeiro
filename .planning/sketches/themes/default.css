@@ -1,0 +1,13 @@
+/* Vocabulário base dos sketches do Meu Bolso. Cada modelo de identidade
+   sobrescreve estas variáveis no próprio container (.v-<nome>). */
+:root {
+  --color-bg: #f4f2ee;
+  --color-surface: #ffffff;
+  --color-border: #e2ded6;
+  --color-text: #1c1b19;
+  --color-text-muted: #6d6a63;
+  --color-primary: #0b7a4b;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --radius-md: 12px;
+  --radius-full: 9999px;
+}

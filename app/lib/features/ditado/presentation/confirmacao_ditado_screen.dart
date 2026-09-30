@@ -187,11 +187,11 @@ class _ConfirmacaoDitadoScreenState
     } on Object catch (e) {
       String mensagem;
       if (kIsWeb) {
-        mensagem = 'Não consegui acessar o microfone. '
+        mensagem = 'Não foi possível acessar o microfone. '
             'Verifique se o site usa HTTPS (localhost funciona) e '
             'se o navegador permitiu o microfone nas configurações.';
       } else {
-        mensagem = 'Não consegui acessar o microfone. '
+        mensagem = 'Não foi possível acessar o microfone. '
             'Verifique as permissões do app nas configurações do sistema.';
       }
       debugPrint('Erro ao iniciar gravação: $e');
@@ -220,7 +220,7 @@ class _ConfirmacaoDitadoScreenState
     } on DitadoException catch (e) {
       _mostrarMensagem(e.mensagem);
     } on Object {
-      _mostrarMensagem('Não consegui entender. Tente de novo.');
+      _mostrarMensagem('Não foi possível entender o ditado. Dite novamente.');
     } finally {
       if (mounted) setState(() => _processandoCampo = null);
     }
@@ -282,11 +282,11 @@ class _ConfirmacaoDitadoScreenState
       for (int i = 0; i < _itens.length; i++) {
         final item = _itens[i];
         if (item.descricao.trim().isEmpty) {
-          _mostrarMensagem('Item ${i + 1}: descrição obrigatória');
+          _mostrarMensagem('Item ${i + 1}: informe a descrição.');
           return;
         }
         if (item.valorReais == null || item.valorReais!.trim().isEmpty) {
-          _mostrarMensagem('Item ${i + 1}: valor obrigatório');
+          _mostrarMensagem('Item ${i + 1}: informe o valor.');
           return;
         }
       }
@@ -298,7 +298,7 @@ class _ConfirmacaoDitadoScreenState
     } else {
       final centavos = parseValorBRLParaCentavos(_valorController.text.trim());
       if (centavos == null) {
-        _mostrarMensagem('Valor inválido');
+        _mostrarMensagem('Informe um valor válido.');
         return;
       }
       valorFinal = centavos;
@@ -328,10 +328,17 @@ class _ConfirmacaoDitadoScreenState
             vencimento: _tipo == TipoLancamento.despesa ? _vencimento : null,
             itens: itensParaSalvar,
           );
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Lançamento registrado.')),
+      );
       if (mounted) context.go(AppRoutes.home);
     } catch (_) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Não foi possível salvar.')),
+        const SnackBar(
+          content: Text(
+            'Não foi possível registrar o lançamento. Tente novamente.',
+          ),
+        ),
       );
       if (mounted) setState(() => _isSaving = false);
     }
@@ -342,7 +349,7 @@ class _ConfirmacaoDitadoScreenState
     final tema = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Confirmar lançamento')),
+      appBar: AppBar(title: const Text('Confira o lançamento')),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -593,16 +600,18 @@ class _ConfirmacaoDitadoScreenState
                       ),
                     ],
                     const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         TextButton(
                           onPressed: _isSaving
                               ? null
                               : () => context.pop(),
-                          child: const Text('Cancelar'),
+                          child: const Text('Ditar novamente'),
                         ),
-                        const SizedBox(width: 8),
                         FilledButton.icon(
                           onPressed: _isSaving ? null : _salvar,
                           icon: _isSaving
@@ -615,7 +624,7 @@ class _ConfirmacaoDitadoScreenState
                                 )
                               : const Icon(Icons.check),
                           label: Text(
-                            _isSaving ? 'Salvando...' : 'Salvar',
+                            _isSaving ? 'Lançando…' : 'Lançar',
                           ),
                         ),
                       ],

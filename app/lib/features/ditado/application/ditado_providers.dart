@@ -75,11 +75,11 @@ class DitadoController extends Notifier<DitadoState> {
     } on Object catch (e) {
       String mensagem;
       if (kIsWeb) {
-        mensagem = 'Não consegui acessar o microfone. '
+        mensagem = 'Não foi possível acessar o microfone. '
             'Verifique se o site usa HTTPS (localhost funciona) e '
             'se o navegador permitiu o microfone nas configurações.';
       } else {
-        mensagem = 'Não consegui acessar o microfone. '
+        mensagem = 'Não foi possível acessar o microfone. '
             'Verifique as permissões do app nas configurações do sistema.';
       }
       debugPrint('Erro ao iniciar gravação: $e');
@@ -109,7 +109,7 @@ class DitadoController extends Notifier<DitadoState> {
     } on DitadoException catch (e) {
       state = DitadoErro(e.mensagem);
     } on Object {
-      state = const DitadoErro('Não consegui entender. Tente de novo.');
+      state = const DitadoErro('Não foi possível entender o ditado. Dite novamente.');
     }
   }
 

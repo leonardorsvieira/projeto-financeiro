@@ -69,11 +69,11 @@ void main() {
       (tester) async {
     final (fakeLancamentos, _) = await abrirConfirmacao(tester);
 
-    expect(find.text('Confirmar lançamento'), findsOneWidget);
+    expect(find.text('Confira o lançamento'), findsOneWidget);
     expect(find.text('Almoço'), findsOneWidget);
 
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Salvar'));
-    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Lançar'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Lançar'));
     await tester.pumpAndSettle();
 
     expect(find.byType(LancamentosListScreen), findsOneWidget);
@@ -103,8 +103,8 @@ void main() {
 
     expect(find.text('Chipe'), findsOneWidget);
 
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Salvar'));
-    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Lançar'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Lançar'));
     await tester.pumpAndSettle();
 
     expect(fakeLancamentos.createCount, 1);
@@ -123,8 +123,8 @@ void main() {
       ),
     );
 
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Salvar'));
-    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Lançar'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Lançar'));
     await tester.pump();
 
     expect(find.text('Informe um valor.'), findsOneWidget);
@@ -133,8 +133,8 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(1), '12,90');
     await tester.pump();
 
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Salvar'));
-    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Lançar'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Lançar'));
     await tester.pumpAndSettle();
 
     expect(fakeLancamentos.createCount, 1);

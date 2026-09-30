@@ -136,8 +136,8 @@ void main() {
   testWidgets('salvar cria lançamento no repositório (D-34)', (tester) async {
     final (fakeLancamentos, _) = await pumpConfirmacao(tester);
 
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Salvar'));
-    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Lançar'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Lançar'));
     await tester.pumpAndSettle();
 
     expect(fakeLancamentos.createCount, 1);
@@ -150,8 +150,8 @@ void main() {
   testWidgets('cancelar volta para a lista sem salvar', (tester) async {
     final (fakeLancamentos, _) = await pumpConfirmacao(tester);
 
-    await tester.ensureVisible(find.text('Cancelar'));
-    await tester.tap(find.text('Cancelar'));
+    await tester.ensureVisible(find.text('Ditar novamente'));
+    await tester.tap(find.text('Ditar novamente'));
     await tester.pumpAndSettle();
 
     expect(find.byType(LancamentoDitadoScreen), findsOneWidget);
@@ -194,11 +194,11 @@ void main() {
     await tester.tap(find.byIcon(Icons.stop));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Salvar'));
-    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Lançar'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Lançar'));
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('Salvando...'), findsOneWidget);
+    expect(find.text('Lançando…'), findsOneWidget);
     expect(
       tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
       isNull,
@@ -235,8 +235,8 @@ void main() {
     await tester.tap(find.text('Receita'));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Salvar'));
-    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Lançar'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Lançar'));
     await tester.pumpAndSettle();
 
     expect(fakeLancamentos.createCount, 1);

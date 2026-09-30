@@ -93,14 +93,14 @@ class _LancamentoDitadoScreenState
           Icons.stop,
           tema.colorScheme.error,
           'Toque para parar',
-          'Falando… $_segundos s',
+          'Gravando ditado… $_segundos s',
           _parar,
         ),
       DitadoProcessando() => (
           Icons.hourglass_top,
           tema.colorScheme.primary,
-          'Analisando…',
-          'A IA está ouvindo o que você disse',
+          'Lançando no livro…',
+          'Interpretando o que foi dito.',
           null,
         ),
       _ => (
@@ -149,7 +149,7 @@ class _LancamentoDitadoScreenState
                   ],
                   const Spacer(flex: 3),
                   Text(
-                    'Fale o gasto. Ex.: "almoço quarenta reais com cartão".',
+                    'Diga o valor, a descrição e a forma de pagamento.',
                     style: tema.textTheme.bodySmall,
                     textAlign: TextAlign.center,
                   ),

@@ -75,7 +75,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.stop));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 60));
-    expect(find.text('Analisando…'), findsOneWidget);
+    expect(find.text('Lançando no livro…'), findsOneWidget);
 
     await tester.pumpAndSettle();
     expect(find.byType(ConfirmacaoDitadoScreen), findsOneWidget);

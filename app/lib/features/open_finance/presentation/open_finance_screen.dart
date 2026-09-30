@@ -508,7 +508,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
 
           // Importador de Extrato OFX (Fallback)
           Card(
-            color: theme.colorScheme.surfaceContainerHighest,
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(

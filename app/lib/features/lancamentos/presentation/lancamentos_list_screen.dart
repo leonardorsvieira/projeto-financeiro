@@ -143,7 +143,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
               height: 160,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SingleChildScrollView(

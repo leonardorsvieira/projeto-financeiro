@@ -14,6 +14,7 @@ import '../../metas/application/metas_providers.dart';
 import '../application/dashboard_providers.dart';
 import '../application/home_widget_service.dart';
 import 'relatorio_cartoes_widget.dart';
+import '../../../theme/glass.dart';
 
 /// Cores do donut por categoria (fallback para categorias novas).
 const _coresCategorias = <String, Color>{
@@ -127,7 +128,7 @@ class _CardGastosMes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    return GlassCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -228,7 +229,7 @@ class _PatrimonioSection extends StatelessWidget {
 
     final temInvestimentos = patrimonioCents != 0;
 
-    return Card(
+    return GlassCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -520,7 +521,7 @@ class _SeletorMesHeader extends ConsumerWidget {
     final ehMesAtual = mesAno.year == agora.year && mesAno.month == agora.month;
 
     return Card(
-      color: theme.colorScheme.surfaceContainerHigh,
+      color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Row(

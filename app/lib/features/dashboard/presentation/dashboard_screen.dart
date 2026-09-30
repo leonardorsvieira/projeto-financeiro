@@ -16,6 +16,7 @@ import '../../metas/application/metas_providers.dart';
 import '../application/dashboard_providers.dart';
 import '../application/home_widget_service.dart';
 import '../application/saudacao.dart';
+import '../application/widget_agenda.dart';
 import 'relatorio_cartoes_widget.dart';
 /// Cor do donut por categoria (ordem fixa; categorias novas usam a ultima).
 const _ordemCategorias = <String>[
@@ -54,9 +55,7 @@ class DashboardScreen extends ConsumerWidget {
 
     HomeWidgetService.atualizarWidget(
       saldoFormatado: formatoBRL(resumo.saldoCents),
-      vencimentosTexto: proximos.isEmpty
-          ? 'Sem vencimentos hoje'
-          : '${proximos.length} vencimento(s) próximo(s)',
+      vencimentos: linhasAgendaWidget(proximos),
     );
 
     return RefreshIndicator(

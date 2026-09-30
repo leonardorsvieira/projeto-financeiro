@@ -17,7 +17,6 @@ import '../../../support/fake_ditado_repository.dart';
 import '../../../support/fake_investimentos_repository.dart';
 import '../../../support/fake_lancamentos_repository.dart';
 import '../../../support/fake_metas_repository.dart';
-import '../../../support/fake_movimentos_investimento_repository.dart';
 
 Lancamento _lanc({
   required String id,
@@ -84,8 +83,6 @@ class ProviderScopeContainer extends StatelessWidget {
         lancamentosRepositoryProvider.overrideWithValue(repo),
         metasRepositoryProvider.overrideWithValue(metasRepo),
         investimentosRepositoryProvider.overrideWithValue(investimentosRepo),
-        movimentosInvestimentoRepositoryProvider
-            .overrideWithValue(FakeMovimentosInvestimentoRepository()),
         ditadoRepositoryProvider.overrideWithValue(FakeDitadoRepository()),
       ],
       child: child,

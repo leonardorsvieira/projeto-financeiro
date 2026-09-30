@@ -5,25 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:meubolso/features/investimentos/application/investimentos_providers.dart';
 import 'package:meubolso/features/investimentos/domain/investimento.dart';
-import 'package:meubolso/features/investimentos/domain/rendimento_investimento.dart';
 
 import '../../../support/fake_investimentos_repository.dart';
-import '../../../support/fake_movimentos_investimento_repository.dart';
-import '../../../support/fake_rendimentos_investimento_repository.dart';
 
 Future<void> _aguardarInvestimentos(ProviderContainer c) {
   final completer = Completer<void>();
   c.listen(investimentosStreamProvider, (_, next) {
-    if (next.value != null && !completer.isCompleted) {
-      completer.complete();
-    }
-  });
-  return completer.future;
-}
-
-Future<void> _aguardarRendimentos(ProviderContainer c) {
-  final completer = Completer<void>();
-  c.listen(rendimentosStreamProvider, (_, next) {
     if (next.value != null && !completer.isCompleted) {
       completer.complete();
     }
@@ -65,8 +52,6 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         investimentosRepositoryProvider.overrideWithValue(repo),
-        movimentosInvestimentoRepositoryProvider
-            .overrideWithValue(FakeMovimentosInvestimentoRepository()),
       ],
     );
     addTearDown(container.dispose);
@@ -104,8 +89,6 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         investimentosRepositoryProvider.overrideWithValue(repo),
-        movimentosInvestimentoRepositoryProvider
-            .overrideWithValue(FakeMovimentosInvestimentoRepository()),
       ],
     );
     addTearDown(container.dispose);
@@ -137,8 +120,6 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         investimentosRepositoryProvider.overrideWithValue(repo),
-        movimentosInvestimentoRepositoryProvider
-            .overrideWithValue(FakeMovimentosInvestimentoRepository()),
       ],
     );
     addTearDown(container.dispose);
@@ -211,144 +192,5 @@ void main() {
     ]);
     expect(resumo.maiorGanho?.id, 'a');
     expect(resumo.maiorPerda, isNull);
-  });
-
-  test('rendimentosPorAtivoProvider filtra por investimento', () async {
-    final repo = FakeInvestimentosRepository([
-      const Investimento(
-        id: 'i1',
-        classe: TipoClasseInvestimento.acao,
-        nome: 'PETR4',
-        quantidade: 10,
-        precoAtualCents: 4000,
-      ),
-      const Investimento(
-        id: 'i2',
-        classe: TipoClasseInvestimento.fii,
-        nome: 'XPML11',
-        quantidade: 5,
-        precoAtualCents: 10000,
-      ),
-    ]);
-    final rendimentos = FakeRendimentosInvestimentoRepository([
-      RendimentoInvestimento(
-        id: 'r1',
-        investimentoId: 'i1',
-        tipo: TipoRendimentoInvestimento.dividendo,
-        valorCents: 5000,
-        data: DateTime(2026, 8, 15),
-      ),
-      RendimentoInvestimento(
-        id: 'r2',
-        investimentoId: 'i1',
-        tipo: TipoRendimentoInvestimento.juros,
-        valorCents: 3000,
-        data: DateTime(2026, 7, 10),
-      ),
-      RendimentoInvestimento(
-        id: 'r3',
-        investimentoId: 'i2',
-        tipo: TipoRendimentoInvestimento.dividendo,
-        valorCents: 2000,
-        data: DateTime(2026, 8, 20),
-      ),
-    ]);
-    final container = ProviderContainer(
-      overrides: [
-        investimentosRepositoryProvider.overrideWithValue(repo),
-        movimentosInvestimentoRepositoryProvider
-            .overrideWithValue(FakeMovimentosInvestimentoRepository()),
-        rendimentosInvestimentoRepositoryProvider
-            .overrideWithValue(rendimentos),
-      ],
-    );
-    addTearDown(container.dispose);
-
-    await _aguardarInvestimentos(container);
-    await _aguardarRendimentos(container);
-
-    final i1Rendimentos = container.read(rendimentosPorAtivoProvider('i1'));
-    final i2Rendimentos = container.read(rendimentosPorAtivoProvider('i2'));
-
-    expect(i1Rendimentos.length, 2);
-    expect(i2Rendimentos.length, 1);
-    expect(i1Rendimentos[0].tipo, TipoRendimentoInvestimento.dividendo);
-    expect(i2Rendimentos.single.valorCents, 2000);
-  });
-
-  test('rendimentosPorMesProvider agrupa por mês ordenado desc', () async {
-    final repo = FakeInvestimentosRepository([
-      const Investimento(
-        id: 'i1',
-        classe: TipoClasseInvestimento.acao,
-        nome: 'PETR4',
-        quantidade: 10,
-        precoAtualCents: 4000,
-      ),
-    ]);
-    final rendimentos = FakeRendimentosInvestimentoRepository([
-      // Agosto 2026
-      RendimentoInvestimento(
-        id: 'r1',
-        investimentoId: 'i1',
-        tipo: TipoRendimentoInvestimento.dividendo,
-        valorCents: 5000,
-        data: DateTime(2026, 8, 15),
-      ),
-      RendimentoInvestimento(
-        id: 'r2',
-        investimentoId: 'i1',
-        tipo: TipoRendimentoInvestimento.juros,
-        valorCents: 3000,
-        data: DateTime(2026, 8, 10),
-      ),
-      // Julho 2026
-      RendimentoInvestimento(
-        id: 'r3',
-        investimentoId: 'i1',
-        tipo: TipoRendimentoInvestimento.dividendo,
-        valorCents: 2000,
-        data: DateTime(2026, 7, 20),
-      ),
-      // Setembro 2026 (mais recente)
-      RendimentoInvestimento(
-        id: 'r4',
-        investimentoId: 'i1',
-        tipo: TipoRendimentoInvestimento.dividendo,
-        valorCents: 7000,
-        data: DateTime(2026, 9, 5),
-      ),
-    ]);
-    final container = ProviderContainer(
-      overrides: [
-        investimentosRepositoryProvider.overrideWithValue(repo),
-        movimentosInvestimentoRepositoryProvider
-            .overrideWithValue(FakeMovimentosInvestimentoRepository()),
-        rendimentosInvestimentoRepositoryProvider
-            .overrideWithValue(rendimentos),
-      ],
-    );
-    addTearDown(container.dispose);
-
-    await _aguardarInvestimentos(container);
-    await _aguardarRendimentos(container);
-
-    final meses = container.read(rendimentosPorMesProvider);
-
-    // Ordem: Setembro, Agosto, Julho (mais recente primeiro)
-    expect(meses.length, 3);
-    expect(meses[0].ano, 2026);
-    expect(meses[0].mes, 9);
-    expect(meses[0].totalCents, 7000);
-    expect(meses[0].rendimentos.length, 1);
-
-    expect(meses[1].ano, 2026);
-    expect(meses[1].mes, 8);
-    expect(meses[1].totalCents, 8000); // 5000 + 3000
-    expect(meses[1].rendimentos.length, 2);
-
-    expect(meses[2].ano, 2026);
-    expect(meses[2].mes, 7);
-    expect(meses[2].totalCents, 2000);
   });
 }

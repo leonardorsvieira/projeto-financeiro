@@ -1,31 +1,4 @@
 import '../domain/investimento.dart';
-import '../domain/movimento_investimento.dart';
-
-/// Resultado do cálculo de Preço Médio e Rentabilidade por Ativo.
-class PrecoMedioResultado {
-  const PrecoMedioResultado({
-    required this.precoMedioCents,
-    required this.custoTotalCents,
-    required this.quantidadeAtual,
-    required this.patrimonioAtualCents,
-    required this.lucroPrejuizoCents,
-    required this.rentabilidadePercent,
-  });
-
-  final int precoMedioCents;
-  final int custoTotalCents;
-  final double quantidadeAtual;
-  final int patrimonioAtualCents;
-  final int lucroPrejuizoCents;
-  final double rentabilidadePercent;
-
-  double get precoMedioReais => precoMedioCents / 100.0;
-  double get custoTotalReais => custoTotalCents / 100.0;
-  double get patrimonioAtualReais => patrimonioAtualCents / 100.0;
-  double get lucroPrejuizoReais => lucroPrejuizoCents / 100.0;
-
-  bool get eLucro => lucroPrejuizoCents >= 0;
-}
 
 /// Sugestão de aporte para rebalanceamento de classe.
 class SugestaoAporteClasse {
@@ -49,76 +22,6 @@ class SugestaoAporteClasse {
 
 class InvestimentosCalculosService {
   InvestimentosCalculosService._();
-
-  /// Calcula o Preço Médio (PM) ponderado e Rentabilidade (% e R$) de um ativo.
-  static PrecoMedioResultado calcularPrecoMedio({
-    required Investimento investimento,
-    required List<MovimentoInvestimento> movimentos,
-  }) {
-    // Ordena movimentos do mais antigo para o mais recente
-    final movsOrdenados = List<MovimentoInvestimento>.from(movimentos)
-      ..sort((a, b) => a.data.compareTo(b.data));
-
-    double qtdAcumulada = 0.0;
-    int custoAcumuladoCents = 0;
-    int pmCents = 0;
-
-    for (final m in movsOrdenados) {
-      if (m.tipo == TipoMovimentoInvestimento.compra) {
-        final valorCompra = (m.quantidade * m.precoUnitCents).round();
-        custoAcumuladoCents += valorCompra;
-        qtdAcumulada += m.quantidade;
-        if (qtdAcumulada > 0) {
-          pmCents = (custoAcumuladoCents / qtdAcumulada).round();
-        }
-      } else if (m.tipo == TipoMovimentoInvestimento.venda) {
-        if (qtdAcumulada > 0) {
-          final custoVenda = (m.quantidade * pmCents).round();
-          custoAcumuladoCents -= custoVenda;
-          qtdAcumulada -= m.quantidade;
-          if (qtdAcumulada <= 0) {
-            qtdAcumulada = 0;
-            custoAcumuladoCents = 0;
-            pmCents = 0;
-          }
-        }
-      }
-    }
-
-    final qtdUsada = investimento.ePorQuantidade
-        ? investimento.quantidade
-        : (qtdAcumulada > 0 ? qtdAcumulada : 1.0);
-
-    // Se houver PM calculado via histórico, utiliza ele; caso contrário, estima pelo preço atual ou saldo
-    final pmFinalCents = pmCents > 0
-        ? pmCents
-        : (investimento.ePorQuantidade
-            ? investimento.precoAtualCents
-            : investimento.saldoCents);
-
-    final custoTotalCents = investimento.ePorQuantidade
-        ? (qtdUsada * pmFinalCents).round()
-        : (custoAcumuladoCents > 0
-            ? custoAcumuladoCents
-            : investimento.saldoCents);
-
-    final patrimonioAtualCents = investimento.patrimonioCents;
-    final lucroPrejuizoCents = patrimonioAtualCents - custoTotalCents;
-
-    double rentabilidade = 0.0;
-    if (custoTotalCents > 0) {
-      rentabilidade = (lucroPrejuizoCents / custoTotalCents) * 100.0;
-    }
-
-    return PrecoMedioResultado(
-      precoMedioCents: pmFinalCents,
-      custoTotalCents: custoTotalCents,
-      quantidadeAtual: qtdUsada,
-      patrimonioAtualCents: patrimonioAtualCents,
-      lucroPrejuizoCents: lucroPrejuizoCents,
-      rentabilidadePercent: rentabilidade,
-    );
-  }
 
   /// Calcula as sugestões de rebalanceamento da carteira com base no aporte e metas por classe.
   static List<SugestaoAporteClasse> calcularRebalanceamento({

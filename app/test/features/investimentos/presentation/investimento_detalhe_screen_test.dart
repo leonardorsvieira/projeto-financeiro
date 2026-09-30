@@ -7,8 +7,6 @@ import 'package:meubolso/features/investimentos/domain/investimento.dart';
 import 'package:meubolso/features/investimentos/presentation/investimento_detalhe_screen.dart';
 
 import '../../../support/fake_investimentos_repository.dart';
-import '../../../support/fake_movimentos_investimento_repository.dart';
-import '../../../support/fake_rendimentos_investimento_repository.dart';
 
 Future<void> _pump(
   WidgetTester tester,
@@ -19,10 +17,6 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         investimentosRepositoryProvider.overrideWithValue(investimentos),
-        movimentosInvestimentoRepositoryProvider
-            .overrideWithValue(FakeMovimentosInvestimentoRepository()),
-        rendimentosInvestimentoRepositoryProvider
-            .overrideWithValue(FakeRendimentosInvestimentoRepository()),
       ],
       child: MaterialApp(
         home: InvestimentoDetalheScreen(investimentoId: id),

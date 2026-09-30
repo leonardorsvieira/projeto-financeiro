@@ -17,8 +17,6 @@ class AppRoutes {
   static const String openFinance = '/open-finance';
   static const String investimentos = '/investimentos';
   static const String investimentoDetalhe = '/investimentos/:id';
-  static const String rendimentos = '/investimentos/rendimentos';
-  static const String calendarioProventos = '/investimentos/proventos';
 
   static String lancamentoEditar(String id) => '/lancamentos/$id';
   static String investimentoDetalheDe(String id) => '/investimentos/$id';

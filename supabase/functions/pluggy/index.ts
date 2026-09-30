@@ -216,8 +216,6 @@ async function atender(req: Request): Promise<Response> {
         execucao: i.executionStatus,
         conector: i.connector?.id,
         webhook: i.webhookUrl === WEBHOOK_URL,
-        produtos: i.products,
-        consentidos: i.consentedProducts,
       })),
     }));
     return resposta(req, 200, { results });
@@ -270,16 +268,7 @@ async function atender(req: Request): Promise<Response> {
       if (v && /^\d{1,4}$/.test(v)) params.set(k, v);
     }
     const r = await pluggy("GET", `/investments?${params}`);
-    const texto = await r.text();
-    // Diagnóstico sem dados financeiros: só status e quantidade.
-    let total: unknown;
-    try {
-      total = JSON.parse(texto)?.total;
-    } catch {
-      // corpo não-JSON
-    }
-    console.log(JSON.stringify({ rota: "investments", status: r.status, total }));
-    return repassar(req, r, texto);
+    return repassar(req, r, await r.text());
   }
 
   // Transações: /v2/transactions (cursor). O /transactions antigo responde 410

@@ -20,8 +20,6 @@ import '../features/open_finance/presentation/open_finance_screen.dart';
 import '../features/metas/presentation/metas_screen.dart';
 import '../features/investimentos/presentation/investimentos_screen.dart';
 import '../features/investimentos/presentation/investimento_detalhe_screen.dart';
-import '../features/investimentos/presentation/rendimentos_screen.dart';
-import '../features/investimentos/presentation/calendario_proventos_screen.dart';
 
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(Ref ref) {
@@ -106,14 +104,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return InvestimentoDetalheScreen(investimentoId: id);
         },
-      ),
-      GoRoute(
-        path: AppRoutes.rendimentos,
-        builder: (_, _) => const RendimentosScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.calendarioProventos,
-        builder: (_, _) => const CalendarioProventosScreen(),
       ),
     ],
     redirect: (context, state) {

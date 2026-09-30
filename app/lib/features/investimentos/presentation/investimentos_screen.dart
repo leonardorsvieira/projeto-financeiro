@@ -63,11 +63,6 @@ class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
             icon: const Icon(Icons.balance),
             onPressed: () => mostrarDialogoRebalanceamento(context),
           ),
-          IconButton(
-            tooltip: 'Calendário de Proventos',
-            icon: const Icon(Icons.calendar_month),
-            onPressed: () => context.push(AppRoutes.calendarioProventos),
-          ),
         ],
       ),
       body: porClasse.totalAtivos == 0

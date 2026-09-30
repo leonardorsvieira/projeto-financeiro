@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 Phase: 8 — Investimentos (concluída) — todas as 8 fases do roadmap completas
 Plan: 08-01..08-05 ✅ (05-02 push FCM/APNs adiado de propósito — lembretes usam notificação local)
 Status: **Milestone v1.1 completo.** Depois dele: Open Finance via Pluggy (Edge Functions `pluggy`/`pluggy-webhook`, meu.pluggy.ai direto, `/v2/transactions`, sincronização automática, sinal do cartão, categorias neutras) e hardening multiusuário (quick 260928-n3q).
-Last activity: 2026-09-30 — quick 260930-arb: removidas telas de rendimentos/proventos e o diagnóstico da função pluggy
+Last activity: 2026-09-30 — quick 260930-j4c: visual glassmorphism (vidro fosco) no app inteiro
 
 ## Performance Metrics
 
@@ -108,6 +108,7 @@ Items acknowledged and carried forward from previous milestone close:
 | 260929-rf2 | Patrimônio somente Open Finance | 2026-09-29 | [SUMMARY](quick/260929-rf2-patrimonio-somente-open-finance/260929-rf2-SUMMARY.md) |
 | 260929-rou | Rendimento por investimento (Open Finance) | 2026-09-29 | [SUMMARY](quick/260929-rou-rendimento-por-investimento-open-finance/260929-rou-SUMMARY.md) |
 | 260930-arb | Remover telas de proventos e diagnóstico Pluggy | 2026-09-30 | [SUMMARY](quick/260930-arb-remover-telas-proventos-e-diagnostico-pl/260930-arb-SUMMARY.md) |
+| 260930-j4c | Visual glassmorphism (aero glass) no app inteiro | 2026-09-30 | [SUMMARY](quick/260930-j4c-glassmorphism-aero-glass-no-app-inteiro/260930-j4c-SUMMARY.md) |
 
 ## Session Continuity
 

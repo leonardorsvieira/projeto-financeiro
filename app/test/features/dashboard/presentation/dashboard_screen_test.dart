@@ -119,8 +119,8 @@ void main() {
     await _pump(tester, repo);
 
     expect(find.text('Saldo do mês'), findsOneWidget);
-    expect(find.text('Entradas'), findsOneWidget);
-    expect(find.text('Saídas'), findsOneWidget);
+    expect(find.text('Receitas'), findsOneWidget);
+    expect(find.text('Despesas'), findsOneWidget);
     expect(find.text('Previsto no mês: R\$ 50,00'), findsOneWidget);
     expect(find.text('R\$ 3.000,00'), findsWidgets); // entradas
     expect(find.text('R\$ 100,00'), findsWidgets); // saídas
@@ -183,7 +183,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('Metas'), 100);
     expect(find.text('Metas'), findsOneWidget);
     expect(find.text('R\$ 90,00 de R\$ 100,00'), findsOneWidget);
-    expect(find.text('90%'), findsOneWidget);
+    expect(find.text('90% utilizado. Restam R\$ 10,00 até o fim do mês.'), findsOneWidget);
     expect(find.text('Gerenciar'), findsWidgets);
   });
 

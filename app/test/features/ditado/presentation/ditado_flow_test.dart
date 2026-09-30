@@ -51,7 +51,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Lançamentos'));
+    await tester.tap(find.text('Livro-caixa'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Ditar'));

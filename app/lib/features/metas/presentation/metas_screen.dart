@@ -2,6 +2,8 @@ import '../../../theme/caderneta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../dashboard/presentation/dashboard_screen.dart'
+    show textoUtilizacaoOrcamento;
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../application/metas_providers.dart';
 import '../domain/meta.dart';
@@ -53,7 +55,7 @@ class _MetasScreenState extends ConsumerState<MetasScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro ao salvar a meta.')),
+        const SnackBar(content: Text('Não foi possível salvar o orçamento. Tente novamente.')),
       );
     }
   }
@@ -62,9 +64,9 @@ class _MetasScreenState extends ConsumerState<MetasScreen> {
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir meta?'),
+        title: const Text('Excluir orçamento?'),
         content: Text(
-          'A meta de ${meta.categoria} será removida. Essa ação não pode ser desfeita.',
+          'O orçamento de ${meta.categoria} será removido. Essa ação não pode ser desfeita.',
         ),
         actions: [
           TextButton(
@@ -84,7 +86,7 @@ class _MetasScreenState extends ConsumerState<MetasScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro ao excluir a meta.')),
+        const SnackBar(content: Text('Não foi possível excluir o orçamento. Tente novamente.')),
       );
     }
   }
@@ -193,7 +195,7 @@ class _MetaTile extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    item.meta.categoria,
+                    'Orçamento · ${item.meta.categoria}',
                     style: theme.textTheme.titleMedium,
                   ),
                 ),
@@ -226,19 +228,13 @@ class _MetaTile extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Builder(builder: (context) {
-              final sufixo = [
-                if (item.estourou) 'limite estourado',
-                if (item.quaseEstourada) 'quase no limite',
-              ].join(' · ');
-              return Text(
-                sufixo.isEmpty ? '$pct%' : '$pct% · $sufixo',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: cor,
-                  fontWeight: FontWeight.w600,
-                ),
-              );
-            }),
+            Text(
+              textoUtilizacaoOrcamento(item),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),

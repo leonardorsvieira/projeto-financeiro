@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:intl/intl.dart';
 
+import '../../auth/application/auth_controller.dart';
 import '../../ditado/application/ditado_providers.dart';
 import '../../home/domain/app_routes.dart';
 import '../../investimentos/application/investimentos_providers.dart';
@@ -14,6 +15,7 @@ import '../../lancamentos/domain/lancamento_converter.dart';
 import '../../metas/application/metas_providers.dart';
 import '../application/dashboard_providers.dart';
 import '../application/home_widget_service.dart';
+import '../application/saudacao.dart';
 import 'relatorio_cartoes_widget.dart';
 /// Cor do donut por categoria (ordem fixa; categorias novas usam a ultima).
 const _ordemCategorias = <String>[
@@ -63,6 +65,8 @@ class DashboardScreen extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         children: [
+          _Saudacao(nome: ref.watch(primeiroNomeUsuarioProvider)),
+          const SizedBox(height: 12),
           const _SeletorMesHeader(),
           const SizedBox(height: 12),
           _CardGastosMes(resumo: resumo),
@@ -76,7 +80,7 @@ class DashboardScreen extends ConsumerWidget {
             resumo: ref.watch(resumoRendimentosProvider),
           ),
           const SizedBox(height: 16),
-          Text('Por categoria', style: theme.textTheme.titleMedium),
+          Text('Despesas por categoria', style: theme.textTheme.titleMedium),
           const SizedBox(height: 4),
           _DonutGastosCategoria(
             gastos: porCategoria,
@@ -104,7 +108,7 @@ class DashboardScreen extends ConsumerWidget {
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.schedule_outlined),
                 title: Text(l.descricao),
-                subtitle: Text('Vence ${formatoData(l.vencimento!)}'),
+                subtitle: Text(_textoVencimento(l.vencimento!)),
                 trailing: Text(
                   formatoBRL(l.valorCents),
                   style: CadernetaTexto.numero(size: 16).copyWith(
@@ -123,6 +127,36 @@ class DashboardScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _Saudacao extends StatelessWidget {
+  const _Saudacao({this.nome});
+
+  final String? nome;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final agora = DateTime.now();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(saudacaoPara(agora, nome), style: theme.textTheme.headlineSmall),
+        Text(dataPorExtenso(agora), style: theme.textTheme.bodyMedium),
+      ],
+    );
+  }
+}
+
+String _textoVencimento(DateTime vencimento) {
+  final hoje = DateTime.now();
+  final dias = DateTime(vencimento.year, vencimento.month, vencimento.day)
+      .difference(DateTime(hoje.year, hoje.month, hoje.day))
+      .inDays;
+  if (dias < 0) return 'Venceu em ${formatoData(vencimento)}';
+  if (dias == 0) return 'Vence hoje';
+  if (dias == 1) return 'Vence amanhã';
+  return 'Vence em $dias dias';
 }
 
 class _CardGastosMes extends StatelessWidget {
@@ -153,7 +187,7 @@ class _CardGastosMes extends StatelessWidget {
               children: [
                 Expanded(
                   child: _ValorRotulado(
-                    rotulo: 'Entradas',
+                    rotulo: 'Receitas',
                     valor: resumo.entradasCents,
                     cor: Caderneta.corReceita(context),
                   ),
@@ -161,7 +195,7 @@ class _CardGastosMes extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: _ValorRotulado(
-                    rotulo: 'Saídas',
+                    rotulo: 'Despesas',
                     valor: resumo.saidasCents,
                     cor: theme.colorScheme.error,
                   ),
@@ -455,7 +489,7 @@ class _MetaProgressoTile extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    meta.meta.categoria,
+                    'Orçamento · ${meta.meta.categoria}',
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
@@ -480,7 +514,7 @@ class _MetaProgressoTile extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                '$pct%',
+                textoUtilizacaoOrcamento(meta),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: cor,
                   fontWeight: FontWeight.w600,
@@ -492,6 +526,17 @@ class _MetaProgressoTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "83% utilizado. Restam R$ 260,00 até o fim do mês." ou, se excedido,
+/// "Orçamento excedido em R$ X.".
+String textoUtilizacaoOrcamento(MetaComProgresso m) {
+  final diferenca = m.meta.valorLimiteCents - m.gastoCents;
+  if (diferenca < 0) {
+    return 'Orçamento excedido em ${formatoBRL(-diferenca)}.';
+  }
+  return '${m.percentual}% utilizado. '
+      'Restam ${formatoBRL(diferenca)} até o fim do mês.';
 }
 
 class _SeletorMesHeader extends ConsumerWidget {
@@ -550,7 +595,7 @@ class _SeletorMesHeader extends ConsumerWidget {
                     ),
                     if (!ehMesAtual)
                       Text(
-                        'Histórico de Meses',
+                        'Histórico de meses',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                         ),

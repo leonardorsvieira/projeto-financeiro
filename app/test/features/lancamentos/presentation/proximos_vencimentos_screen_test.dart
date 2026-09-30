@@ -130,7 +130,7 @@ void main() {
       await tester.pumpWidget(buildScreen());
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Próximos Vencimentos'));
+      await tester.tap(find.text('Próximos vencimentos'));
       await tester.pumpAndSettle();
 
       expect(find.text('Próximos vencimentos'), findsOneWidget);
@@ -169,7 +169,7 @@ void main() {
       ]));
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Próximos Vencimentos'));
+      await tester.tap(find.text('Próximos vencimentos'));
       await tester.pumpAndSettle();
 
       expect(find.text('Próximos vencimentos'), findsOneWidget);
@@ -213,7 +213,7 @@ void main() {
       ]));
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Próximos Vencimentos'));
+      await tester.tap(find.text('Próximos vencimentos'));
       await tester.pumpAndSettle();
 
       expect(find.text('Passado'), findsNothing);
@@ -241,7 +241,7 @@ void main() {
       ]));
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Próximos Vencimentos'));
+      await tester.tap(find.text('Próximos vencimentos'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Conta luz'));

@@ -69,8 +69,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(icon: Icon(Icons.space_dashboard_outlined), text: 'Dashboard'),
-            Tab(icon: Icon(Icons.list_alt_outlined), text: 'Lançamentos'),
+            Tab(icon: Icon(Icons.space_dashboard_outlined), text: 'Resumo'),
+            Tab(icon: Icon(Icons.list_alt_outlined), text: 'Livro-caixa'),
           ],
         ),
         actions: [
@@ -107,7 +107,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 value: 'historico',
                 child: ListTile(
                   leading: Icon(Icons.history_outlined),
-                  title: Text('Histórico de Meses'),
+                  title: Text('Histórico de meses'),
                   dense: true,
                 ),
               ),
@@ -115,7 +115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 value: 'relatorios',
                 child: ListTile(
                   leading: Icon(Icons.bar_chart_outlined),
-                  title: Text('Relatórios & Comparativos'),
+                  title: Text('Relatórios e comparativos'),
                   dense: true,
                 ),
               ),
@@ -123,7 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 value: 'open_finance',
                 child: ListTile(
                   leading: Icon(Icons.account_balance),
-                  title: Text('Open Finance & Bancos'),
+                  title: Text('Bancos e Open Finance'),
                   dense: true,
                 ),
               ),
@@ -147,7 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 value: 'vencimentos',
                 child: ListTile(
                   leading: Icon(Icons.event_outlined),
-                  title: Text('Próximos Vencimentos'),
+                  title: Text('Próximos vencimentos'),
                   dense: true,
                 ),
               ),
@@ -155,7 +155,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 value: 'cartoes',
                 child: ListTile(
                   leading: Icon(Icons.credit_card_outlined),
-                  title: Text('Meus Cartões de Crédito'),
+                  title: Text('Cartões de crédito'),
                   dense: true,
                 ),
               ),
@@ -163,7 +163,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 value: 'tema',
                 child: ListTile(
                   leading: Icon(Icons.palette_outlined),
-                  title: Text('Aparência & Tema'),
+                  title: Text('Aparência'),
                   dense: true,
                 ),
               ),
@@ -182,7 +182,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   value: 'biometria',
                   child: ListTile(
                     leading: Icon(Icons.fingerprint),
-                    title: Text('Segurança & Biometria'),
+                    title: Text('Segurança e biometria'),
                     dense: true,
                   ),
                 ),

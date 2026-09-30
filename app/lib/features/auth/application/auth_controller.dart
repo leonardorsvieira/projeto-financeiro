@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import '../data/auth_repository.dart';
 import '../domain/auth_state.dart';
@@ -31,3 +32,17 @@ class AuthController extends StreamNotifier<AuthState> {
     return _repo.signOut();
   }
 }
+
+/// Primeiro nome da conta (user_metadata `full_name` ou `name`), ou null.
+/// Sem Supabase inicializado (testes) devolve null.
+final primeiroNomeUsuarioProvider = Provider<String?>((ref) {
+  ref.watch(authControllerProvider);
+  try {
+    final meta = Supabase.instance.client.auth.currentUser?.userMetadata;
+    final bruto = (meta?['full_name'] ?? meta?['name'])?.toString().trim();
+    if (bruto == null || bruto.isEmpty) return null;
+    return bruto.split(RegExp(r's+')).first;
+  } catch (_) {
+    return null;
+  }
+});

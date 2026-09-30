@@ -71,13 +71,13 @@ void main() {
     await _pump(tester, lancamentos: lancamentos, metas: metas);
 
     expect(find.text('Metas'), findsOneWidget);
-    expect(find.text('Alimentação'), findsOneWidget);
+    expect(find.text('Orçamento · Alimentação'), findsOneWidget);
     expect(find.text('R\$ 90,00 de R\$ 100,00'), findsOneWidget);
-    expect(find.text('90% · quase no limite'), findsOneWidget);
+    expect(find.text('90% utilizado. Restam R\$ 10,00 até o fim do mês.'), findsOneWidget);
     expect(find.text('R\$ 120,00 de R\$ 100,00'), findsOneWidget);
-    expect(find.text('120% · limite estourado'), findsOneWidget);
+    expect(find.text('Orçamento excedido em R\$ 20,00.'), findsOneWidget);
     expect(find.text('R\$ 0,00 de R\$ 100,00'), findsOneWidget);
-    expect(find.text('0%'), findsOneWidget);
+    expect(find.text('0% utilizado. Restam R\$ 100,00 até o fim do mês.'), findsOneWidget);
   });
 
   testWidgets('MetasScreen mostra empty state quando não há metas',
@@ -113,7 +113,7 @@ void main() {
     expect(metas.createCount, 1);
     expect(metas.items.single.categoria, 'Mercado');
     expect(metas.items.single.valorLimiteCents, 50000);
-    expect(find.text('Mercado'), findsOneWidget);
+    expect(find.text('Orçamento · Mercado'), findsOneWidget);
     expect(find.text('R\$ 0,00 de R\$ 500,00'), findsOneWidget);
   });
 
@@ -145,7 +145,7 @@ void main() {
     await tester.tap(find.text('Excluir'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Excluir meta?'), findsOneWidget);
+    expect(find.text('Excluir orçamento?'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Excluir'));
     await tester.pumpAndSettle();
 

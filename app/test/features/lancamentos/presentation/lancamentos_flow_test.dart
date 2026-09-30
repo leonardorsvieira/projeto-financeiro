@@ -53,7 +53,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     // Home agora abre na aba "Resumo" (dashboard); navegar para "Lançamentos".
-    await tester.tap(find.text('Lançamentos'));
+    await tester.tap(find.text('Livro-caixa'));
     await tester.pumpAndSettle();
     return fakeLancamentos;
   }

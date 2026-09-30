@@ -40,6 +40,10 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // Sem R8: o modo "full" do R8 remove assinaturas genéricas usadas
+            // pelo Gson do flutter_local_notifications e o app fechava ao abrir.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

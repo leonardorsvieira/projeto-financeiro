@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meu Bolso · Ícone e widget</title>
+<link rel="stylesheet" href="../themes/default.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,800;1,9..144,700&family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  :root { --papel: #f4ecd8; --papel2: #fbf6ea; --tinta: #1d2a47; --vermelho: #b3261e; --pauta: #d9ccaa; --muted: #6f6a5c; }
+  body { margin: 0; background: #e9dfc4; color: var(--tinta); font-family: Inter, system-ui, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-family: Fraunces, serif; font-weight: 800; font-size: 30px; margin: 0 0 4px; }
+  h2 { font-family: Fraunces, serif; font-weight: 600; font-size: 21px; margin: 32px 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 18px; font-size: 15px; }
+
+  /* ---------- vitrine de ícones ---------- */
+  .icones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 820px) { .icones { grid-template-columns: 1fr; } }
+  .opcao { background: var(--papel2); border: 1.5px solid var(--tinta); border-radius: 4px; padding: 18px; cursor: pointer; transition: all .15s ease; }
+  .opcao:hover { transform: translateY(-2px); }
+  .opcao.on { outline: 3px solid var(--vermelho); outline-offset: 3px; }
+  .opcao h3 { margin: 0 0 2px; font-family: Fraunces, serif; font-size: 18px; }
+  .opcao p { margin: 0 0 14px; font-size: 13px; color: var(--muted); min-height: 36px; }
+  .formas { display: flex; align-items: flex-end; gap: 16px; }
+  .formas figure { margin: 0; text-align: center; font-size: 11px; color: var(--muted); }
+  .formas figcaption { margin-top: 6px; }
+  .ic { display: block; overflow: hidden; }
+  .ic svg { width: 100%; height: 100%; display: block; }
+  .ic.grande { width: 112px; height: 112px; border-radius: 26px; box-shadow: 0 10px 22px -12px rgba(0,0,0,.5); }
+  .ic.circ { width: 64px; height: 64px; border-radius: 50%; }
+  .ic.squi { width: 64px; height: 64px; border-radius: 15px; }
+  .ic.mini { width: 26px; height: 26px; border-radius: 7px; }
+
+  /* ---------- controles ---------- */
+  .controles { display: flex; flex-wrap: wrap; gap: 18px; margin: 10px 0 20px; align-items: center; }
+  .grupo { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+  .grupo > span { color: var(--muted); margin-right: 4px; }
+  .seg { border: 1.5px solid var(--tinta); background: var(--papel2); color: var(--tinta); border-radius: 3px; padding: 7px 12px; font: 600 13px Inter, sans-serif; cursor: pointer; transition: all .15s ease; }
+  .seg:hover { background: #efe5cc; }
+  .seg.on { background: var(--tinta); color: var(--papel); }
+
+  /* ---------- tela inicial simulada ---------- */
+  .palco { display: grid; grid-template-columns: 380px 1fr; gap: 28px; align-items: start; }
+  @media (max-width: 820px) { .palco { grid-template-columns: 1fr; justify-items: center; } }
+  .phone { width: 360px; max-width: calc(100vw - 32px); height: 740px; border-radius: 44px; padding: 10px; background: #111; box-shadow: 0 30px 60px -20px rgba(0,0,0,.4); }
+  .home { position: relative; height: 100%; border-radius: 34px; overflow: hidden; padding: 0 14px; display: flex; flex-direction: column;
+    background: radial-gradient(120% 80% at 20% 10%, #c9d7e8 0, transparent 60%), radial-gradient(90% 70% at 90% 90%, #e8c9b7 0, transparent 60%), linear-gradient(160deg, #a9bcd4, #d9b9a6); }
+  .home.escuro { background: radial-gradient(120% 80% at 20% 10%, #2b3a55 0, transparent 60%), radial-gradient(90% 70% at 90% 90%, #4a2f3a 0, transparent 60%), linear-gradient(160deg, #141b2b, #2a1f28); }
+  .sb { display: flex; justify-content: space-between; padding: 10px 12px 0; font: 600 12px Inter; color: #fff; height: 30px; }
+  .hora { color: #fff; font: 300 54px Inter; text-align: center; margin: 6px 0 0; letter-spacing: -.02em; }
+  .data { color: #fff; text-align: center; font-size: 13px; margin-bottom: 14px; opacity: .9; }
+  .grade { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 8px; align-content: start; }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); cursor: pointer; }
+  .app .ic, .app .fake { width: 58px; height: 58px; }
+  .home.android .app .ic, .home.android .app .fake { border-radius: 50%; }
+  .home.ios .app .ic, .home.ios .app .fake { border-radius: 14px; }
+  .fake { display: grid; place-items: center; font-size: 24px; background: rgba(255,255,255,.85); }
+  .dock { margin-top: auto; margin-bottom: 18px; display: grid; grid-template-columns: repeat(4, 1fr); padding: 10px 6px; border-radius: 28px; background: rgba(255,255,255,.25); }
+  .widget-slot { grid-column: span 4; display: flex; gap: 8px; }
+  .widget-slot.meio { grid-column: span 2; }
+
+  /* ---------- widget Caderneta ---------- */
+  .w { position: relative; border-radius: 22px; overflow: hidden; cursor: pointer; transition: transform .15s ease; color: var(--wt);
+    --wbg: #fbf6ea; --wt: #1d2a47; --wr: #b3261e; --wp: #e3d6b6; --wm: #6f6a5c;
+    background: repeating-linear-gradient(var(--wbg) 0 21px, var(--wp) 21px 22px); box-shadow: 0 10px 24px -12px rgba(0,0,0,.45); }
+  .w:hover { transform: scale(1.015); }
+  .escuro .w { --wbg: #17213a; --wt: #f1e8d2; --wr: #ef7a70; --wp: #243154; --wm: #a9a18c; }
+  .w::before { content: ''; position: absolute; top: 0; bottom: 0; left: 30px; border-left: 1.5px solid var(--wr); opacity: .8; }
+  .w .in { position: relative; padding: 12px 14px 12px 40px; height: 100%; display: flex; flex-direction: column; }
+  .w .cab { display: flex; align-items: center; gap: 6px; font: 600 11px Fraunces, serif; letter-spacing: .01em; }
+  .w .cab .ic { width: 18px; height: 18px; border-radius: 5px; }
+  .w .rot { font: 700 9px Inter; letter-spacing: .12em; text-transform: uppercase; color: var(--wm); margin-top: 10px; }
+  .w .saldo { font: 600 21px 'IBM Plex Mono', monospace; letter-spacing: -.02em; margin-top: 2px; }
+  .w .venc { margin-top: auto; font: 600 10.5px Inter; color: var(--wr); line-height: 1.3; }
+  .w .rd { display: flex; gap: 14px; margin-top: 6px; font: 10px Inter; color: var(--wm); }
+  .w .rd b { display: block; font: 600 11.5px 'IBM Plex Mono'; color: var(--wt); }
+  .w.p { width: 100%; height: 158px; }
+  .w.g { width: 100%; height: 158px; }
+  .w.g .in { flex-direction: row; gap: 10px; }
+  .w.g .esq { flex: 1; display: flex; flex-direction: column; }
+  .w.g .dir { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+  .micw { width: 64px; height: 64px; border-radius: 50%; border: 0; background: var(--wt); color: var(--wbg); font-size: 26px; cursor: pointer; box-shadow: 0 0 0 4px var(--wbg), 0 0 0 5.5px var(--wt); transition: transform .15s ease; }
+  .micw:hover { transform: scale(1.06); }
+  .dir small { font: 700 10px Inter; letter-spacing: .08em; text-transform: uppercase; }
+  .linhas { margin-top: 8px; font: 11px Inter; }
+  .linhas div { display: flex; justify-content: space-between; gap: 8px; height: 22px; align-items: center; }
+  .linhas .dt { font: 600 10.5px 'IBM Plex Mono'; color: var(--wr); width: 38px; flex: none; }
+  .linhas .n { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .linhas .v { font: 600 11px 'IBM Plex Mono'; }
+
+  /* explicação lateral */
+  .nota { background: var(--papel2); border: 1.5px solid var(--tinta); border-radius: 4px; padding: 16px 18px; font-size: 14px; line-height: 1.5; }
+  .nota h3 { margin: 0 0 6px; font-family: Fraunces, serif; font-size: 18px; }
+  .nota ul { margin: 6px 0 0; padding-left: 18px; }
+  .nota .tag { display: inline-block; font: 700 10px Inter; letter-spacing: .08em; text-transform: uppercase; color: var(--vermelho); border: 1.5px solid var(--vermelho); padding: 2px 6px; border-radius: 2px; margin-bottom: 6px; }
+
+  .toast { position: absolute; left: 50%; bottom: 110px; transform: translate(-50%, 20px); opacity: 0; background: #1d2a47; color: #f4ecd8; padding: 10px 14px; border-radius: 4px; font: 600 12px Inter; white-space: nowrap; transition: all .25s ease; pointer-events: none; z-index: 5; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Ícone e widget · Caderneta</h1>
+  <p class="lead">Hoje o app usa o ícone padrão do Flutter e um widget escuro genérico. Escolha um ícone e um widget; a tela inicial ao lado muda na hora.</p>
+
+  <h2>1. Ícone do app</h2>
+  <p class="lead">Cada opção aparece em tamanho grande, no recorte redondo do Android e no recorte arredondado do iPhone.</p>
+  <div class="icones" id="icones"></div>
+
+  <h2>2. Widget na tela inicial</h2>
+  <div class="controles">
+    <div class="grupo"><span>Widget</span><button class="seg" data-w="p">Compacto 2×2</button><button class="seg" data-w="g">Largo 4×2 · com Ditar</button><button class="seg" data-w="a">Agenda 4×2</button></div>
+    <div class="grupo"><span>Celular</span><button class="seg" data-so="android">Android</button><button class="seg" data-so="ios">iPhone</button></div>
+    <div class="grupo"><span>Tema</span><button class="seg" data-t="claro">Claro</button><button class="seg" data-t="escuro">Escuro</button></div>
+  </div>
+
+  <div class="palco">
+    <div class="phone"><div class="home" id="home"></div></div>
+    <div class="nota" id="nota"></div>
+  </div>
+</div>
+
+<div id="sketch-tools" style="position:fixed;bottom:12px;right:12px;z-index:9999;font:12px system-ui;background:rgba(0,0,0,.75);color:#fff;padding:8px 12px;border-radius:8px;opacity:.45;transition:opacity .2s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.45">Sketch 002 · clique no widget e no botão Ditar</div>
+
+<script>
+/* Três propostas de ícone na linguagem da Caderneta (papel, tinta azul-marinho, vermelho de margem). */
+const ICONES = {
+  carimbo: {
+    nome: 'A · Carimbo ★ Escolhido', desc: 'O selo "MB" do app, como um carimbo de livro-caixa em papel creme.',
+    svg: `<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#f4ecd8"/><g transform="rotate(-8 50 50)"><circle cx="50" cy="50" r="33" fill="none" stroke="#b3261e" stroke-width="4"/><circle cx="50" cy="50" r="27" fill="none" stroke="#b3261e" stroke-width="1.4" stroke-dasharray="2.5 3"/><text x="50" y="61" text-anchor="middle" font-family="Fraunces" font-weight="800" font-size="30" fill="#1d2a47">MB</text></g></svg>`,
+  },
+  capa: {
+    nome: 'B · Capa da caderneta', desc: 'Uma caderneta fechada em azul-marinho, com elástico vermelho e etiqueta.',
+    svg: `<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#e9dfc4"/><rect x="24" y="16" width="52" height="68" rx="5" fill="#1d2a47"/><rect x="24" y="16" width="7" height="68" rx="3" fill="#141e36"/><rect x="36" y="32" width="32" height="18" rx="2" fill="#f4ecd8"/><text x="52" y="45.5" text-anchor="middle" font-family="Fraunces" font-weight="800" font-size="11" fill="#1d2a47">MB</text><rect x="62" y="14" width="5" height="72" rx="2" fill="#b3261e"/></svg>`,
+  },
+  pagina: {
+    nome: 'C · Página pautada', desc: 'Uma página com pauta, margem vermelha e um "B" à mão: o lançamento sendo anotado.',
+    svg: `<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#fbf6ea"/><g stroke="#c9d3e6" stroke-width="1.6"><line x1="0" y1="30" x2="100" y2="30"/><line x1="0" y1="46" x2="100" y2="46"/><line x1="0" y1="62" x2="100" y2="62"/><line x1="0" y1="78" x2="100" y2="78"/></g><line x1="26" y1="0" x2="26" y2="100" stroke="#b3261e" stroke-width="2.4"/><text x="58" y="72" text-anchor="middle" font-family="Fraunces" font-style="italic" font-weight="700" font-size="54" fill="#1d2a47">B</text><path d="M40 82 q18 6 36 -2" fill="none" stroke="#b3261e" stroke-width="3" stroke-linecap="round"/></svg>`,
+  },
+};
+
+const WIDGETS = {
+  p: { nome: 'Compacto 2×2', nota: `<span class="tag">Hoje já existe</span><h3>Compacto 2×2</h3>É o widget que você já tem, redesenhado: mesmo conteúdo (saldo do mês e vencimentos), agora em papel pautado com a margem vermelha. <ul><li>Não precisa de dado novo: usa <code>widget_saldo</code> e <code>widget_vencimentos</code>.</li><li>Tocar abre o app no Resumo.</li></ul>` },
+  g: { nome: 'Largo 4×2', nota: `<span class="tag">Novo recurso</span><h3>Largo 4×2 · com Ditar</h3>Saldo, receitas e despesas, e um botão que <b>abre o app direto no ditado</b>. Da tela inicial ao lançamento em um toque. <ul><li>Precisa de um link direto para a tela de ditado.</li><li>Receitas e despesas viram dados novos no widget.</li></ul>` },
+  a: { nome: 'Agenda 4×2', nota: `<span class="tag">Novo recurso</span><h3>Agenda 4×2</h3>Os próximos vencimentos como linhas do livro-caixa, com a data na margem e o saldo no rodapé. Bom para quem vive de boleto e fatura. <ul><li>Precisa enviar a lista dos 3 próximos vencimentos ao widget.</li></ul>` },
+};
+
+let icone = 'carimbo', widget = 'p', so = 'android', tema = 'claro';
+try { const s = JSON.parse(localStorage.getItem('sketch002') || '{}'); ({ icone = icone, widget = widget, so = so, tema = tema } = s); } catch (_) {}
+
+const ic = (k, cls) => `<span class="ic ${cls}">${ICONES[k].svg}</span>`;
+
+function widgetHtml() {
+  const cab = `<div class="cab">${ic(icone, '')}Meu Bolso</div>`;
+  if (widget === 'p') return `<div class="widget-slot meio"><div class="w p" data-toast="Abre o Meu Bolso no Resumo"><div class="in">${cab}
+    <div class="rot">Saldo do mês</div><div class="saldo">R$ 3.880</div>
+    <div class="venc">§ Vence amanhã:<br>Luz · R$ 187,40</div></div></div></div>`;
+  if (widget === 'g') return `<div class="widget-slot"><div class="w g" data-toast="Abre o Meu Bolso no Resumo"><div class="in"><div class="esq">${cab}
+    <div class="rot">Saldo do mês</div><div class="saldo">R$ 3.880,00</div>
+    <div class="rd"><span>Receitas<b>8.000,00</b></span><span>Despesas<b>4.120,00</b></span></div>
+    <div class="venc">§ Vence amanhã: Luz · R$ 187,40</div></div>
+    <div class="dir"><button class="micw" data-toast="Abre direto em “Ditar lançamento” 🎙">🎙</button><small>Ditar</small></div></div></div></div>`;
+  return `<div class="widget-slot"><div class="w g" style="height:158px" data-toast="Abre o Meu Bolso em Vencimentos"><div class="in" style="flex-direction:column">${cab}
+    <div class="linhas"><div><span class="dt">01/10</span><span class="n">Conta de luz</span><span class="v">187,40</span></div>
+    <div><span class="dt">05/10</span><span class="n">Fatura Nubank</span><span class="v">1.284,90</span></div>
+    <div><span class="dt">12/10</span><span class="n">Internet</span><span class="v">99,90</span></div></div>
+    <div class="venc" style="color:var(--wm)">Saldo do mês <b style="font:600 11px 'IBM Plex Mono';color:var(--wt)">R$ 3.880,00</b></div></div></div></div>`;
+}
+
+function render() {
+  document.getElementById('icones').innerHTML = Object.entries(ICONES).map(([k, i]) => `
+    <div class="opcao ${k === icone ? 'on' : ''}" data-icone="${k}"><h3>${i.nome}</h3><p>${i.desc}</p>
+      <div class="formas"><figure>${ic(k, 'grande')}<figcaption>Grande</figcaption></figure>
+      <figure>${ic(k, 'circ')}<figcaption>Android</figcaption></figure>
+      <figure>${ic(k, 'squi')}<figcaption>iPhone</figcaption></figure>
+      <figure>${ic(k, 'mini')}<figcaption>Notificação</figcaption></figure></div></div>`).join('');
+
+  const outros = [['📷', 'Câmera'], ['💬', 'Mensagens'], ['🗺️', 'Mapas'], ['🎵', 'Música'], ['📅', 'Agenda'], ['⏰', 'Relógio'], ['📝', 'Notas']];
+  const meu = `<div class="app" data-toast="Abrindo o Meu Bolso…">${ic(icone, '')}<span>Meu Bolso</span></div>`;
+  const apps = outros.slice(0, 3).map(([e, n]) => `<div class="app"><span class="fake">${e}</span><span>${n}</span></div>`);
+  const compacto = widget === 'p';
+  const home = document.getElementById('home');
+  home.className = `home ${so} ${tema}`;
+  home.innerHTML = `<div class="sb"><span>14:32</span><span>●●● ▮</span></div>
+    <div class="hora">14:32</div><div class="data">terça-feira, 30 de setembro</div>
+    <div class="grade">${widgetHtml()}${compacto ? `<div class="widget-slot meio" style="display:grid;grid-template-columns:1fr 1fr;gap:16px 8px">${meu}${apps[0]}${apps[1]}${apps[2]}</div>` : meu + apps.join('')}
+      ${outros.slice(3).map(([e, n]) => `<div class="app"><span class="fake">${e}</span><span>${n}</span></div>`).join('')}</div>
+    <div class="dock">${['📞', '🌐', '✉️', '⚙️'].map(e => `<div class="app"><span class="fake">${e}</span></div>`).join('')}</div>
+    <div class="toast"></div>`;
+
+  document.getElementById('nota').innerHTML = WIDGETS[widget].nota + `<p style="margin:12px 0 0;color:var(--muted);font-size:13px">No iPhone, hoje o app não tem widget: seria preciso criar uma extensão de widget nativa (Swift). O ícone muda nos dois.</p>`;
+  document.querySelectorAll('[data-w]').forEach(b => b.classList.toggle('on', b.dataset.w === widget));
+  document.querySelectorAll('[data-so]').forEach(b => b.classList.toggle('on', b.dataset.so === so));
+  document.querySelectorAll('[data-t]').forEach(b => b.classList.toggle('on', b.dataset.t === tema));
+  try { localStorage.setItem('sketch002', JSON.stringify({ icone, widget, so, tema })); } catch (_) {}
+}
+
+document.addEventListener('click', e => {
+  const o = e.target.closest('[data-icone]'); if (o) { icone = o.dataset.icone; return render(); }
+  const b = e.target.closest('[data-w],[data-so],[data-t]');
+  if (b) { if (b.dataset.w) widget = b.dataset.w; if (b.dataset.so) so = b.dataset.so; if (b.dataset.t) tema = b.dataset.t; return render(); }
+  const t = e.target.closest('[data-toast]');
+  if (t) { const el = document.querySelector('.toast'); el.textContent = t.dataset.toast; el.classList.add('show'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 1600); e.stopPropagation(); }
+});
+render();
+</script>
+</body>
+</html>

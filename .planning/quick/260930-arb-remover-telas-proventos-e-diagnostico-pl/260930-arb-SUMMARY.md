@@ -10,6 +10,6 @@ status: complete
   (sem uso desde 260929-rf2) e o cálculo de preço médio. Rebalanceamento
   mantido.
 - Função `pluggy` v10 = mesmo conteúdo (hash) da v8, sem o diagnóstico.
-- Tabelas `movimentos_investimento`/`rendimentos_investimento` continuam no
-  banco (vazias); não foram apagadas.
+- Tabelas `movimentos_investimento`/`rendimentos_investimento` apagadas
+  depois, a pedido (migration 20260930163053; estavam vazias).
 - `flutter analyze`: só infos antigos; `flutter test`: 225 ✓.

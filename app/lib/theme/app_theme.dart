@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import 'caderneta.dart';
+import 'icones.dart';
 
 /// Tema "Caderneta": livro-caixa de papel e tinta (claro) e caderneta
 /// noturna (escuro). Opaco, sem sombras e sem blur.
@@ -118,6 +119,18 @@ class AppTheme {
       canvasColor: c.papel,
       hoverColor: c.hover,
       iconTheme: IconThemeData(color: c.tinta),
+      // Ícones que o Material desenha sozinho (voltar, fechar, menu lateral,
+      // check do segmento selecionado) também em Phosphor.
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (_) => const PhosphorIcon(Icones.voltar),
+        closeButtonIconBuilder: (_) => const PhosphorIcon(Icones.fechar),
+        drawerButtonIconBuilder: (_) => const PhosphorIcon(Icones.menuLateral),
+        endDrawerButtonIconBuilder: (_) =>
+            const PhosphorIcon(Icones.menuLateral),
+      ),
+      segmentedButtonTheme: const SegmentedButtonThemeData(
+        selectedIcon: PhosphorIcon(Icones.confirmar),
+      ),
       pageTransitionsTheme: _transicoes,
       appBarTheme: AppBarTheme(
         backgroundColor: c.papel,

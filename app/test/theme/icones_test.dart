@@ -10,13 +10,12 @@ void main() {
     final fonte = File('lib/theme/icones.dart').readAsStringSync();
     final papeis = RegExp(
       r'static const (\w+) = IconData\(\s*(0x[0-9a-fA-F]+),\s*'
-      r'fontFamily: _f,\s*fontPackage: _p,?\s*\);',
+      r'fontFamily: _f,?\s*\);',
     ).allMatches(fonte).toList();
 
     test('há um papel por ícone e todos usam a fonte PhosphorDuotone', () {
       expect(papeis.length, greaterThanOrEqualTo(80));
       expect(fonte, contains("static const String _f = 'PhosphorDuotone';"));
-      expect(fonte, contains("static const String _p = 'phosphor_flutter';"));
       // Nenhuma constante de ícone fora do padrão (p. ex. `Icons.x` ou outra
       // família): toda `static const` de papel casou com a regex acima.
       final declaracoes = RegExp(r'static const (?!String|Map)\w+ =')
@@ -25,10 +24,10 @@ void main() {
       expect(papeis.length, declaracoes);
     });
 
-    test('papéis principais usam a família duotone do pacote', () {
+    test('papéis principais usam a fonte duotone embutida no app', () {
       for (final i in [Icones.ditar, Icones.resumo, Icones.voltar]) {
         expect(i.fontFamily, 'PhosphorDuotone');
-        expect(i.fontPackage, 'phosphor_flutter');
+        expect(i.fontPackage, isNull);
       }
     });
 
@@ -40,7 +39,6 @@ void main() {
           // ignore: non_const_argument_for_const_parameter
           codigo,
           fontFamily: 'PhosphorDuotone',
-          fontPackage: 'phosphor_flutter',
         );
         final preenchimento = Icones.preenchimentoDe(contorno);
         expect(preenchimento, isNotNull, reason: m.group(1));

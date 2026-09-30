@@ -53,7 +53,6 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.1
   url_launcher: ^6.3.2
-  phosphor_flutter: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -81,6 +80,7 @@ flutter:
     - assets/fonts/OFL-Fraunces.txt
     - assets/fonts/OFL-Inter.txt
     - assets/fonts/OFL-IBMPlexMono.txt
+    - assets/fonts/LICENSE-Phosphor.txt
 
   fonts:
     - family: Fraunces
@@ -97,6 +97,9 @@ flutter:
           weight: 400
         - asset: assets/fonts/IBMPlexMono-SemiBold.ttf
           weight: 600
+    - family: PhosphorDuotone
+      fonts:
+        - asset: assets/fonts/PhosphorDuotone.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

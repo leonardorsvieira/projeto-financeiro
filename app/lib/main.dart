@@ -127,14 +127,15 @@ class MeuBolsoApp extends ConsumerWidget {
   }
 }
 
-/// Registra as licencas OFL das fontes empacotadas (Fraunces, Inter, IBM Plex
-/// Mono) para aparecerem na tela de licencas do app.
+/// Registra as licencas das fontes empacotadas (Fraunces, Inter, IBM Plex
+/// Mono: OFL; Phosphor Icons: MIT) para aparecerem na tela de licencas do app.
 void _registrarLicencasDeFontes() {
   LicenseRegistry.addLicense(() async* {
     const fontes = {
       'Fraunces': 'assets/fonts/OFL-Fraunces.txt',
       'Inter': 'assets/fonts/OFL-Inter.txt',
       'IBM Plex Mono': 'assets/fonts/OFL-IBMPlexMono.txt',
+      'Phosphor Icons': 'assets/fonts/LICENSE-Phosphor.txt',
     };
     for (final e in fontes.entries) {
       final texto = await rootBundle.loadString(e.value);

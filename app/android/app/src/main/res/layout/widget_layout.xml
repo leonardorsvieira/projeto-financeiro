@@ -1,65 +1,237 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:background="@drawable/widget_background"
-    android:id="@+id/widget_container">
+    android:background="@drawable/widget_background">
+
+    <View
+        android:layout_width="1.5dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="30dp"
+        android:alpha="0.8"
+        android:background="@drawable/widget_margem" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:paddingEnd="14dp"
+        android:paddingStart="40dp">
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@mipmap/ic_launcher"
-            android:contentDescription="Meu Bolso Logo" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:contentDescription="Meu Bolso"
+                android:src="@mipmap/ic_launcher" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:fontFamily="serif"
+                android:text="Meu Bolso"
+                android:textColor="@color/widget_tinta"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/widget_venc_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="22dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/widget_venc_1_data"
+                    android:layout_width="42dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="01/10"
+                    android:textColor="@color/widget_margem"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/widget_venc_1_nome"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Conta de luz"
+                    android:textColor="@color/widget_tinta"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/widget_venc_1_valor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:fontFamily="monospace"
+                    android:gravity="end"
+                    android:text="187,40"
+                    android:textColor="@color/widget_tinta"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/widget_pauta" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/widget_venc_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="22dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/widget_venc_2_data"
+                    android:layout_width="42dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="05/10"
+                    android:textColor="@color/widget_margem"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/widget_venc_2_nome"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Fatura Nubank"
+                    android:textColor="@color/widget_tinta"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/widget_venc_2_valor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:fontFamily="monospace"
+                    android:gravity="end"
+                    android:text="1.284,90"
+                    android:textColor="@color/widget_tinta"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/widget_pauta" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/widget_venc_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="22dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/widget_venc_3_data"
+                    android:layout_width="42dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="12/10"
+                    android:textColor="@color/widget_margem"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/widget_venc_3_nome"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Internet"
+                    android:textColor="@color/widget_tinta"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/widget_venc_3_valor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:fontFamily="monospace"
+                    android:gravity="end"
+                    android:text="99,90"
+                    android:textColor="@color/widget_tinta"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/widget_pauta" />
+        </LinearLayout>
 
         <TextView
-            android:layout_width="0dp"
+            android:id="@+id/widget_vazio"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:text="Meu Bolso"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:text="Nenhum vencimento próximo."
+            android:textColor="@color/widget_apagado"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Saldo do mês"
+                android:textColor="@color/widget_apagado"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/widget_saldo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:fontFamily="monospace"
+                android:text="R$ —"
+                android:textColor="@color/widget_tinta"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="6dp"
-        android:layout_marginBottom="6dp"
-        android:background="#33FFFFFF" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Saldo do Mês"
-        android:textColor="#B0FFFFFF"
-        android:textSize="11sp" />
-
-    <TextView
-        android:id="@+id/widget_saldo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="R$ --"
-        android:textColor="#4CAF50"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/widget_vencimentos"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="Sem vencimentos hoje"
-        android:textColor="#E0FFFFFF"
-        android:textSize="11sp" />
-
-</LinearLayout>
+</FrameLayout>

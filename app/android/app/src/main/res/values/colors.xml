@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#F4ECD8</color>
+    <color name="widget_papel">#FBF6EA</color>
+    <color name="widget_tinta">#1D2A47</color>
+    <color name="widget_margem">#B3261E</color>
+    <color name="widget_apagado">#6F6A5C</color>
+    <color name="widget_pauta">#D9CCAA</color>
 </resources>

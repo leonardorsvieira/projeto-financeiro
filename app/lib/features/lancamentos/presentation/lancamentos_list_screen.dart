@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -143,13 +144,13 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
               height: 160,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SingleChildScrollView(
                 child: SelectableText(
                   csvContent,
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                  style: const TextStyle(fontFamily: 'IBMPlexMono', fontSize: 11),
                 ),
               ),
             ),
@@ -195,7 +196,10 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop('delete_series'),
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
               child: const Text('Excluir série toda'),
             ),
           ] else ...[
@@ -319,7 +323,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
           final ehReceita = item.tipo == TipoLancamento.receita;
           final valor = '${ehReceita ? '+' : '-'}${formatoBRL(item.valorCents)}';
           final corValor = ehReceita
-              ? Colors.green.shade700
+              ? Caderneta.corReceita(context)
               : theme.colorScheme.error;
           final hasVencimento = item.vencimento != null;
           final isFixa = item.fixoMensal;
@@ -328,7 +332,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
             onTap: () => context.push(AppRoutes.lancamentoEditar(item.id)),
             leading: CircleAvatar(
               backgroundColor: ehReceita
-                  ? Colors.green.withValues(alpha: 0.15)
+                  ? Caderneta.corReceitaFundo(context)
                   : null,
               child: Text(
                 item.categoria.characters.first,
@@ -364,7 +368,7 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
                         _Badge(
                           label: 'Receita',
                           icon: Icons.arrow_downward,
-                          color: Colors.green.shade700,
+                          color: Caderneta.corReceita(context),
                         ),
                     ],
                   ),

@@ -1,3 +1,4 @@
+import '../../../../theme/caderneta.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -57,11 +58,11 @@ class ComparativoMensalChart extends StatelessWidget {
           barRods: [
             BarChartRodData(
               toY: e,
-              color: Colors.green.shade600,
+              color: Caderneta.corReceita(context),
               width: 10,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(4),
+                topLeft: Radius.circular(2),
+                topRight: Radius.circular(2),
               ),
             ),
             BarChartRodData(
@@ -69,8 +70,8 @@ class ComparativoMensalChart extends StatelessWidget {
               color: theme.colorScheme.error,
               width: 10,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(4),
+                topLeft: Radius.circular(2),
+                topRight: Radius.circular(2),
               ),
             ),
           ],
@@ -87,7 +88,7 @@ class ComparativoMensalChart extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _IndicadorLegenda(
-              cor: Colors.green.shade600,
+              cor: Caderneta.corReceita(context),
               rotulo: 'Entradas (Receitas)',
             ),
             const SizedBox(width: 24),
@@ -185,7 +186,7 @@ class ComparativoMensalChart extends StatelessWidget {
                           text: fmtFull.format(valor),
                           style: TextStyle(
                             color: isReceita
-                                ? Colors.green.shade700
+                                ? Caderneta.corReceita(context)
                                 : theme.colorScheme.error,
                             fontWeight: FontWeight.bold,
                           ),

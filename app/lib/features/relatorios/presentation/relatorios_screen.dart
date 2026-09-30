@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,7 +119,7 @@ class RelatoriosScreen extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: isPositivo
-                              ? Colors.green.shade100
+                              ? Caderneta.corReceitaFundo(context)
                               : theme.colorScheme.errorContainer,
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -130,7 +131,7 @@ class RelatoriosScreen extends ConsumerWidget {
                                   : Icons.trending_down,
                               size: 16,
                               color: isPositivo
-                                  ? Colors.green.shade800
+                                  ? Caderneta.corReceita(context)
                                   : theme.colorScheme.onErrorContainer,
                             ),
                             const SizedBox(width: 4),
@@ -140,7 +141,7 @@ class RelatoriosScreen extends ConsumerWidget {
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: isPositivo
-                                    ? Colors.green.shade800
+                                    ? Caderneta.corReceita(context)
                                     : theme.colorScheme.onErrorContainer,
                               ),
                             ),
@@ -198,7 +199,7 @@ class RelatoriosScreen extends ConsumerWidget {
                       _ValorResumoItem(
                         rotulo: 'Média de Receita',
                         valor: fmtBrl.format(dados.mediaEntradasReais),
-                        cor: Colors.green.shade700,
+                        cor: Caderneta.corReceita(context),
                       ),
                       _ValorResumoItem(
                         rotulo: 'Média de Despesa',
@@ -209,7 +210,7 @@ class RelatoriosScreen extends ConsumerWidget {
                         rotulo: 'Saldo do Período',
                         valor: fmtBrl.format(dados.saldoTotalCents / 100),
                         cor: dados.saldoTotalCents >= 0
-                            ? Colors.green.shade700
+                            ? Caderneta.corReceita(context)
                             : theme.colorScheme.error,
                       ),
                     ],

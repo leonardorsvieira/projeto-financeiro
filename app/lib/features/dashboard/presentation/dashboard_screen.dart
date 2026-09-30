@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,19 +15,24 @@ import '../../metas/application/metas_providers.dart';
 import '../application/dashboard_providers.dart';
 import '../application/home_widget_service.dart';
 import 'relatorio_cartoes_widget.dart';
+/// Cor do donut por categoria (ordem fixa; categorias novas usam a ultima).
+const _ordemCategorias = <String>[
+  'Alimentação',
+  'Transporte',
+  'Moradia',
+  'Saúde',
+  'Lazer',
+  'Educação',
+  'Mercado',
+  'Assinaturas',
+  'Outros',
+];
 
-/// Cores do donut por categoria (fallback para categorias novas).
-const _coresCategorias = <String, Color>{
-  'Alimentação': Color(0xFFE53935),
-  'Transporte': Color(0xFF1E88E5),
-  'Moradia': Color(0xFF43A047),
-  'Saúde': Color(0xFF8E24AA),
-  'Lazer': Color(0xFFFB8C00),
-  'Educação': Color(0xFF00897B),
-  'Mercado': Color(0xFFF4511E),
-  'Assinaturas': Color(0xFF3949AB),
-  'Outros': Color(0xFF757575),
-};
+Color corDaCategoria(String categoria, Brightness b) {
+  final paleta = Caderneta.paletaCategorias(b);
+  final i = _ordemCategorias.indexOf(categoria);
+  return paleta[i < 0 ? paleta.length - 1 : i];
+}
 
 /// Aba "Resumo" do home: gastos do mês (real + previsto) e próximos vencimentos.
 class DashboardScreen extends ConsumerWidget {
@@ -101,7 +107,7 @@ class DashboardScreen extends ConsumerWidget {
                 subtitle: Text('Vence ${formatoData(l.vencimento!)}'),
                 trailing: Text(
                   formatoBRL(l.valorCents),
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: CadernetaTexto.numero(size: 16).copyWith(
                     color: theme.colorScheme.error,
                     fontWeight: FontWeight.w600,
                   ),
@@ -127,21 +133,19 @@ class _CardGastosMes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+    return PapelPautado(
+      padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Saldo do mês', style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             Text(
               formatoBRL(resumo.saldoCents),
-              style: theme.textTheme.headlineMedium?.copyWith(
+              style: CadernetaTexto.numero(size: 34).copyWith(
                 color: resumo.saldoCents >= 0
-                    ? Colors.green.shade700
+                    ? Caderneta.corReceita(context)
                     : theme.colorScheme.error,
-                fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 12),
@@ -151,7 +155,7 @@ class _CardGastosMes extends StatelessWidget {
                   child: _ValorRotulado(
                     rotulo: 'Entradas',
                     valor: resumo.entradasCents,
-                    cor: Colors.green.shade700,
+                    cor: Caderneta.corReceita(context),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -170,7 +174,6 @@ class _CardGastosMes extends StatelessWidget {
               style: theme.textTheme.bodyMedium,
             ),
           ],
-        ),
       ),
     );
   }
@@ -197,7 +200,7 @@ class _ValorRotulado extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           formatoBRL(valor),
-          style: theme.textTheme.titleMedium?.copyWith(
+          style: CadernetaTexto.numero(size: 16).copyWith(
             color: cor,
             fontWeight: FontWeight.w600,
           ),
@@ -222,7 +225,7 @@ class _PatrimonioSection extends StatelessWidget {
     final rendimentoCents = resumo.rendimentoCents;
     final positivo = rendimentoCents >= 0;
     final corRendimento = positivo
-        ? Colors.green.shade700
+        ? Caderneta.corReceita(context)
         : theme.colorScheme.error;
     final pct = resumo.rentabilidadePercent;
 
@@ -317,7 +320,7 @@ class _DonutGastosCategoria extends StatelessWidget {
       for (final g in gastos)
         PieChartSectionData(
           value: g.valorCents.toDouble(),
-          color: _coresCategorias[g.categoria] ?? theme.colorScheme.primary,
+          color: corDaCategoria(g.categoria, theme.brightness),
           radius: 42,
           showTitle: false,
         ),
@@ -345,8 +348,7 @@ class _DonutGastosCategoria extends StatelessWidget {
                 height: 12,
                 decoration: BoxDecoration(
                   color:
-                      _coresCategorias[g.categoria] ??
-                      theme.colorScheme.primary,
+                      corDaCategoria(g.categoria, theme.brightness),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -431,16 +433,16 @@ class _MetaProgressoTile extends StatelessWidget {
 
   final MetaComProgresso meta;
 
-  Color _corProgresso(ColorScheme scheme) {
+  Color _corProgresso(BuildContext context, ColorScheme scheme) {
     if (meta.estourou) return scheme.error;
-    if (meta.quaseEstourada) return Colors.amber.shade700;
-    return Colors.green.shade600;
+    if (meta.quaseEstourada) return Caderneta.ocre(context);
+    return Caderneta.corReceita(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cor = _corProgresso(theme.colorScheme);
+    final cor = _corProgresso(context, theme.colorScheme);
     final pct = meta.percentual;
 
     return Card(
@@ -520,7 +522,7 @@ class _SeletorMesHeader extends ConsumerWidget {
     final ehMesAtual = mesAno.year == agora.year && mesAno.month == agora.month;
 
     return Card(
-      color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
+      color: theme.colorScheme.surfaceContainerHigh,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Row(
@@ -635,7 +637,7 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
           children: [
             Row(
               children: [
-                const Icon(Icons.auto_awesome, color: Colors.amber),
+                Icon(Icons.auto_awesome, color: Caderneta.ocre(context)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

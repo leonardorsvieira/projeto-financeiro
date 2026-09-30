@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -141,7 +142,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
             'Sincronização concluída! ${res.contasSincronizadas} banco(s) e ${res.transacoesNovas} transação(ões) nova(s) importada(s).'
             '${res.investimentosAtualizados > 0 ? ' ${res.investimentosAtualizados} investimento(s) atualizado(s) no Patrimônio.' : ''}',
           ),
-          backgroundColor: Colors.green.shade700,
+          backgroundColor: Caderneta.corReceita(context),
         ),
       );
     } catch (e) {
@@ -207,7 +208,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                           : Colors.purple.shade200)
                     : (theme.brightness == Brightness.dark
                           ? Colors.amber.shade400.withValues(alpha: 0.4)
-                          : Colors.amber.shade300),
+                          : Caderneta.ocre(context)),
               ),
             ),
             child: Padding(
@@ -229,7 +230,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                                     : Colors.purple.shade900)
                               : (theme.brightness == Brightness.dark
                                     ? Colors.amber.shade200
-                                    : Colors.amber.shade900),
+                                    : Caderneta.ocre(context)),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -249,7 +250,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                                           : Colors.purple.shade900)
                                     : (theme.brightness == Brightness.dark
                                           ? Colors.amber.shade200
-                                          : Colors.amber.shade900),
+                                          : Caderneta.ocre(context)),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -508,7 +509,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
 
           // Importador de Extrato OFX (Fallback)
           Card(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: theme.colorScheme.surfaceContainerHighest,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -595,7 +596,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('$qtd transações importadas com sucesso!'),
-                      backgroundColor: Colors.green.shade700,
+                      backgroundColor: Caderneta.corReceita(context),
                     ),
                   );
                 }
@@ -658,13 +659,13 @@ class _CardContaBancaria extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: conta.status == StatusConexaoBanco.conectado
-                    ? Colors.green.withValues(alpha: 0.15)
-                    : Colors.amber.withValues(alpha: 0.15),
+                    ? Caderneta.corReceitaFundo(context)
+                    : Caderneta.ocre(context).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: conta.status == StatusConexaoBanco.conectado
-                      ? Colors.green.withValues(alpha: 0.4)
-                      : Colors.amber.withValues(alpha: 0.4),
+                      ? Caderneta.corReceita(context).withValues(alpha: 0.4)
+                      : Caderneta.ocre(context).withValues(alpha: 0.4),
                 ),
               ),
               child: Text(
@@ -674,11 +675,11 @@ class _CardContaBancaria extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: conta.status == StatusConexaoBanco.conectado
                       ? (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.green.shade300
-                            : Colors.green.shade900)
+                            ? Caderneta.corReceita(context)
+                            : Caderneta.corReceita(context))
                       : (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.amber.shade300
-                            : Colors.amber.shade900),
+                            ? Caderneta.ocre(context)
+                            : Caderneta.ocre(context)),
                 ),
               ),
             ),

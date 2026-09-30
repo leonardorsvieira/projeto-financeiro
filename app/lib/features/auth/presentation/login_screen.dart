@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -58,16 +59,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(
-                      Icons.account_balance_wallet_outlined,
-                      size: 64,
-                      color: theme.colorScheme.primary,
-                    ),
+                    const Center(child: CarimboLogo(tamanho: 72)),
                     const SizedBox(height: 8),
                     Text(
                       'Meu Bolso',
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineMedium,
+                      style: CadernetaTexto.display(
+                        size: 28,
+                        cor: theme.colorScheme.onSurface,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(

@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -159,7 +160,7 @@ String textoRendimento(int cents, double? percent) {
 }
 
 Color corRendimento(BuildContext context, int cents) =>
-    cents >= 0 ? Colors.green.shade700 : Theme.of(context).colorScheme.error;
+    cents >= 0 ? Caderneta.corReceita(context) : Theme.of(context).colorScheme.error;
 
 class _PatrimonioCard extends StatelessWidget {
   const _PatrimonioCard({required this.patrimonioCents, required this.resumo});

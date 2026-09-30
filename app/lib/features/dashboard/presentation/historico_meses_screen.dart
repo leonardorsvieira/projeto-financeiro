@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -164,7 +165,7 @@ class _CardMesHistorico extends StatelessWidget {
                   _InfoColuna(
                     rotulo: 'Entradas',
                     valor: formatoBRL(resumo.entradasCents),
-                    cor: Colors.green.shade700,
+                    cor: Caderneta.corReceita(context),
                   ),
                   _InfoColuna(
                     rotulo: 'Saídas',
@@ -175,7 +176,7 @@ class _CardMesHistorico extends StatelessWidget {
                     rotulo: 'Saldo',
                     valor: formatoBRL(resumo.saldoCents),
                     cor: saldoPositivo
-                        ? Colors.green.shade700
+                        ? Caderneta.corReceita(context)
                         : theme.colorScheme.error,
                   ),
                 ],

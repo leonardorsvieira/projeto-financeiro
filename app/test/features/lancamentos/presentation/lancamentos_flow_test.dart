@@ -1,3 +1,4 @@
+import 'package:meubolso/theme/caderneta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meubolso/features/auth/domain/auth_state.dart';
@@ -212,6 +213,6 @@ void main() {
     expect(find.text('Receita'), findsOneWidget);
 
     final salario = tester.widget<Text>(find.text('+R\$ 3.000,00'));
-    expect(salario.style?.color, Colors.green.shade700);
+    expect(salario.style?.color, CadernetaCores.claro.receita);
   });
 }

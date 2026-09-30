@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -176,15 +177,22 @@ class _BotaoMic extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = CadernetaCores.of(context);
+    // Anel duplo: papel (6px) + tinta (1.5px), equivalente ao sketch.
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       width: tamanho,
       height: tamanho,
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: cor.withValues(alpha: 0.12),
+        color: c.papel,
+        border: Border.all(color: c.tinta, width: Caderneta.borda),
       ),
-      child: Icon(icone, size: 64, color: cor),
+      child: DecoratedBox(
+        decoration: BoxDecoration(shape: BoxShape.circle, color: cor),
+        child: Center(child: Icon(icone, size: 64, color: c.papel)),
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -169,16 +170,16 @@ class _MetaTile extends StatelessWidget {
   final VoidCallback onEditar;
   final VoidCallback onExcluir;
 
-  Color _corProgresso(ColorScheme scheme) {
+  Color _corProgresso(BuildContext context, ColorScheme scheme) {
     if (item.estourou) return scheme.error;
-    if (item.quaseEstourada) return Colors.amber.shade700;
-    return Colors.green.shade600;
+    if (item.quaseEstourada) return Caderneta.ocre(context);
+    return Caderneta.corReceita(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cor = _corProgresso(theme.colorScheme);
+    final cor = _corProgresso(context, theme.colorScheme);
     final pct = item.percentual;
 
     return Card(

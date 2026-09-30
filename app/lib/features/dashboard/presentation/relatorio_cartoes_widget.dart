@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,7 +79,7 @@ class RelatorioCartoesWidget extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.pie_chart_outline, color: Color(0xFF0B7A4B)),
+                Icon(Icons.pie_chart_outline, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   'Gastos por Meio de Pagamento',
@@ -107,7 +108,7 @@ class RelatorioCartoesWidget extends ConsumerWidget {
                     sections: [
                       if (totalPixCents > 0)
                         PieChartSectionData(
-                          color: const Color(0xFF32BCAD),
+                          color: Caderneta.paletaCategorias(Theme.of(context).brightness)[4],
                           value: totalPixCents.toDouble(),
                           title:
                               '${((totalPixCents / totalGasto) * 100).toStringAsFixed(0)}%',
@@ -156,8 +157,8 @@ class RelatorioCartoesWidget extends ConsumerWidget {
               ListTile(
                 dense: true,
                 contentPadding: EdgeInsets.zero,
-                leading: const CircleAvatar(
-                  backgroundColor: Color(0xFF32BCAD),
+                leading: CircleAvatar(
+                  backgroundColor: Caderneta.paletaCategorias(Theme.of(context).brightness)[4],
                   radius: 12,
                   child: Icon(Icons.flash_on, size: 14, color: Colors.white),
                 ),

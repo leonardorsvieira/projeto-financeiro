@@ -1,3 +1,4 @@
+import '../../../theme/caderneta.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,12 +54,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       appBar: AppBar(
         title: Row(
           children: [
-            const Icon(Icons.account_balance_wallet_outlined),
+            const CarimboLogo(tamanho: 30),
             const SizedBox(width: 8),
             Text(
               'Meu Bolso',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+              style: CadernetaTexto.display(
+                size: 22,
+                italico: true,
+                cor: CadernetaCores.of(context).tinta,
               ),
             ),
           ],

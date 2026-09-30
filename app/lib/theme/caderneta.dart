@@ -248,7 +248,92 @@ class PapelPautado extends StatelessWidget {
   }
 }
 
-/// Selo "MB": borda dupla (vermelha por fora, tinta por dentro), sem sombra.
+/// Desenha o carimbo redondo "MB" (viewBox 100 do sketch): anel vermelho
+/// girado -8 graus, anel tracejado e "MB" em Fraunces 800 na cor da tinta.
+/// Usado pelo [CarimboLogo] e pelo gerador de icones (`tool/`).
+void pintarCarimbo(
+  Canvas canvas,
+  double tamanho, {
+  required Color cor,
+  required Color tinta,
+  Color? fundo,
+  double escala = 1,
+  bool recorteCircular = false,
+}) {
+  final u = tamanho / 100;
+  canvas.save();
+  if (recorteCircular) {
+    canvas.clipPath(Path()..addOval(Rect.fromLTWH(0, 0, tamanho, tamanho)));
+  }
+  if (fundo != null) {
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, tamanho, tamanho),
+      Paint()..color = fundo,
+    );
+  }
+  canvas.translate(tamanho / 2, tamanho / 2);
+  canvas.scale(escala);
+  canvas.rotate(-8 * 3.141592653589793 / 180);
+  canvas.translate(-tamanho / 2, -tamanho / 2);
+
+  final centro = Offset(tamanho / 2, tamanho / 2);
+  canvas.drawCircle(
+    centro,
+    33 * u,
+    Paint()
+      ..color = cor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4 * u,
+  );
+
+  final tracejado = Paint()
+    ..color = cor
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.4 * u;
+  final oval = Path()
+    ..addOval(Rect.fromCircle(center: centro, radius: 27 * u));
+  for (final m in oval.computeMetrics()) {
+    var d = 0.0;
+    while (d < m.length) {
+      canvas.drawPath(m.extractPath(d, d + 2.5 * u), tracejado);
+      d += 5.5 * u;
+    }
+  }
+
+  final tp = TextPainter(
+    text: TextSpan(
+      text: 'MB',
+      style: TextStyle(
+        fontFamily: 'Fraunces',
+        fontSize: 30 * u,
+        color: tinta,
+        fontWeight: FontWeight.w800,
+        fontVariations: const [FontVariation('wght', 800)],
+      ),
+    ),
+    textDirection: TextDirection.ltr,
+  )..layout();
+  final base = tp.computeDistanceToActualBaseline(TextBaseline.alphabetic);
+  tp.paint(canvas, Offset(tamanho / 2 - tp.width / 2, 61 * u - base));
+  canvas.restore();
+}
+
+class _CarimboPainter extends CustomPainter {
+  _CarimboPainter({required this.cor, required this.tinta});
+
+  final Color cor;
+  final Color tinta;
+
+  @override
+  void paint(Canvas canvas, Size size) =>
+      pintarCarimbo(canvas, size.width, cor: cor, tinta: tinta);
+
+  @override
+  bool shouldRepaint(_CarimboPainter old) =>
+      old.cor != cor || old.tinta != tinta;
+}
+
+/// Carimbo "MB" redondo (mesma marca do icone do app), sem sombra.
 class CarimboLogo extends StatelessWidget {
   const CarimboLogo({super.key, this.tamanho = 36});
 
@@ -257,36 +342,11 @@ class CarimboLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = CadernetaCores.of(context);
-    return Transform.rotate(
-      angle: -0.05,
-      child: Container(
-        width: tamanho,
-        height: tamanho,
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: c.margem, width: 1.5),
-        ),
-        child: Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(2),
-            border: Border.all(color: c.tinta, width: 1.5),
-          ),
-          child: FittedBox(
-            child: Padding(
-              padding: const EdgeInsets.all(2),
-              child: Text(
-                'MB',
-                style: CadernetaTexto.display(
-                  size: tamanho * 0.42,
-                  cor: c.tinta,
-                  italico: true,
-                ),
-              ),
-            ),
-          ),
-        ),
+    return Semantics(
+      label: 'Meu Bolso',
+      child: CustomPaint(
+        size: Size.square(tamanho),
+        painter: _CarimboPainter(cor: c.margem, tinta: c.tinta),
       ),
     );
   }

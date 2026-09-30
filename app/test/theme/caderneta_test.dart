@@ -48,15 +48,19 @@ void main() {
     expect(find.byType(MargemVermelha), findsOneWidget);
   });
 
-  testWidgets('CarimboLogo mostra MB sem sombra', (tester) async {
+  testWidgets('CarimboLogo desenha o carimbo no tamanho pedido', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: CarimboLogo())),
+      const MaterialApp(home: Scaffold(body: CarimboLogo(tamanho: 40))),
     );
-    expect(find.text('MB'), findsOneWidget);
-    final boxes = tester.widgetList<DecoratedBox>(find.byType(DecoratedBox));
-    for (final b in boxes) {
-      final d = b.decoration;
-      if (d is BoxDecoration) expect(d.boxShadow, isNull);
-    }
+    final box = tester.renderObject<RenderBox>(
+      find.descendant(
+        of: find.byType(CarimboLogo),
+        matching: find.byType(CustomPaint),
+      ),
+    );
+    expect(box.size, const Size.square(40));
+    expect(find.bySemanticsLabel('Meu Bolso'), findsOneWidget);
   });
 }

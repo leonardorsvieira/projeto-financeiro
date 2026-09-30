@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/biometria_providers.dart';
+import '../../../theme/glass.dart';
 
 class BiometricLockWrapper extends ConsumerStatefulWidget {
   const BiometricLockWrapper({super.key, required this.child});
@@ -9,7 +10,8 @@ class BiometricLockWrapper extends ConsumerStatefulWidget {
   final Widget child;
 
   @override
-  ConsumerState<BiometricLockWrapper> createState() => _BiometricLockWrapperState();
+  ConsumerState<BiometricLockWrapper> createState() =>
+      _BiometricLockWrapperState();
 }
 
 class _BiometricLockWrapperState extends ConsumerState<BiometricLockWrapper>
@@ -35,7 +37,8 @@ class _BiometricLockWrapperState extends ConsumerState<BiometricLockWrapper>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       final isAtivo = ref.read(bloqueioBiometricoAtivoProvider).value ?? false;
       if (isAtivo) {
         setState(() {
@@ -92,50 +95,55 @@ class _BiometricLockWrapperState extends ConsumerState<BiometricLockWrapper>
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: SafeArea(
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-          color: theme.scaffoldBackgroundColor,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  shape: BoxShape.circle,
+      body: GlassBackground(
+        child: SafeArea(
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer.withValues(
+                      alpha: 0.3,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.fingerprint,
+                    size: 72,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
-                child: Icon(
-                  Icons.fingerprint,
-                  size: 72,
-                  color: theme.colorScheme.primary,
+                const SizedBox(height: 24),
+                Text(
+                  'Meu Bolso Bloqueado',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Meu Bolso Bloqueado',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 8),
+                Text(
+                  'Autentique-se com sua impressão digital ou biometria para acessar suas finanças.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Autentique-se com sua impressão digital ou biometria para acessar suas finanças.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton.icon(
-                  onPressed: _autenticando ? null : _solicitarAutenticacao,
-                  icon: const Icon(Icons.lock_open),
-                  label: Text(_autenticando ? 'Aguardando digital...' : 'Desbloquear'),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton.icon(
+                    onPressed: _autenticando ? null : _solicitarAutenticacao,
+                    icon: const Icon(Icons.lock_open),
+                    label: Text(
+                      _autenticando ? 'Aguardando digital...' : 'Desbloquear',
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

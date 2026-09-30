@@ -29,17 +29,17 @@ class GlassTokens {
       GlassTokens.ofBrightness(Theme.of(context).brightness);
 
   static GlassTokens ofBrightness(Brightness b) => GlassTokens._(
-        fill: fillDe(b),
-        fillForte: fillDe(b, forte: true),
-        borda: bordaDe(b),
-        sombra: BoxShadow(
-          color: Colors.black.withValues(
-            alpha: b == Brightness.light ? 0.06 : 0.20,
-          ),
-          blurRadius: 24,
-          offset: const Offset(0, 8),
-        ),
-      );
+    fill: fillDe(b),
+    fillForte: fillDe(b, forte: true),
+    borda: bordaDe(b),
+    sombra: BoxShadow(
+      color: Colors.black.withValues(
+        alpha: b == Brightness.light ? 0.06 : 0.20,
+      ),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
+    ),
+  );
 
   static Color fillDe(Brightness b, {bool forte = false}) {
     if (b == Brightness.light) {
@@ -49,11 +49,9 @@ class GlassTokens {
   }
 
   static BorderSide bordaDe(Brightness b) => BorderSide(
-        color: Colors.white.withValues(
-          alpha: b == Brightness.light ? 0.45 : 0.16,
-        ),
-        width: 1,
-      );
+    color: Colors.white.withValues(alpha: b == Brightness.light ? 0.45 : 0.16),
+    width: 1,
+  );
 }
 
 /// Fundo global: gradiente verde -> azul petróleo com manchas suaves de cor.

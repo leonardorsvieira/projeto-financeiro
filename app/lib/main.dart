@@ -12,6 +12,7 @@ import 'features/seguranca/application/limpeza_local.dart';
 import 'features/seguranca/presentation/biometric_lock_wrapper.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
+import 'theme/glass.dart';
 import 'theme/theme_controller.dart';
 
 Future<void> main() async {
@@ -119,7 +120,9 @@ class MeuBolsoApp extends ConsumerWidget {
       ],
       routerConfig: router,
       builder: (context, child) {
-        return BiometricLockWrapper(child: child ?? const SizedBox.shrink());
+        return GlassBackground(
+          child: BiometricLockWrapper(child: child ?? const SizedBox.shrink()),
+        );
       },
     );
   }

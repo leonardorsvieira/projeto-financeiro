@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../application/biometria_providers.dart';
-import '../../../theme/glass.dart';
 
 class BiometricLockWrapper extends ConsumerStatefulWidget {
   const BiometricLockWrapper({super.key, required this.child});
@@ -95,7 +94,9 @@ class _BiometricLockWrapperState extends ConsumerState<BiometricLockWrapper>
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: GlassBackground(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: ColoredBox(
+        color: theme.scaffoldBackgroundColor,
         child: SafeArea(
           child: Container(
             width: double.infinity,

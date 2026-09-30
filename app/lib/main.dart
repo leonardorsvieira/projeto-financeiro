@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
@@ -12,7 +13,6 @@ import 'features/seguranca/application/limpeza_local.dart';
 import 'features/seguranca/presentation/biometric_lock_wrapper.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
-import 'theme/glass.dart';
 import 'theme/theme_controller.dart';
 
 Future<void> main() async {
@@ -30,6 +30,7 @@ Future<void> main() async {
     );
   }
 
+  _registrarLicencasDeFontes();
   runApp(const _SessaoIsolada());
 }
 
@@ -120,10 +121,24 @@ class MeuBolsoApp extends ConsumerWidget {
       ],
       routerConfig: router,
       builder: (context, child) {
-        return GlassBackground(
-          child: BiometricLockWrapper(child: child ?? const SizedBox.shrink()),
-        );
+        return BiometricLockWrapper(child: child ?? const SizedBox.shrink());
       },
     );
   }
+}
+
+/// Registra as licencas OFL das fontes empacotadas (Fraunces, Inter, IBM Plex
+/// Mono) para aparecerem na tela de licencas do app.
+void _registrarLicencasDeFontes() {
+  LicenseRegistry.addLicense(() async* {
+    const fontes = {
+      'Fraunces': 'assets/fonts/OFL-Fraunces.txt',
+      'Inter': 'assets/fonts/OFL-Inter.txt',
+      'IBM Plex Mono': 'assets/fonts/OFL-IBMPlexMono.txt',
+    };
+    for (final e in fontes.entries) {
+      final texto = await rootBundle.loadString(e.value);
+      yield LicenseEntryWithLineBreaks([e.key], texto);
+    }
+  });
 }

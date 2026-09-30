@@ -10,7 +10,6 @@ import '../../lancamentos/presentation/lembretes_preferencias_dialog.dart';
 import '../../open_finance/application/open_finance_providers.dart';
 import '../../seguranca/presentation/bloqueio_biometrico_dialog.dart';
 import '../../../theme/theme_selector_dialog.dart';
-import '../../../theme/glass.dart';
 import '../../cartoes/presentation/cartoes_screen.dart';
 import '../../cartoes/application/cartoes_providers.dart';
 import '../../cartoes/application/cartoes_notificacoes_service.dart';
@@ -63,12 +62,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
             ),
           ],
-        ),
-        backgroundColor: Colors.transparent,
-        flexibleSpace: const GlassSurface(
-          blur: true,
-          borderRadius: BorderRadius.zero,
-          child: SizedBox.expand(),
         ),
         bottom: TabBar(
           controller: _tabController,

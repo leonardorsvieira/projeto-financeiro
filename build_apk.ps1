@@ -1,7 +1,9 @@
 param(
   [ValidateSet("debug", "release")]
   [string]$Mode = "debug",
-  [string]$OutDir = ""
+  [string]$OutDir = "",
+  # Ex.: "android-arm64,android-x64" (sem o arm 32 bits). Vazio = todas.
+  [string]$Plataformas = ""
 )
 
 # build_apk.ps1 — gera o APK do Meu Bolso com as defines do .env embutidas.
@@ -9,6 +11,9 @@ param(
 #   .\build_apk.ps1                  (debug)
 #   .\build_apk.ps1 -Mode release    (release)
 #   .\build_apk.ps1 -OutDir "C:\seu\caminho"   (copia o APK para um destino)
+#   .\build_apk.ps1 -Mode release -Plataformas "android-arm64,android-x64"
+#       (só 64 bits: quando o Controle Inteligente de Aplicativos do Windows
+#        bloqueia o gen_snapshot do arm 32 bits)
 
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
@@ -42,6 +47,8 @@ Write-Host "==> Meu Bolso: build $Mode APK" -ForegroundColor Cyan
 Write-Host "    SUPABASE_URL  : $supabaseUrl"
 Write-Host "    SUPABASE_ANON : $($supabaseAnonKey.Substring(0, 12))..."
 
+$inicio = Get-Date
+
 Push-Location (Join-Path $root "app")
 try {
   $flutterArgs = @(
@@ -49,6 +56,7 @@ try {
     "--dart-define=SUPABASE_URL=$supabaseUrl",
     "--dart-define=SUPABASE_ANON_KEY=$supabaseAnonKey"
   )
+  if ($Plataformas) { $flutterArgs += "--target-platform=$Plataformas" }
 
   # flutter é um .bat; cmd /c evita que o stderr (warnings nativos do Gradle)
   # seja tratado como erro pelo $ErrorActionPreference = "Stop".
@@ -64,9 +72,11 @@ $externalApk = Join-Path "C:\build\meubolso\app\outputs\flutter-apk" "app-$Mode.
 $apk = Join-Path $root "app\build\app\outputs\flutter-apk\app-$Mode.apk"
 if (Test-Path $externalApk) { $apk = $externalApk }
 
-if (-not (Test-Path $apk)) {
-  if ($exitCode -ne 0) { throw "flutter build falhou (exit $exitCode)" }
-  Write-Host "AVISO: APK nao encontrado em $apk" -ForegroundColor Yellow
+# Com a pasta de build externa o Flutter sai com erro mesmo quando gera o APK,
+# então vale o arquivo: ele precisa ter sido escrito por ESTE build (um APK
+# antigo na pasta não conta).
+if (-not (Test-Path $apk) -or (Get-Item $apk).LastWriteTime -lt $inicio) {
+  Write-Host "ERRO: o build nao gerou um APK novo (exit $exitCode). Veja o log acima." -ForegroundColor Red
   exit 1
 }
 

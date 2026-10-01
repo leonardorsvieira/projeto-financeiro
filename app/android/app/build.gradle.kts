@@ -57,6 +57,19 @@ android {
         }
     }
 
+    // Build só 64 bits (`--target-platform android-arm64,android-x64`): tira
+    // também as libs nativas de 32 bits dos plugins. Sem isso um celular de
+    // 32 bits instalaria o APK e o app fecharia ao abrir (sem libflutter).
+    val plataformasAlvo = project.findProperty("target-platform") as String?
+    if (plataformasAlvo != null && !plataformasAlvo.split(",").contains("android-arm")) {
+        packaging {
+            jniLibs {
+                excludes += "lib/armeabi-v7a/**"
+                excludes += "lib/x86/**"
+            }
+        }
+    }
+
     buildTypes {
         release {
             signingConfig = if (temChaveDeProducao) {

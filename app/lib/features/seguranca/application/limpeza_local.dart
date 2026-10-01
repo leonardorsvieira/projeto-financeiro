@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../dashboard/application/home_widget_service.dart';
@@ -25,3 +26,9 @@ Future<void> limparDadosLocais() async {
   }
   await HomeWidgetService.limpar();
 }
+
+/// [limparDadosLocais] como provider, para as telas chamarem pelo `ref` e os
+/// testes trocarem por um fake (sem plugins de notificação/widget).
+final limparDadosLocaisProvider = Provider<Future<void> Function()>(
+  (ref) => limparDadosLocais,
+);

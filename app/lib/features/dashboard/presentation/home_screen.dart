@@ -104,6 +104,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 mostrarDialogoBloqueioBiometrico(context);
               } else if (value == 'tema') {
                 mostrarDialogoSelecaoTema(context);
+              } else if (value == 'privacidade') {
+                context.push(AppRoutes.privacidadeEDados);
               } else if (value == 'signout') {
                 ref.read(authControllerProvider.notifier).signOut();
               }
@@ -193,6 +195,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                 ),
               ],
+              const PopupMenuItem(
+                value: 'privacidade',
+                child: ListTile(
+                  leading: PhosphorIcon(Icones.privacidade),
+                  title: Text('Privacidade e dados'),
+                  dense: true,
+                ),
+              ),
               const PopupMenuDivider(),
               const PopupMenuItem(
                 value: 'signout',

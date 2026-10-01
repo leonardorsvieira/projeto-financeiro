@@ -12,6 +12,7 @@ import '../features/privacidade/domain/aceite_termos.dart';
 import '../features/privacidade/domain/textos_legais.dart';
 import '../features/privacidade/presentation/aceite_termos_screen.dart';
 import '../features/privacidade/presentation/documento_legal_screen.dart';
+import '../features/privacidade/presentation/privacidade_dados_screen.dart';
 import '../features/ditado/domain/rascunho_lancamento.dart';
 import '../features/ditado/presentation/confirmacao_ditado_screen.dart';
 import '../features/ditado/presentation/lancamento_ditado_screen.dart';
@@ -64,6 +65,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.termos,
         builder: (_, _) => const DocumentoLegalScreen(documento: termosDeUso),
+      ),
+      GoRoute(
+        path: AppRoutes.privacidadeEDados,
+        builder: (_, _) => const PrivacidadeDadosScreen(),
       ),
       GoRoute(
         path: AppRoutes.home,
@@ -149,7 +154,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       } else if (status == AuthStatus.unauthenticated) {
         if (location == AppRoutes.home ||
             location == AppRoutes.splash ||
-            location == AppRoutes.aceiteTermos) {
+            location == AppRoutes.aceiteTermos ||
+            location == AppRoutes.privacidadeEDados) {
           return AppRoutes.login;
         }
       }

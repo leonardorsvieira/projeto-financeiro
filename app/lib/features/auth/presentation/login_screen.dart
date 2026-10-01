@@ -7,6 +7,7 @@ import '../../../core/auth_errors.dart';
 import '../../../features/home/domain/app_routes.dart';
 import '../../../theme/icones.dart';
 import '../application/auth_controller.dart';
+import '../application/aviso_login.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -21,6 +22,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    // Aviso único vindo da sessão anterior (ex.: 'Conta excluída.').
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final aviso = ref.read(avisoLoginProvider).consumir();
+      if (aviso != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(aviso)),
+        );
+      }
+    });
+  }
 
   @override
   void dispose() {

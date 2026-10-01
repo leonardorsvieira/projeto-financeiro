@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import 'core/env.dart';
 import 'features/auth/application/auth_controller.dart';
+import 'features/auth/application/aviso_login.dart';
 import 'features/auth/domain/auth_state.dart';
 import 'features/lancamentos/application/lembretes_controller.dart';
 import 'features/seguranca/application/limpeza_local.dart';
@@ -34,8 +35,13 @@ Future<void> main() async {
   runApp(const _SessaoIsolada());
 }
 
-ProviderContainer _novoContainer() {
-  final container = ProviderContainer();
+ProviderContainer _novoContainer({String? avisoLogin}) {
+  final container = ProviderContainer(
+    overrides: [
+      if (avisoLogin != null)
+        avisoLoginProvider.overrideWithValue(AvisoLogin(avisoLogin)),
+    ],
+  );
   // Inicia a sincronização de lembretes apenas em mobile (notificação local).
   if (!kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
@@ -59,8 +65,8 @@ class _SessaoIsolada extends StatefulWidget {
 class _SessaoIsoladaState extends State<_SessaoIsolada> {
   late ProviderContainer _container = _criarContainer();
 
-  ProviderContainer _criarContainer() {
-    final container = _novoContainer();
+  ProviderContainer _criarContainer({String? avisoLogin}) {
+    final container = _novoContainer(avisoLogin: avisoLogin);
     container.listen<AsyncValue<AuthState>>(authControllerProvider, (
       anterior,
       atual,
@@ -79,7 +85,10 @@ class _SessaoIsoladaState extends State<_SessaoIsolada> {
     await limparDadosLocais();
     if (!mounted) return;
     final antigo = _container;
-    setState(() => _container = _criarContainer());
+    // O aviso (ex.: 'Conta excluída.') vai só para o container NOVO: o login
+    // da sessão antiga não o consome.
+    final aviso = AvisoProximaSessao.consumir();
+    setState(() => _container = _criarContainer(avisoLogin: aviso));
     WidgetsBinding.instance.addPostFrameCallback((_) => antigo.dispose());
   }
 

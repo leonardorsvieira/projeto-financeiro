@@ -36,7 +36,8 @@ flutter run -d chrome --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON
 - **Web:** push na `main` que toque `app/**` publica no GitHub Pages (`.github/workflows/deploy.yml`, `--base-href=/projeto-financeiro/`, chaves vindas dos secrets do repositório; `404.html` é cópia do `index.html` para o fallback da SPA).
 - **iOS:** `.github/workflows/build-ios.yml`.
 - **Banco:** migrations SQL em `supabase/migrations/` (projeto Supabase `tkfhthotspehsgvmpsjm`, região `sa-east-1`). O nome do arquivo deve casar com a versão registrada no projeto remoto.
-- **Edge Functions:** `supabase/functions/{ditado,pluggy}` + `_shared/seguranca.ts` (Deno). Deploy com `supabase functions deploy <nome>` (ou MCP), sempre com verificação de JWT.
+- **Edge Functions:** `supabase/functions/{ditado,pluggy,excluir-conta}` + `_shared/seguranca.ts` (Deno). Deploy com `supabase functions deploy <nome>` (ou MCP), sempre com verificação de JWT. `excluir-conta` apaga o usuário do JWT (LGPD): desconecta os itens Pluggy e deleta em `auth.users` (tabelas em cascata).
+- **APK comercial:** assinado com `app/android/key.properties` + `.jks` (fora do git; modelo em `key.properties.example`). Sem eles o release sai com a chave de debug. Documentos legais e dados do controlador (CNPJ, e-mail) em `app/lib/features/privacidade/domain/`; mudar `versaoDocumentos` pede novo aceite de todos.
 - **CI:** `.github/workflows/secret-scan.yml` roda gitleaks em todo push/PR.
 
 ## Configuração / segredos

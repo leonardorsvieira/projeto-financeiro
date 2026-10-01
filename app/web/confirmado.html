@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src 'self'; img-src 'self'">
+  <title>Meu Bolso · E-mail confirmado</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <!--
+    Página de destino do link de confirmação de cadastro (Supabase Auth).
+    Configurada no painel do Supabase como Site URL. O Supabase confirma o
+    e-mail ANTES de redirecionar para cá; esta página só informa o resultado
+    (lido do fragmento da URL) e apaga os tokens da barra de endereço.
+    Sem chamadas externas: fontes vêm do próprio build.
+  -->
+  <style>
+    @font-face { font-family: Fraunces; src: url("assets/assets/fonts/Fraunces.ttf"); font-weight: 100 900; }
+    @font-face { font-family: Inter; src: url("assets/assets/fonts/Inter.ttf"); font-weight: 100 900; }
+    :root {
+      --papel: #f4ecd8; --claro: #fbf6ea; --tinta: #1d2a47; --apagado: #6f6a5c;
+      --margem: #b3261e; --receita: #2d6a3e; --pauta: #e3d6b6; --contorno: rgba(29,42,71,.22); --sombra: rgba(29,42,71,.14);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --papel: #17213a; --claro: #1c2844; --tinta: #f1e8d2; --apagado: #a9a18c;
+        --margem: #ef7a70; --receita: #7fbf8e; --pauta: #243154; --contorno: rgba(241,232,210,.2); --sombra: rgba(0,0,0,.4);
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px;
+      background: var(--papel); color: var(--tinta); font-family: Inter, system-ui, sans-serif; }
+    .cartao { position: relative; overflow: hidden; width: 100%; max-width: 440px; padding: 32px 28px 28px 36px;
+      background: repeating-linear-gradient(var(--claro) 0 31px, var(--pauta) 31px 32px);
+      border: 1px solid var(--contorno); border-radius: 16px; box-shadow: 0 6px 18px var(--sombra); }
+    .cartao::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+      border-left: 1.5px solid var(--margem); border-right: 1.5px solid var(--margem); }
+    svg { width: 72px; height: 72px; display: block; margin-bottom: 16px; }
+    h1 { font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 28px; margin: 0 0 12px; line-height: 1.2; }
+    p { font-size: 16px; line-height: 1.55; margin: 0 0 12px; }
+    .passos { margin: 16px 0 0; padding-left: 20px; line-height: 1.7; }
+    .apagado { color: var(--apagado); font-size: 14px; margin-top: 20px; }
+    .ok { color: var(--receita); }
+    .erro { color: var(--margem); }
+  </style>
+</head>
+<body>
+  <main class="cartao">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-8 50 50)">
+      <circle cx="50" cy="50" r="40" fill="none" stroke="var(--margem)" stroke-width="7"/>
+      <circle cx="50" cy="50" r="31" fill="none" stroke="var(--margem)" stroke-width="2" stroke-dasharray="4 5"/>
+      <text x="50" y="62" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="800" font-size="34" fill="var(--tinta)">MB</text>
+    </g></svg>
+
+    <section id="sucesso">
+      <h1 class="ok">E-mail confirmado.</h1>
+      <p>Sua conta no Meu Bolso está pronta.</p>
+      <ol class="passos">
+        <li>Volte ao aplicativo Meu Bolso.</li>
+        <li>Entre com o e-mail e a senha que você cadastrou.</li>
+      </ol>
+      <p class="apagado">Pode fechar esta página.</p>
+    </section>
+
+    <section id="expirado" hidden>
+      <h1 class="erro">Este link não vale mais.</h1>
+      <p>Ele expirou ou já foi usado. Se você já confirmou o e-mail antes, é só entrar no aplicativo normalmente.</p>
+      <p>Se ainda não confirmou, faça o cadastro de novo no aplicativo para receber outro e-mail.</p>
+      <p class="apagado">Dúvidas: leonardorodriguesv99@gmail.com</p>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var dados = new URLSearchParams(location.hash.replace(/^#/, "") || location.search.replace(/^\?/, ""));
+      if (dados.get("error") || dados.get("error_code")) {
+        document.getElementById("sucesso").hidden = true;
+        document.getElementById("expirado").hidden = false;
+      }
+      // Tira tokens e códigos da barra de endereço (e do histórico).
+      if (location.hash || location.search) {
+        history.replaceState(null, "", location.pathname);
+      }
+    })();
+  </script>
+</body>
+</html>

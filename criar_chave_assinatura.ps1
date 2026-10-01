@@ -30,6 +30,16 @@ if (-not (Test-Path $keytool)) {
   $keytool = $cmd.Source
 }
 
+# O keytool escreve o progresso ("Generating ...") no stderr; no PowerShell 5.1
+# com ErrorActionPreference=Stop isso vira erro e interrompe o script. Roda com
+# Continue e decide só pelo código de saída.
+function Rodar-Keytool([string[]]$argumentos) {
+  $anterior = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  try { & $keytool @argumentos *> $null } finally { $ErrorActionPreference = $anterior }
+  return $LASTEXITCODE
+}
+
 function Ler-Senha([string]$rotulo) {
   $seguro = Read-Host -Prompt $rotulo -AsSecureString
   $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($seguro)
@@ -50,11 +60,13 @@ while ($true) {
   break
 }
 
-& $keytool -genkeypair -v -keystore $jks -storetype PKCS12 -alias $alias `
-  -keyalg RSA -keysize 2048 -validity 10000 `
-  -dname "CN=Meu Bolso, OU=CNPJ 68.018.160/0001-00, C=BR" `
-  -storepass $senha -keypass $senha 2>&1 | Out-Null
-if ($LASTEXITCODE -ne 0 -or -not (Test-Path $jks)) {
+$saida = Rodar-Keytool @(
+  "-genkeypair", "-v", "-keystore", $jks, "-storetype", "PKCS12", "-alias", $alias,
+  "-keyalg", "RSA", "-keysize", "2048", "-validity", "10000",
+  "-dname", "CN=Meu Bolso, OU=CNPJ 68.018.160/0001-00, C=BR",
+  "-storepass", $senha, "-keypass", $senha
+)
+if ($saida -ne 0 -or -not (Test-Path $jks)) {
   Write-Host "keytool falhou; nenhuma chave foi criada." -ForegroundColor Red
   exit 1
 }
@@ -70,9 +82,10 @@ $conteudo = @(
 [IO.File]::WriteAllLines($props, $conteudo, (New-Object Text.ASCIIEncoding))
 $senha = $null; $confirmacao = $null; $senhaProps = $null; $conteudo = $null
 
-& $keytool -list -keystore $jks -storetype PKCS12 -alias $alias `
-  -storepass (Get-Content $props | Where-Object { $_ -like "storePassword=*" }).Substring(14).Replace('\\', '\') 2>&1 | Out-Null
-if ($LASTEXITCODE -ne 0) {
+$senhaLida = (Get-Content $props | Where-Object { $_ -like "storePassword=*" }).Substring(14).Replace('\\', '\')
+$saida = Rodar-Keytool @("-list", "-keystore", $jks, "-storetype", "PKCS12", "-alias", $alias, "-storepass", $senhaLida)
+$senhaLida = $null
+if ($saida -ne 0) {
   Write-Host "A chave foi criada, mas a conferencia falhou. Avise antes de gerar o APK." -ForegroundColor Red
   exit 1
 }

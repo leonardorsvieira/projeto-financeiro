@@ -207,6 +207,12 @@ abstract final class Icones {
   static const aviso = IconData(0xe4e1, fontFamily: _f);
   // Phosphor: signOut
   static const sair = IconData(0xe42b, fontFamily: _f);
+  // Phosphor: shieldCheck
+  static const privacidade = IconData(0xe40f, fontFamily: _f);
+  // Phosphor: scroll
+  static const termos = IconData(0xeb7b, fontFamily: _f);
+  // Phosphor: userMinus
+  static const excluirConta = IconData(0xe4cf, fontFamily: _f);
 
   // Aparência, avisos e IA
   // Phosphor: palette
@@ -336,6 +342,8 @@ abstract final class Icones {
     0xe30b: IconData(0xe30a, fontFamily: _f),
     0xe4e1: IconData(0xe4e0, fontFamily: _f),
     0xe42b: IconData(0xe42a, fontFamily: _f),
+    0xeb7b: IconData(0xeb7a, fontFamily: _f),
+    0xe4cf: IconData(0xe4ce, fontFamily: _f),
     0xe6c9: IconData(0xe6c8, fontFamily: _f),
     0xe18d: IconData(0xe18c, fontFamily: _f),
     0xe473: IconData(0xe472, fontFamily: _f),

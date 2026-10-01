@@ -5,6 +5,10 @@ class AppRoutes {
   static const String home = '/home';
   static const String login = '/login';
   static const String signup = '/signup';
+  static const String privacidade = '/privacidade';
+  static const String termos = '/termos';
+  static const String aceiteTermos = '/aceite-termos';
+  static const String privacidadeEDados = '/privacidade-e-dados';
 
   static const String lancamentoNovo = '/lancamentos/novo';
   static const String lancamentoDitado = '/lancamentos/ditar';

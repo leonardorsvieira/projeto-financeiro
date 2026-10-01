@@ -8,6 +8,8 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/signup_screen.dart';
 import '../features/auth/presentation/splash_screen.dart';
 import '../features/home/domain/app_routes.dart';
+import '../features/privacidade/domain/textos_legais.dart';
+import '../features/privacidade/presentation/documento_legal_screen.dart';
 import '../features/ditado/domain/rascunho_lancamento.dart';
 import '../features/ditado/presentation/confirmacao_ditado_screen.dart';
 import '../features/ditado/presentation/lancamento_ditado_screen.dart';
@@ -48,6 +50,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
       GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
       GoRoute(path: AppRoutes.signup, builder: (_, _) => const SignupScreen()),
+      GoRoute(
+        path: AppRoutes.privacidade,
+        builder: (_, _) =>
+            const DocumentoLegalScreen(documento: politicaDePrivacidade),
+      ),
+      GoRoute(
+        path: AppRoutes.termos,
+        builder: (_, _) => const DocumentoLegalScreen(documento: termosDeUso),
+      ),
       GoRoute(
         path: AppRoutes.home,
         builder: (_, _) => const HomeScreen(),

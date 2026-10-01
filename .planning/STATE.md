@@ -115,7 +115,7 @@ Items acknowledged and carried forward from previous milestone close:
 | 260930-lw9 | Ajustes visuais da Caderneta (pauta, cores, título) | 2026-09-30 | [SUMMARY](quick/260930-lw9-ajustes-visuais-caderneta/260930-lw9-SUMMARY.md) |
 | 260930-q6z | Caderneta suave (cantos arredondados) + correções do APK/widget | 2026-09-30 | [SUMMARY](quick/260930-q6z-caderneta-suave-cantos-arredondados/260930-q6z-SUMMARY.md) |
 | 260930-qmc | Ícones Phosphor Duotone no app inteiro | 2026-09-30 | [SUMMARY](quick/260930-qmc-icones-phosphor-duotone-no-app/260930-qmc-SUMMARY.md) |
-| 261001-ktp | Assinatura de produção do APK (aguarda keystore do usuário) | 2026-10-01 | [SUMMARY](quick/261001-ktp-assinatura-de-producao-do-apk/261001-ktp-SUMMARY.md) |
+| 261001-ktp | Assinatura de produção + APK comercial 1.1.0 (64 bits) | 2026-10-01 | [SUMMARY](quick/261001-ktp-assinatura-de-producao-do-apk/261001-ktp-SUMMARY.md) |
 | 261001-l9o | LGPD: política, termos, aceite e exclusão de conta | 2026-10-01 | [SUMMARY](quick/261001-l9o-lgpd-privacidade-termos-e-exclusao-de-co/261001-l9o-SUMMARY.md) |
 
 ## Session Continuity

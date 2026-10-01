@@ -29,8 +29,8 @@ const DocumentoLegal politicaDePrivacidade = DocumentoLegal(
       titulo: '1. Quem cuida dos seus dados',
       blocos: [
         ParagrafoLegal(
-          'O controlador dos seus dados pessoais é $nomeControlador, '
-          'responsável pelo Meu Bolso.',
+          'O controlador dos seus dados pessoais, responsável pelo Meu '
+          'Bolso, é $identificacaoControlador.',
         ),
         ParagrafoLegal(
           'Para qualquer assunto sobre seus dados, escreva para '
@@ -286,8 +286,8 @@ const DocumentoLegal termosDeUso = DocumentoLegal(
         ParagrafoLegal(
           'O Meu Bolso é um aplicativo de organização financeira pessoal: '
           'lançamentos por voz ou manuais, lembretes de vencimento, resumo '
-          'do mês, metas e, se você quiser, Open Finance. É oferecido por '
-          '$nomeControlador.',
+          'do mês, metas e, se você quiser, Open Finance. O fornecedor é '
+          '$identificacaoControlador.',
         ),
       ],
     ),

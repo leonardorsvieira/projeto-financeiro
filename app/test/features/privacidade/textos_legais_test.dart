@@ -10,7 +10,7 @@ void main() {
     test('cita controlador, canal de contato e provedores reais', () {
       for (final trecho in [
         emailPrivacidade,
-        nomeControlador,
+        cnpjControlador,
         'Supabase',
         'São Paulo',
         'Google',
@@ -82,10 +82,10 @@ void main() {
     });
   });
 
-  test('nenhum documento deixa marcador pendente além do nome do controlador',
+  test('nenhum documento deixa marcador pendente',
       () {
     for (final doc in [politicaDePrivacidade, termosDeUso]) {
-      final limpo = doc.textoCompleto.replaceAll(nomeControlador, '');
+      final limpo = doc.textoCompleto;
       expect(limpo, isNot(contains('[')), reason: doc.titulo);
       expect(limpo, isNot(contains('TODO')), reason: doc.titulo);
     }

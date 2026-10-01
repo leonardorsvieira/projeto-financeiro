@@ -16,14 +16,27 @@ void main() {
     expect(formatarVersao('2026-01-09'), '09/01/2026');
   });
 
-  test(
-    'nome do controlador preenchido para o APK comercial',
-    () {
-      expect(nomeControlador, isNotEmpty);
-      expect(nomeControlador, isNot(contains('[')));
-    },
-    skip: nomeControlador.contains('[')
-        ? 'preencher nomeControlador antes do APK comercial'
-        : null,
-  );
+  test('CNPJ do controlador tem dígitos verificadores válidos', () {
+    final d = cnpjControlador.replaceAll(RegExp(r'\D'), '').split('').map(int.parse).toList();
+    expect(d, hasLength(14));
+    int dv(int n) {
+      final pesos = n == 12
+          ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+          : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+      var soma = 0;
+      for (var i = 0; i < n; i++) {
+        soma += d[i] * pesos[i];
+      }
+      final resto = soma % 11;
+      return resto < 2 ? 0 : 11 - resto;
+    }
+
+    expect(d[12], dv(12));
+    expect(d[13], dv(13));
+  });
+
+  test('identificação do controlador nos documentos', () {
+    expect(identificacaoControlador, contains(cnpjControlador));
+    expect(identificacaoControlador, isNot(contains('[')));
+  });
 }

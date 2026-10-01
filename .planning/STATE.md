@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 Phase: 8 — Investimentos (concluída) — todas as 8 fases do roadmap completas
 Plan: 08-01..08-05 ✅ (05-02 push FCM/APNs adiado de propósito — lembretes usam notificação local)
 Status: **Milestone v1.1 completo.** Depois dele: Open Finance via Pluggy (Edge Functions `pluggy`/`pluggy-webhook`, meu.pluggy.ai direto, `/v2/transactions`, sincronização automática, sinal do cartão, categorias neutras) e hardening multiusuário (quick 260928-n3q).
-Last activity: 2026-09-30 — quick 260930-qmc: ícones Phosphor Duotone no app inteiro
+Last activity: 2026-10-01 — quick 261001-l9o: LGPD (política, termos, aceite, exclusão de conta)
 
 ## Performance Metrics
 
@@ -115,6 +115,8 @@ Items acknowledged and carried forward from previous milestone close:
 | 260930-lw9 | Ajustes visuais da Caderneta (pauta, cores, título) | 2026-09-30 | [SUMMARY](quick/260930-lw9-ajustes-visuais-caderneta/260930-lw9-SUMMARY.md) |
 | 260930-q6z | Caderneta suave (cantos arredondados) + correções do APK/widget | 2026-09-30 | [SUMMARY](quick/260930-q6z-caderneta-suave-cantos-arredondados/260930-q6z-SUMMARY.md) |
 | 260930-qmc | Ícones Phosphor Duotone no app inteiro | 2026-09-30 | [SUMMARY](quick/260930-qmc-icones-phosphor-duotone-no-app/260930-qmc-SUMMARY.md) |
+| 261001-ktp | Assinatura de produção do APK (aguarda keystore do usuário) | 2026-10-01 | [SUMMARY](quick/261001-ktp-assinatura-de-producao-do-apk/261001-ktp-SUMMARY.md) |
+| 261001-l9o | LGPD: política, termos, aceite e exclusão de conta | 2026-10-01 | [SUMMARY](quick/261001-l9o-lgpd-privacidade-termos-e-exclusao-de-co/261001-l9o-SUMMARY.md) |
 
 ## Session Continuity
 

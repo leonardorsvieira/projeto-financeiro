@@ -8,7 +8,9 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/signup_screen.dart';
 import '../features/auth/presentation/splash_screen.dart';
 import '../features/home/domain/app_routes.dart';
+import '../features/privacidade/domain/aceite_termos.dart';
 import '../features/privacidade/domain/textos_legais.dart';
+import '../features/privacidade/presentation/aceite_termos_screen.dart';
 import '../features/privacidade/presentation/documento_legal_screen.dart';
 import '../features/ditado/domain/rascunho_lancamento.dart';
 import '../features/ditado/presentation/confirmacao_ditado_screen.dart';
@@ -50,6 +52,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
       GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
       GoRoute(path: AppRoutes.signup, builder: (_, _) => const SignupScreen()),
+      GoRoute(
+        path: AppRoutes.aceiteTermos,
+        builder: (_, _) => const AceiteTermosScreen(),
+      ),
       GoRoute(
         path: AppRoutes.privacidade,
         builder: (_, _) =>
@@ -119,20 +125,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
-      final status = auth.maybeWhen(
-        data: (s) => s.status,
-        orElse: () => AuthStatus.unknown,
-      );
+      final estado = auth.maybeWhen(data: (s) => s, orElse: () => null);
+      final status = estado?.status ?? AuthStatus.unknown;
       final location = state.matchedLocation;
 
       if (status == AuthStatus.authenticated) {
+        // Portão de re-aceite: sem o aceite da versão vigente, só a tela de
+        // aceite e os dois documentos ficam acessíveis.
+        if (!termosEmDia(estado?.termosVersao)) {
+          const liberadas = {
+            AppRoutes.aceiteTermos,
+            AppRoutes.privacidade,
+            AppRoutes.termos,
+          };
+          return liberadas.contains(location) ? null : AppRoutes.aceiteTermos;
+        }
         if (location == AppRoutes.login ||
             location == AppRoutes.signup ||
-            location == AppRoutes.splash) {
+            location == AppRoutes.splash ||
+            location == AppRoutes.aceiteTermos) {
           return AppRoutes.home;
         }
       } else if (status == AuthStatus.unauthenticated) {
-        if (location == AppRoutes.home || location == AppRoutes.splash) {
+        if (location == AppRoutes.home ||
+            location == AppRoutes.splash ||
+            location == AppRoutes.aceiteTermos) {
           return AppRoutes.login;
         }
       }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth_errors.dart';
 import '../../../features/home/domain/app_routes.dart';
 import '../../../theme/icones.dart';
+import '../../privacidade/presentation/destaques_privacidade.dart';
 import '../application/auth_controller.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _confirmController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _aceitouTermos = false;
   String? _errorText;
   String? _avisoConfirmacao;
 
@@ -175,6 +177,36 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         return null;
                       },
                     ),
+                    const SizedBox(height: 16),
+                    const DestaquesPrivacidade(compacto: true),
+                    const SizedBox(height: 8),
+                    CheckboxListTile(
+                      value: _aceitouTermos,
+                      onChanged: isSubmitting
+                          ? null
+                          : (v) => setState(() => _aceitouTermos = v ?? false),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text(
+                        'Li e aceito os Termos de Uso e a Política de '
+                        'Privacidade',
+                      ),
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () => context.push(AppRoutes.termos),
+                          icon: const PhosphorIcon(Icones.termos),
+                          label: const Text('Termos de Uso'),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => context.push(AppRoutes.privacidade),
+                          icon: const PhosphorIcon(Icones.privacidade),
+                          label: const Text('Política de Privacidade'),
+                        ),
+                      ],
+                    ),
                     if (_avisoConfirmacao != null) ...[
                       const SizedBox(height: 16),
                       Container(
@@ -214,7 +246,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ],
                     const SizedBox(height: 24),
                     FilledButton(
-                      onPressed: isSubmitting ? null : _submit,
+                      onPressed:
+                          (isSubmitting || !_aceitouTermos) ? null : _submit,
                       child: isSubmitting
                           ? const SizedBox(
                               height: 20,

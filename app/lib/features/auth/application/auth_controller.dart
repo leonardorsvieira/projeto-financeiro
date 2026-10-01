@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
+import '../../privacidade/domain/aceite_termos.dart';
+import '../../privacidade/domain/controlador.dart';
 import '../data/auth_repository.dart';
 import '../domain/auth_state.dart';
 
@@ -23,10 +25,19 @@ class AuthController extends StreamNotifier<AuthState> {
     return _repo.signIn(email.trim(), password);
   }
 
-  /// true = conta criada, falta confirmar o e-mail.
+  /// true = conta criada, falta confirmar o e-mail. O cadastro só é possível
+  /// com a caixa de aceite marcada, então todo signUp leva a evidência do
+  /// aceite (versão e data) nos metadados.
   Future<bool> signUp(String email, String password) {
-    return _repo.signUp(email.trim(), password);
+    return _repo.signUp(
+      email.trim(),
+      password,
+      metadados: metadadosDeAceite(),
+    );
   }
+
+  /// Registra o aceite da versão vigente dos documentos (re-aceite).
+  Future<void> aceitarTermos() => _repo.aceitarTermos(versaoDocumentos);
 
   Future<void> signOut() {
     return _repo.signOut();

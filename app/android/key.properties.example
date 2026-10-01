@@ -1,0 +1,10 @@
+# Copie para key.properties (mesma pasta) e preencha. key.properties e o
+# arquivo .jks ficam fora do git (android/.gitignore).
+#
+# storeFile é relativo a app/android/ (ex.: o .jks guardado em app/android/).
+# Guarde o .jks e as senhas em lugar seguro e com backup: sem eles não dá
+# para publicar atualizações do app.
+storeFile=meubolso-producao.jks
+storePassword=SENHA_DO_ARQUIVO
+keyAlias=meubolso
+keyPassword=SENHA_DA_CHAVE

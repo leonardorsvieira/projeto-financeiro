@@ -33,6 +33,11 @@ if ([string]::IsNullOrWhiteSpace($supabaseUrl) -or [string]::IsNullOrWhiteSpace(
   exit 1
 }
 
+$keyProps = Join-Path $root "app\android\key.properties"
+if ($Mode -eq "release" -and -not (Test-Path $keyProps)) {
+  Write-Host "AVISO: sem app\android\key.properties o release sai com a chave de DEBUG (so para testes, nao para distribuir)." -ForegroundColor Yellow
+}
+
 Write-Host "==> Meu Bolso: build $Mode APK" -ForegroundColor Cyan
 Write-Host "    SUPABASE_URL  : $supabaseUrl"
 Write-Host "    SUPABASE_ANON : $($supabaseAnonKey.Substring(0, 12))..."

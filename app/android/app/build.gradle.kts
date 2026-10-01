@@ -1,8 +1,19 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Chave de assinatura de produção (fora do git). Sem android/key.properties o
+// release continua assinado com a chave de debug, que serve só para testes.
+// Modelo em android/key.properties.example.
+val keyProperties = Properties().apply {
+    val arquivo = rootProject.file("key.properties")
+    if (arquivo.exists()) arquivo.inputStream().use { load(it) }
+}
+val temChaveDeProducao = keyProperties.getProperty("storeFile") != null
 
 android {
     namespace = "br.com.meubolso.meubolso"
@@ -35,11 +46,24 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (temChaveDeProducao) {
+            create("producao") {
+                storeFile = rootProject.file(keyProperties.getProperty("storeFile"))
+                storePassword = keyProperties.getProperty("storePassword")
+                keyAlias = keyProperties.getProperty("keyAlias")
+                keyPassword = keyProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (temChaveDeProducao) {
+                signingConfigs.getByName("producao")
+            } else {
+                signingConfigs.getByName("debug")
+            }
             // Sem R8: o modo "full" do R8 remove assinaturas genéricas usadas
             // pelo Gson do flutter_local_notifications e o app fechava ao abrir.
             isMinifyEnabled = false

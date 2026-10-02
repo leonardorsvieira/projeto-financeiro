@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src 'self'; img-src 'self'">
+  <title>Meu Bolso · Conectar seus bancos</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <!--
+    Guia para clientes: criar a conta no Meu Pluggy (meu.pluggy.ai), conectar
+    os bancos lá e ligar ao Meu Bolso. Página "não listada": não há link para
+    ela em lugar nenhum do site, o nome tem um sufixo aleatório, os buscadores
+    são instruídos a não indexar e o no-referrer não vaza o endereço ao clicar
+    nos links externos. É divulgada só por link, para quem comprou.
+    Sem JavaScript e sem chamadas externas: fontes vêm do próprio build.
+    Rótulos dos botões citados aqui devem casar com o app
+    (features/open_finance/presentation e dashboard/presentation/home_screen).
+  -->
+  <style>
+    @font-face { font-family: Fraunces; src: url("assets/assets/fonts/Fraunces.ttf"); font-weight: 100 900; }
+    @font-face { font-family: Inter; src: url("assets/assets/fonts/Inter.ttf"); font-weight: 100 900; }
+    :root {
+      --papel: #f4ecd8; --claro: #fbf6ea; --tinta: #1d2a47; --apagado: #6f6a5c;
+      --margem: #b3261e; --receita: #2d6a3e; --ocre: #9a6a12; --pauta: #e3d6b6;
+      --contorno: rgba(29,42,71,.22); --sombra: rgba(29,42,71,.14);
+      --roxo: #7b1fa2; --roxo-texto: #ffffff; --destaque: rgba(154,106,18,.10);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --papel: #17213a; --claro: #1c2844; --tinta: #f1e8d2; --apagado: #a9a18c;
+        --margem: #ef7a70; --receita: #7fbf8e; --ocre: #e2b65c; --pauta: #243154;
+        --contorno: rgba(241,232,210,.2); --sombra: rgba(0,0,0,.4);
+        --roxo: #ab47bc; --roxo-texto: #ffffff; --destaque: rgba(226,182,92,.10);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; padding: 24px 16px 48px; background: var(--papel); color: var(--tinta);
+      font-family: Inter, system-ui, sans-serif; font-size: 16px; line-height: 1.6; }
+    main { max-width: 680px; margin: 0 auto; }
+
+    .folha { position: relative; overflow: hidden; padding: 28px 22px 26px 34px; margin-bottom: 20px;
+      background: var(--claro); border: 1px solid var(--contorno); border-radius: 16px;
+      box-shadow: 0 6px 18px var(--sombra); }
+    .folha::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+      border-left: 1.5px solid var(--margem); border-right: 1.5px solid var(--margem); }
+
+    .selo { width: 64px; height: 64px; display: block; margin-bottom: 14px; }
+    h1, h2 { font-family: Fraunces, Georgia, serif; font-weight: 600; line-height: 1.2; margin: 0; }
+    h1 { font-size: 30px; margin-bottom: 12px; }
+    h2 { font-size: 23px; margin-bottom: 4px; }
+    .parte { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--margem);
+      font-weight: 600; margin: 0 0 6px; }
+    .sub { color: var(--apagado); margin: 0 0 18px; }
+    p { margin: 0 0 12px; }
+    a { color: var(--margem); font-weight: 600; text-underline-offset: 3px; }
+    strong { font-weight: 650; }
+
+    /* Fluxo banco → Meu Pluggy → Meu Bolso */
+    .fluxo { display: flex; align-items: center; gap: 6px; margin: 18px 0 6px; }
+    .no { flex: 1 1 0; min-width: 0; text-align: center; padding: 10px 6px; border-radius: 12px;
+      border: 1.5px solid var(--contorno); background: var(--papel); font-size: 14px; line-height: 1.3; }
+    .no b { display: block; font-family: Fraunces, Georgia, serif; font-size: 16px; font-weight: 600; }
+    .no span { color: var(--apagado); font-size: 12px; }
+    .no.mb { border-color: var(--margem); }
+    .seta { flex: none; color: var(--apagado); font-size: 18px; }
+
+    .lista-check { list-style: none; padding: 0; margin: 8px 0 0; }
+    .lista-check li { position: relative; padding-left: 30px; margin-bottom: 8px; }
+    .lista-check li::before { content: "✓"; position: absolute; left: 4px; top: 0; color: var(--receita); font-weight: 700; }
+
+    /* Passos numerados */
+    ol.passos { list-style: none; counter-reset: passo var(--inicio, 0); padding: 0; margin: 14px 0 0; }
+    ol.passos > li { counter-increment: passo; position: relative; padding: 0 0 18px 50px; }
+    ol.passos > li:last-child { padding-bottom: 0; }
+    ol.passos > li::before { content: counter(passo); position: absolute; left: 0; top: -2px; width: 36px; height: 36px;
+      display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--margem);
+      font-family: Fraunces, Georgia, serif; font-weight: 700; font-size: 18px; color: var(--margem); background: var(--claro); }
+    ol.passos > li::after { content: ""; position: absolute; left: 17px; top: 38px; bottom: 4px; width: 2px; background: var(--pauta); }
+    ol.passos > li:last-child::after { display: none; }
+    .passo-titulo { display: block; font-weight: 650; margin-bottom: 2px; }
+
+    /* Imitações dos botões do app */
+    .botao { display: inline-block; padding: 2px 12px; border-radius: 999px; font-size: 14px; font-weight: 600;
+      white-space: nowrap; border: 1.5px solid var(--tinta); line-height: 1.6; }
+    .botao.roxo { background: var(--roxo); color: var(--roxo-texto); border-color: var(--roxo); }
+    .botao.cheio { background: var(--tinta); color: var(--claro); }
+    .menu-icone { display: inline-block; padding: 0 7px; border: 1.5px solid var(--contorno); border-radius: 8px;
+      font-weight: 700; letter-spacing: -1px; }
+
+    .dica { margin: 10px 0 0; padding: 10px 14px; border-radius: 10px; background: var(--destaque);
+      border-left: 3px solid var(--ocre); font-size: 15px; }
+    .dica b { color: var(--ocre); }
+
+    .acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .acao { display: inline-block; padding: 10px 18px; border-radius: 999px; text-decoration: none;
+      font-weight: 600; border: 1.5px solid var(--margem); }
+    .acao.principal { background: var(--margem); color: var(--claro); }
+
+    .pronto h2 { color: var(--receita); }
+
+    details { border-top: 1px solid var(--pauta); padding: 12px 0; }
+    details:last-of-type { border-bottom: 1px solid var(--pauta); }
+    summary { cursor: pointer; font-weight: 650; list-style: none; position: relative; padding-right: 28px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; position: absolute; right: 4px; top: -2px; font-size: 22px; color: var(--margem); font-weight: 400; }
+    details[open] summary::after { content: "−"; }
+    details p { margin: 8px 0 0; color: var(--tinta); }
+
+    .rodape { text-align: center; color: var(--apagado); font-size: 14px; margin-top: 8px; }
+
+    @media (max-width: 420px) {
+      h1 { font-size: 26px; }
+      .folha { padding: 24px 16px 22px 28px; }
+      ol.passos > li { padding-left: 46px; }
+      .no b { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+
+  <section class="folha">
+    <svg class="selo" viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-8 50 50)">
+      <circle cx="50" cy="50" r="40" fill="none" stroke="var(--margem)" stroke-width="7"/>
+      <circle cx="50" cy="50" r="31" fill="none" stroke="var(--margem)" stroke-width="2" stroke-dasharray="4 5"/>
+      <text x="50" y="62" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-weight="800" font-size="34" fill="var(--tinta)">MB</text>
+    </g></svg>
+    <h1>Conecte seus bancos ao Meu Bolso</h1>
+    <p>Em uns 10 minutos, suas compras no cartão, Pix e recebimentos passam a entrar <strong>sozinhos</strong> no app, pelo <strong>Open Finance</strong> — o sistema oficial de compartilhamento de dados do Banco Central.</p>
+    <p>O caminho tem três partes: você cria uma conta gratuita no <strong>Meu Pluggy</strong>, conecta seus bancos lá e depois autoriza o Meu Bolso a ler esses dados.</p>
+
+    <div class="fluxo" role="img" aria-label="Seu banco envia os dados ao Meu Pluggy, que repassa ao Meu Bolso">
+      <div class="no"><b>Seu banco</b><span>você aprova</span></div>
+      <div class="seta" aria-hidden="true">→</div>
+      <div class="no"><b>Meu Pluggy</b><span>guarda a conexão</span></div>
+      <div class="seta" aria-hidden="true">→</div>
+      <div class="no mb"><b>Meu Bolso</b><span>organiza tudo</span></div>
+    </div>
+  </section>
+
+  <section class="folha">
+    <h2>Antes de começar</h2>
+    <ul class="lista-check">
+      <li>Sua conta no <strong>Meu Bolso já criada e liberada</strong> (e-mail confirmado e acesso ativo).</li>
+      <li>O <strong>app do seu banco</strong> no celular — é nele que você aprova o compartilhamento.</li>
+      <li>Uns 10 minutos, sem pressa.</li>
+    </ul>
+    <p class="dica"><b>O que é o Meu Pluggy?</b> Um serviço gratuito da Pluggy, empresa autorizada pelo Banco Central, que guarda as suas autorizações do Open Finance. O Meu Bolso usa a Pluggy para buscar seus lançamentos — <strong>sem nunca ver a senha do seu banco</strong>.</p>
+  </section>
+
+  <section class="folha">
+    <p class="parte">Parte 1</p>
+    <h2>Crie sua conta no Meu Pluggy</h2>
+    <p class="sub">Leva 2 minutos.</p>
+    <ol class="passos">
+      <li>
+        <span class="passo-titulo">Abra o site do Meu Pluggy</span>
+        Acesse <a href="https://meu.pluggy.ai" target="_blank" rel="noopener noreferrer">meu.pluggy.ai</a> pelo navegador do celular ou do computador.
+      </li>
+      <li>
+        <span class="passo-titulo">Cadastre-se com e-mail e senha</span>
+        Preencha seus dados e crie uma senha. Não precisa de convite nem aprovação.
+        <p class="dica"><b>Dica:</b> use o <strong>mesmo e-mail do Meu Bolso</strong>, para não confundir. E crie uma senha <strong>diferente</strong> da senha do seu banco.</p>
+      </li>
+      <li>
+        <span class="passo-titulo">Confirme o e-mail, se pedirem</span>
+        Se chegar um e-mail da Pluggy pedindo confirmação, abra e confirme (olhe também a caixa de spam).
+      </li>
+    </ol>
+  </section>
+
+  <section class="folha">
+    <p class="parte">Parte 2</p>
+    <h2>Conecte seus bancos no Meu Pluggy</h2>
+    <p class="sub">Repita para cada banco ou cartão que você usa.</p>
+    <ol class="passos" style="--inicio: 3">
+      <li>
+        <span class="passo-titulo">Toque em <span class="botao">Conectar Minha Conta</span></span>
+        É o botão principal da tela inicial do Meu Pluggy.
+      </li>
+      <li>
+        <span class="passo-titulo">Escolha o seu banco</span>
+        Procure pelo nome (Nubank, Inter, Itaú, Bradesco, Caixa, Banco do Brasil, Santander…).
+      </li>
+      <li>
+        <span class="passo-titulo">Aprove no app do banco</span>
+        Você será levado ao app (ou site) do seu banco. Entre como sempre faz, confira quais dados serão compartilhados e <strong>confirme o compartilhamento</strong>.
+      </li>
+      <li>
+        <span class="passo-titulo">Volte ao Meu Pluggy</span>
+        Espere o banco aparecer como conectado. Depois repita os passos 4 a 7 para os outros bancos e cartões.
+      </li>
+    </ol>
+    <p class="dica"><b>Importante:</b> a conexão é <strong>só de leitura</strong>. Por ela ninguém consegue fazer Pix, pagamentos ou transferências — só ver extrato, cartão e saldos.</p>
+  </section>
+
+  <section class="folha">
+    <p class="parte">Parte 3</p>
+    <h2>Ligue o Meu Pluggy ao Meu Bolso</h2>
+    <p class="sub">Funciona igual no app do celular e no site.</p>
+    <ol class="passos" style="--inicio: 7">
+      <li>
+        <span class="passo-titulo">Entre no Meu Bolso</span>
+        Abra o app no celular (ou o site no computador) e faça login com a sua conta.
+      </li>
+      <li>
+        <span class="passo-titulo">Abra o menu <span class="menu-icone" aria-label="três pontinhos">⋮</span></span>
+        Na tela inicial, toque nos três pontinhos no canto superior direito e escolha <strong>Bancos e Open Finance</strong>.
+      </li>
+      <li>
+        <span class="passo-titulo">Toque em <span class="botao roxo">Conectar meu.pluggy.ai</span></span>
+        Aguarde alguns segundos: a página de autorização do Meu Pluggy vai abrir.
+        <p class="dica"><b>No computador:</b> se o navegador bloquear a janela, aparece um aviso embaixo da tela — toque em <strong>Abrir</strong>.</p>
+      </li>
+      <li>
+        <span class="passo-titulo">Entre no Meu Pluggy e toque em Permitir</span>
+        Use o e-mail e a senha que você criou na Parte 1 (<strong>não</strong> os do banco). Se aparecer a lista dos seus bancos, marque todos os que quer ver no Meu Bolso.
+      </li>
+      <li>
+        <span class="passo-titulo">Volte ao Meu Bolso e sincronize</span>
+        Toque em <span class="botao cheio">Sincronizar agora</span>. Para trazer também o passado, toque em <span class="botao">Importar últimos 12 meses</span>.
+      </li>
+    </ol>
+  </section>
+
+  <section class="folha pronto">
+    <h2>Pronto! 🎉</h2>
+    <p>Daqui para frente o Meu Bolso busca seus lançamentos <strong>sozinho</strong>: quando você abre o app, a cada 30 minutos com ele aberto e sempre que o banco avisa que tem novidade.</p>
+    <ul class="lista-check">
+      <li>Compras no cartão, Pix, transferências e salários entram já com categoria.</li>
+      <li>Transferências entre as suas próprias contas e aplicações/resgates aparecem na lista, mas <strong>não contam como gasto</strong>.</li>
+      <li>Seus investimentos aparecem em <strong>Investimentos</strong>, com o rendimento de cada um.</li>
+      <li>O banco costuma atualizar os dados uma vez por dia — uma compra de agora pode levar algumas horas para aparecer.</li>
+    </ul>
+    <div class="acoes">
+      <a class="acao principal" href="./" target="_blank" rel="noopener noreferrer">Abrir o Meu Bolso no navegador</a>
+      <a class="acao" href="https://meu.pluggy.ai" target="_blank" rel="noopener noreferrer">Ir ao Meu Pluggy</a>
+    </div>
+  </section>
+
+  <section class="folha">
+    <h2>Se algo der errado</h2>
+    <p class="sub">As dúvidas mais comuns.</p>
+
+    <details>
+      <summary>A página de autorização não abriu</summary>
+      <p>No computador, o navegador pode ter bloqueado a janela. Procure o aviso embaixo da tela do Meu Bolso e toque em <strong>Abrir</strong>, ou permita pop-ups para o site. No celular, confira se existe um navegador padrão instalado.</p>
+    </details>
+
+    <details>
+      <summary>Sincronizei e não veio nada</summary>
+      <p>Na primeira vez os dados podem levar alguns minutos para chegar. Espere 5 a 10 minutos e toque em <strong>Sincronizar agora</strong> de novo. Confira também, no meu.pluggy.ai, se o banco aparece como conectado.</p>
+    </details>
+
+    <details>
+      <summary>Um dos meus bancos não apareceu</summary>
+      <p>Veja se ele está conectado no Meu Pluggy (Parte 2). Se estiver, toque de novo em <strong>Conectar meu.pluggy.ai</strong> no Meu Bolso e autorize esse banco também.</p>
+    </details>
+
+    <details>
+      <summary>Apareceu um lançamento repetido</summary>
+      <p>Acontece quando o gasto foi lançado à mão (ou ditado) <em>e</em> também veio do banco. Apague o que você lançou à mão — o importado o app reconhece e nunca traz duas vezes.</p>
+    </details>
+
+    <details>
+      <summary>Parou de atualizar depois de um tempo</summary>
+      <p>As autorizações do Open Finance têm prazo de validade e o banco pode pedir para renovar. Entre no meu.pluggy.ai, reconecte o banco e depois toque em <strong>Sincronizar agora</strong> no Meu Bolso.</p>
+    </details>
+
+    <details>
+      <summary>Como desconecto tudo?</summary>
+      <p>No Meu Bolso: menu ⋮ → <strong>Bancos e Open Finance</strong> → <strong>Remover todas as conexões</strong> (os lançamentos já importados continuam no app). Você também pode cancelar no meu.pluggy.ai ou no app do banco, na área de Open Finance.</p>
+    </details>
+
+    <details>
+      <summary>Alguém mais consegue ver os meus dados?</summary>
+      <p>Não. Cada conta do Meu Bolso é isolada: só você vê os seus bancos e lançamentos. O Meu Bolso nunca recebe a senha do seu banco e você pode cancelar a conexão quando quiser.</p>
+    </details>
+  </section>
+
+  <p class="rodape">Guia exclusivo para clientes do Meu Bolso.<br>Ficou com dúvida? Escreva para <a href="mailto:leonardorodriguesv99@gmail.com">leonardorodriguesv99@gmail.com</a>.</p>
+
+</main>
+</body>
+</html>

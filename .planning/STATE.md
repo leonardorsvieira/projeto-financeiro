@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 Phase: 8 — Investimentos (concluída) — todas as 8 fases do roadmap completas
 Plan: 08-01..08-05 ✅ (05-02 push FCM/APNs adiado de propósito — lembretes usam notificação local)
 Status: **Milestone v1.1 completo.** Depois dele: Open Finance via Pluggy (Edge Functions `pluggy`/`pluggy-webhook`, meu.pluggy.ai direto, `/v2/transactions`, sincronização automática, sinal do cartão, categorias neutras) e hardening multiusuário (quick 260928-n3q).
-Last activity: 2026-10-02 — quick 261001-uh5: controle de acesso por assinatura (código pronto; ativação no Supabase pendente)
+Last activity: 2026-10-02 — quick 261002-f1a: guia não listado do Meu Pluggy para clientes (conectar-bancos-o3um1bnu.html)
 
 ## Performance Metrics
 
@@ -120,6 +120,7 @@ Items acknowledged and carried forward from previous milestone close:
 | 261001-rmt | Página de e-mail confirmado (Site URL) | 2026-10-01 | [SUMMARY](quick/261001-rmt-pagina-de-confirmacao-de-email/261001-rmt-SUMMARY.md) |
 | 261001-uh5 | Controle de acesso por assinatura (ativo) | 2026-10-02 | [SUMMARY](quick/261001-uh5-controle-de-acesso-por-assinatura/261001-uh5-SUMMARY.md) |
 | 261001-tc0 | Site não quebra mais com o retorno do link de confirmação | 2026-10-01 | [SUMMARY](quick/261001-tc0-site-quebra-no-link-de-confirmacao/261001-tc0-SUMMARY.md) |
+| 261002-f1a | Guia do Meu Pluggy para clientes (página não listada) | 2026-10-02 | [SUMMARY](quick/261002-f1a-guia-meu-pluggy-para-clientes/261002-f1a-SUMMARY.md) |
 
 ## Session Continuity
 

@@ -1,9 +1,11 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meubolso/features/acesso/application/acesso_providers.dart';
 import 'package:meubolso/features/auth/application/auth_controller.dart';
 import 'package:meubolso/features/ditado/application/ditado_providers.dart';
 import 'package:meubolso/features/lancamentos/application/lancamentos_providers.dart';
 
+import 'fake_acesso_repository.dart';
 import 'fake_audio_recorder_service.dart';
 import 'fake_auth.dart';
 import 'fake_ditado_repository.dart';
@@ -15,11 +17,16 @@ ProviderScope wrapWithDitadoFakes({
   FakeAudioRecorderService? fakeAudio,
   FakeDitadoRepository? fakeDitado,
   DateTime Function()? relogio,
+  FakeAcessoRepository? fakeAcesso,
   required Widget child,
 }) {
   return ProviderScope(
     overrides: [
       authRepositoryProvider.overrideWithValue(fakeAuth),
+      // Padrão: conta ativa, então o portão de acesso não interfere.
+      acessoRepositoryProvider.overrideWithValue(
+        fakeAcesso ?? FakeAcessoRepository(),
+      ),
       if (fakeLancamentos != null)
         lancamentosRepositoryProvider.overrideWithValue(fakeLancamentos),
       if (fakeAudio != null)

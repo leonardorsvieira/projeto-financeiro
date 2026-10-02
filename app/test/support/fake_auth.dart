@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meubolso/features/acesso/application/acesso_providers.dart';
 import 'package:meubolso/features/auth/application/auth_controller.dart';
 import 'package:meubolso/features/auth/data/auth_repository.dart';
 import 'package:meubolso/features/auth/domain/auth_state.dart';
 import 'package:meubolso/features/privacidade/domain/controlador.dart';
+
+import 'fake_acesso_repository.dart';
 
 /// Repositório de autenticação falso.
 ///
@@ -94,7 +97,11 @@ class FakeAuthRepository implements AuthRepository {
 
 ProviderScope wrapWithFake(FakeAuthRepository fake, Widget child) {
   return ProviderScope(
-    overrides: [authRepositoryProvider.overrideWithValue(fake)],
+    overrides: [
+      authRepositoryProvider.overrideWithValue(fake),
+      // Padrão: conta ativa, então o portão de acesso não interfere.
+      acessoRepositoryProvider.overrideWithValue(FakeAcessoRepository()),
+    ],
     child: child,
   );
 }

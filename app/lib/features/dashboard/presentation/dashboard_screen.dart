@@ -6,9 +6,12 @@ import 'package:go_router/go_router.dart';
 
 import 'package:intl/intl.dart';
 
+import '../../../core/edge_function.dart';
 import '../../../theme/icones.dart';
+import '../../acesso/presentation/aviso_vencimento_acesso.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../ditado/application/ditado_providers.dart';
+import '../../ditado/domain/ditado_repository.dart';
 import '../../home/domain/app_routes.dart';
 import '../../investimentos/application/investimentos_providers.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
@@ -65,6 +68,7 @@ class DashboardScreen extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         children: [
+          const AvisoVencimentoAcesso(),
           _Saudacao(nome: ref.watch(primeiroNomeUsuarioProvider)),
           const SizedBox(height: 12),
           const _SeletorMesHeader(),
@@ -662,8 +666,9 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _erro =
-              'Não foi possível gerar a análise no momento. Tente novamente.';
+          _erro = e is DitadoException && e.mensagem == mensagemAcessoInativo
+              ? e.mensagem
+              : 'Não foi possível gerar a análise no momento. Tente novamente.';
           _carregando = false;
         });
       }

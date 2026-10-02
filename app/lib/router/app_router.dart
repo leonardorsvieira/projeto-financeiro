@@ -1,7 +1,10 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/acesso/application/acesso_providers.dart';
+import '../features/acesso/domain/acesso.dart';
+import '../features/acesso/presentation/sem_acesso_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/application/aviso_login.dart';
 import '../features/auth/domain/auth_state.dart';
@@ -28,17 +31,47 @@ import '../features/investimentos/presentation/investimentos_screen.dart';
 import '../features/investimentos/presentation/investimento_detalhe_screen.dart';
 
 class _AuthListenable extends ChangeNotifier {
-  _AuthListenable(Ref ref) {
-    _sub = ref.listen(authControllerProvider, (_, _) {
+  _AuthListenable(this._ref) {
+    _sub = _ref.listen(authControllerProvider, (_, _) {
       notifyListeners();
     });
+    // O portão de acesso depende do status da assinatura: reavalia o redirect
+    // quando ele chega ou muda.
+    _subAcesso = _ref.listen<AsyncValue<StatusAcesso?>>(statusAcessoProvider, (
+      _,
+      atual,
+    ) {
+      if (!atual.isLoading) _ultimaRevalidacao = DateTime.now();
+      notifyListeners();
+    });
+    // Ao voltar ao app, reconsulta o status (o dono pode ter liberado ou
+    // bloqueado nesse meio tempo), no máximo uma vez por minuto.
+    _ciclo = AppLifecycleListener(onResume: _revalidarAcesso);
   }
 
+  final Ref _ref;
   late final ProviderSubscription _sub;
+  late final ProviderSubscription _subAcesso;
+  late final AppLifecycleListener _ciclo;
+  DateTime? _ultimaRevalidacao;
+
+  void _revalidarAcesso() {
+    final auth = _ref.read(authControllerProvider).value;
+    if (auth == null || !auth.isAuthenticated) return;
+    final ultima = _ultimaRevalidacao;
+    final agora = DateTime.now();
+    if (ultima != null && agora.difference(ultima) < const Duration(minutes: 1)) {
+      return;
+    }
+    _ultimaRevalidacao = agora;
+    _ref.invalidate(statusAcessoProvider);
+  }
 
   @override
   void dispose() {
     _sub.close();
+    _subAcesso.close();
+    _ciclo.dispose();
     super.dispose();
   }
 }
@@ -86,6 +119,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.privacidadeEDados,
         builder: (_, _) => const PrivacidadeDadosScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.semAcesso,
+        builder: (_, _) => const SemAcessoScreen(),
       ),
       GoRoute(
         path: AppRoutes.home,
@@ -162,16 +199,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           };
           return liberadas.contains(location) ? null : AppRoutes.aceiteTermos;
         }
-        if (location == AppRoutes.login ||
-            location == AppRoutes.signup ||
-            location == AppRoutes.splash ||
-            location == AppRoutes.aceiteTermos) {
-          return AppRoutes.home;
+        // Portão de assinatura (UX): quem garante o acesso é o servidor.
+        const entrada = {
+          AppRoutes.login,
+          AppRoutes.signup,
+          AppRoutes.splash,
+          AppRoutes.aceiteTermos,
+        };
+        final statusAcesso = ref.read(statusAcessoProvider);
+        switch (decidirAcesso(statusAcesso)) {
+          case DecisaoAcesso.aguardando:
+            // Espera o status no splash em vez de piscar a home.
+            if (entrada.contains(location)) {
+              return location == AppRoutes.splash ? null : AppRoutes.splash;
+            }
+            return null;
+          case DecisaoAcesso.bloqueado:
+            // Sem acesso, só a tela de aviso e as telas de dados e documentos.
+            const liberadas = {
+              AppRoutes.semAcesso,
+              AppRoutes.privacidadeEDados,
+              AppRoutes.privacidade,
+              AppRoutes.termos,
+            };
+            return liberadas.contains(location) ? null : AppRoutes.semAcesso;
+          case DecisaoAcesso.liberado:
+            if (entrada.contains(location) || location == AppRoutes.semAcesso) {
+              return AppRoutes.home;
+            }
+            return null;
         }
       } else if (status == AuthStatus.unauthenticated) {
         if (location == AppRoutes.home ||
             location == AppRoutes.splash ||
             location == AppRoutes.aceiteTermos ||
+            location == AppRoutes.semAcesso ||
             location == AppRoutes.privacidadeEDados) {
           return AppRoutes.login;
         }

@@ -27,3 +27,6 @@ Thumbs.db
 Chave SMTP.txt
 *chave*smtp*
 *Chave*SMTP*
+
+# Scripts SQL só deste computador (podem ter ids/e-mails de contas)
+*.local.sql

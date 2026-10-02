@@ -122,6 +122,7 @@ Items acknowledged and carried forward from previous milestone close:
 | 261001-tc0 | Site não quebra mais com o retorno do link de confirmação | 2026-10-01 | [SUMMARY](quick/261001-tc0-site-quebra-no-link-de-confirmacao/261001-tc0-SUMMARY.md) |
 | 261002-f1a | Guia do Meu Pluggy para clientes (página não listada) | 2026-10-02 | [SUMMARY](quick/261002-f1a-guia-meu-pluggy-para-clientes/261002-f1a-SUMMARY.md) |
 | 261002-kvj | Cartões de cada usuário na nuvem + painel por forma de pagamento (APK 1.2.2) | 2026-10-02 | [SUMMARY](quick/261002-kvj-cartoes-do-usuario-na-nuvem-e-painel-por/261002-kvj-SUMMARY.md) |
+| 261002-q5j | Patrimônio real, transferências para contas próprias e recargas (APK 1.2.3) | 2026-10-02 | [SUMMARY](quick/261002-q5j-patrimonio-real-transferencias-proprias-/261002-q5j-SUMMARY.md) |
 
 ## Session Continuity
 

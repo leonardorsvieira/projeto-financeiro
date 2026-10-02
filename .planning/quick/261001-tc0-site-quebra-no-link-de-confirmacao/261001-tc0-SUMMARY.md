@@ -13,3 +13,13 @@ Diagnóstico (auth_logs): cadastro pelo site às 23:42:10Z, confirmado no primei
 - Testes: `test/router_link_email_test.dart` (link expirado → login com aviso; `access_token` com sessão → home).
 
 Verificação: 295 testes ok; analyze só com os 9 infos antigos.
+
+## Rodada 2 (mesmo dia)
+
+Depois do `onException`, o site passou a ficar preso no splash ao abrir `?error=...otp_expired`: o supabase_flutter emite ERRO no `onAuthStateChange` ao ler esse endereço e o `StreamNotifier` ficava em erro (status desconhecido).
+
+- `tolerarErrosDeSessao` (auth_repository.dart): erro do stream → estado real da sessão (`currentSession`); sessão ativa não é derrubada. Testes em `test/features/auth/tolerar_erros_sessao_test.dart`.
+- `emailRedirectTo` sempre `urlConfirmacaoEmail` (confirmado.html), também na web.
+- confirmado.html: "Tudo certo! Seu cadastro foi salvo." + voltar ao app e fazer login (pedido do usuário).
+
+298 testes ok.

@@ -150,3 +150,5 @@ Pendente (usuário): rodar o script no SQL Editor; depois publicar `ditado`, `pl
 - Verificado no banco (simulando JWT, só leitura): sem acesso → `acesso_ativo=false`; dono → admin; conta antiga → ativa. Hook recusa e-mail não liberado (403) e aceita liberado (case-insensitive).
 - Publicadas: `ditado` v4 e `pluggy` v11 (JWT obrigatório), respondem 401 sem login.
 - `pluggy-webhook` (sem JWT): deploy BLOQUEADO pelo classificador do auto mode — pendente do usuário: `supabase functions deploy pluggy-webhook --no-verify-jwt --project-ref tkfhthotspehsgvmpsjm`. Até lá a versão antiga importa transações também para contas vencidas (só leitura do banco do próprio dono; impacto baixo).
+
+- 2026-10-02: usuário publicou `pluggy-webhook` pela CLI (`supabase login` + deploy `--no-verify-jwt`): v5, verify_jwt=false, responde 200 `{"ignorado":true}` a aviso inválido. Controle de acesso 100% no ar.

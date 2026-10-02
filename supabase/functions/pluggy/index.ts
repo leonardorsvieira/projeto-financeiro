@@ -58,6 +58,37 @@ function registrarFalha(rota: string, status: number) {
   console.warn(JSON.stringify({ rota, status }));
 }
 
+/**
+ * Diagnóstico do Patrimônio sem valores nem nomes: quais campos de valor cada
+ * investimento traz e como se comparam (ex.: saldo igual ao aplicado = banco
+ * não informa rendimento no `balance`).
+ */
+function diagnosticoInvestimentos(texto: string) {
+  try {
+    const { results } = JSON.parse(texto);
+    const n = (v: unknown) => typeof v === "number";
+    console.log(JSON.stringify({
+      rota: "/investments",
+      total: Array.isArray(results) ? results.length : 0,
+      itens: (Array.isArray(results) ? results : []).map((i: Record<string, unknown>) => ({
+        tipo: i.type,
+        subtipo: i.subtype,
+        status: i.status,
+        campos: ["balance", "amount", "amountOriginal", "amountProfit", "amountWithdrawal", "value", "quantity"]
+          .filter((c) => n(i[c])),
+        balanceIgualOriginal: n(i.balance) && i.balance === i.amountOriginal,
+        amountMaiorQueBalance: n(i.amount) && n(i.balance) &&
+          (i.amount as number) > (i.balance as number),
+        withdrawalMaiorQueOriginal: n(i.amountWithdrawal) && n(i.amountOriginal) &&
+          (i.amountWithdrawal as number) > (i.amountOriginal as number),
+        lucroPositivo: n(i.amountProfit) && (i.amountProfit as number) > 0,
+      })),
+    }));
+  } catch {
+    // corpo inesperado: sem diagnóstico
+  }
+}
+
 function repassar(req: Request, r: Response, texto: string): Response {
   if (!r.ok) {
     const url = new URL(r.url);
@@ -265,7 +296,9 @@ async function atender(req: Request): Promise<Response> {
       if (v && /^\d{1,4}$/.test(v)) params.set(k, v);
     }
     const r = await pluggy("GET", `/investments?${params}`);
-    return repassar(req, r, await r.text());
+    const texto = await r.text();
+    if (r.ok) diagnosticoInvestimentos(texto);
+    return repassar(req, r, texto);
   }
 
   // Transações: /v2/transactions (cursor). O /transactions antigo responde 410

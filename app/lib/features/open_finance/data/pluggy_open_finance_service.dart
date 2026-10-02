@@ -8,6 +8,7 @@ import '../../investimentos/domain/investimento.dart';
 import '../../lancamentos/domain/lancamento.dart'
     show categoriaMovimentacaoInvestimento, categoriaTransferenciaEntreContas;
 import '../domain/conta_bancaria_conectada.dart';
+import '../domain/contas_proprias.dart';
 import '../domain/transacao_bancaria_importada.dart';
 
 class BancoDisponivelOpenFinance {
@@ -60,11 +61,18 @@ final _reInvestimento = RegExp(
   r'poupan[cç]a|nota bov|bovespa',
 );
 
+/// Recarga de celular: o banco às vezes põe o próprio titular como recebedor,
+/// e ela parecia transferência entre contas (não contava como gasto).
+final _reRecarga = RegExp(r'\brecarga\b');
+
 /// Categoria neutra (não é renda nem gasto) ou null se for movimento real:
 /// - investimento: aplicação/resgate (RDB, CDB, caixinha, poupança…);
 /// - transferência entre contas do próprio titular: a Pluggy marca como
 ///   mesma titularidade, ou a contraparte (quem pagou numa entrada, quem
-///   recebeu numa saída) tem o CPF — ou, sem CPF, o nome — do titular.
+///   recebeu numa saída) tem o CPF — ou, sem CPF, o nome — do titular, ou é
+///   uma das [nomesProprios] (contas que o usuário marcou como dele, ex.: no
+///   nome do cônjuge).
+/// Recarga de celular nunca é neutra.
 String? categoriaNeutra({
   required String? categoriaPluggy,
   required String descricao,
@@ -72,8 +80,18 @@ String? categoriaNeutra({
   required bool entrada,
   required String? cpfTitular,
   required String? nomeTitular,
+  Iterable<String> nomesProprios = const [],
 }) {
   final cat = (categoriaPluggy ?? '').toLowerCase();
+  if (_reRecarga.hasMatch(descricao.toLowerCase())) return null;
+  final contraparte =
+      paymentData?[entrada ? 'payer' : 'receiver'] as Map<String, dynamic>?;
+  if (ehContaPropria(
+    nomesProprios,
+    [contraparte?['name'] as String?, contraparteDaDescricao(descricao)],
+  )) {
+    return categoriaTransferenciaEntreContas;
+  }
   if (cat.contains('invest') ||
       _reInvestimento.hasMatch(descricao.toLowerCase())) {
     return categoriaMovimentacaoInvestimento;
@@ -92,8 +110,6 @@ String? categoriaNeutra({
       _nomeNormalizado(partes.last) == nome) {
     return categoriaTransferenciaEntreContas;
   }
-  final contraparte =
-      paymentData?[entrada ? 'payer' : 'receiver'] as Map<String, dynamic>?;
   if (contraparte == null) return null;
   final documento = contraparte['documentNumber'];
   final docContraparte = _soDigitos(
@@ -194,6 +210,26 @@ Investimento? investimentoDaPluggy(Map<String, dynamic> inv) {
     pluggyId: id,
     valorInvestidoCents: investido,
   );
+}
+
+/// Saldo disponível das contas corrente/poupança (`balance` de BANK) e fatura
+/// em aberto dos cartões (`balance` de CREDIT: o que se deve), em centavos.
+/// Null quando nenhuma conta daquele tipo informou o saldo. O saldo da conta
+/// pode ser negativo (cheque especial); a fatura negativa é crédito.
+(int?, int?) saldosDasContasPluggy(List<Map<String, dynamic>> contas) {
+  int? saldo;
+  int? fatura;
+  for (final c in contas) {
+    final valor = c['balance'] as num?;
+    if (valor == null) continue;
+    final cents = (valor.toDouble() * 100).round();
+    if ((c['type'] as String?)?.toUpperCase() == 'CREDIT') {
+      fatura = (fatura ?? 0) + cents;
+    } else {
+      saldo = (saldo ?? 0) + cents;
+    }
+  }
+  return (saldo, fatura);
 }
 
 /// Quanto foi aplicado: `amountOriginal`; sem ele, o valor bruto menos o
@@ -444,6 +480,8 @@ class PluggyOpenFinanceService {
     // Busca dados das contas associadas a este item para obter tipo e máscara
     String tipoConta = 'Conta & Cartão';
     String? mascara;
+    int? saldoContas;
+    int? faturaCartoes;
 
     try {
       final accResp = await _chamar(
@@ -456,6 +494,7 @@ class PluggyOpenFinanceService {
         _contasPorItem[itemId] = accounts;
         if (accounts.isNotEmpty) {
           final accList = accounts.cast<Map<String, dynamic>>();
+          (saldoContas, faturaCartoes) = saldosDasContasPluggy(accList);
           if (ehAgregador) {
             final nomes = accList
                 .map(
@@ -500,6 +539,8 @@ class PluggyOpenFinanceService {
       itemIdPluggy: itemId,
       mascaraCartao: mascara,
       capturaAutomaticaAtiva: true,
+      saldoContasCents: saldoContas,
+      faturaCartoesCents: faturaCartoes,
     );
   }
 
@@ -610,6 +651,7 @@ class PluggyOpenFinanceService {
   Future<List<TransacaoBancariaImportada>> buscarTodasTransacoes({
     List<ContaBancariaConectada>? contas,
     DateTime? desde,
+    List<String> nomesProprios = const [],
   }) async {
     final itens = contas ?? await buscarItensConectados();
     final todasTransacoes = <TransacaoBancariaImportada>[];
@@ -702,6 +744,7 @@ class PluggyOpenFinanceService {
                   entrada: isReceita,
                   cpfTitular: acc['taxNumber'] as String?,
                   nomeTitular: acc['owner'] as String?,
+                  nomesProprios: nomesProprios,
                 ) ??
                 _mapearCategoria(categoriaRaw, desc);
 
@@ -848,6 +891,7 @@ class PluggyOpenFinanceService {
     }
 
     final lowerDesc = descricao.toLowerCase();
+    if (_reRecarga.hasMatch(lowerDesc)) return 'Assinaturas';
     if (lowerDesc.contains('ifood') ||
         lowerDesc.contains('mercado') ||
         lowerDesc.contains('supermercado') ||

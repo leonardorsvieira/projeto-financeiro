@@ -102,13 +102,18 @@ class RelatoriosScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Evolução patrimonial',
+                            dados.patrimonioReal
+                                ? 'Evolução patrimonial'
+                                : 'Saldo acumulado',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            'Patrimônio líquido acumulado',
+                            dados.patrimonioReal
+                                ? 'Contas + investimentos − faturas'
+                                : 'Entradas − saídas no período. Conecte seus '
+                                    'bancos para ver o patrimônio.',
                             style: theme.textTheme.bodySmall,
                           ),
                         ],
@@ -156,12 +161,16 @@ class RelatoriosScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _ValorResumoItem(
-                        rotulo: 'Patrimônio atual',
+                        rotulo: dados.patrimonioReal
+                            ? 'Patrimônio atual'
+                            : 'Saldo no período',
                         valor: fmtBrl.format(dados.patrimonioAtualCents / 100),
                         cor: theme.colorScheme.primary,
                       ),
                       _ValorResumoItem(
-                        rotulo: 'Patrimônio inicial',
+                        rotulo: dados.patrimonioReal
+                            ? 'Patrimônio inicial'
+                            : 'Saldo no 1º mês',
                         valor:
                             fmtBrl.format(dados.patrimonioInicialCents / 100),
                         cor: theme.colorScheme.onSurfaceVariant,

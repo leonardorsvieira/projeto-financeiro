@@ -13,8 +13,15 @@ import '../data/bank_notification_parser.dart';
 import '../data/ofx_parser_service.dart';
 import '../data/open_finance_repository.dart';
 import '../data/pluggy_open_finance_service.dart';
+import '../data/supabase_contas_proprias_repository.dart';
 import '../domain/conta_bancaria_conectada.dart';
+import '../domain/contas_proprias.dart';
 import '../domain/transacao_bancaria_importada.dart';
+
+/// Contas no nome de outra pessoa que o usuário marcou como dele.
+final contasPropriasRepositoryProvider = Provider<ContasPropriasRepository>(
+  (ref) => SupabaseContasPropriasRepository(),
+);
 
 final openFinanceRepositoryProvider = Provider<OpenFinanceRepository>(
   (ref) => OpenFinanceRepository(),
@@ -174,11 +181,18 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
   // 3. Busca as transações: 30 dias na primeira vez; depois só a última
   // semana (o webhook e a sincronização periódica cobrem o resto) — cada
   // página conta na cota diária.
+  List<String> nomesProprios = const [];
+  try {
+    nomesProprios = await ler(contasPropriasRepositoryProvider).listar();
+  } catch (_) {
+    // Sem a lista, importa só com as regras do titular.
+  }
   final transacoes = await service.buscarTodasTransacoes(
     contas: listaParaBuscarTransacoes,
     desde: DateTime.now().subtract(
       Duration(days: dias ?? (idsExistentes.isEmpty ? 30 : 7)),
     ),
+    nomesProprios: nomesProprios,
   );
 
   var transacoesImportadas = 0;

@@ -81,13 +81,14 @@ void main() {
           lancamentosStreamProvider
               .overrideWith((ref) => Stream.value(lancamentos)),
           investimentosStreamProvider.overrideWith((ref) => Stream.value([])),
+          // Sem banco conectado: sem patrimônio real, vale o saldo do período.
+          patrimonioRealAtualProvider.overrideWithValue(null),
         ],
       );
       addTearDown(container.dispose);
 
       container.listen(relatoriosComparativosProvider, (_, _) {});
       await container.read(lancamentosStreamProvider.future);
-      await container.read(investimentosStreamProvider.future);
 
       final dados = container.read(relatoriosComparativosProvider);
 
@@ -97,6 +98,67 @@ void main() {
       expect(dados.saldoTotalCents, 700000);
       expect(dados.mediaEntradasReais, 10000.0 / 6);
       expect(dados.mediaSaidasReais, 3000.0 / 6);
+      // Sem banco conectado não há patrimônio real (vale o saldo do período).
+      expect(dados.patrimonioReal, isFalse);
+    });
+  });
+
+  group('evolucaoPatrimonialPorMes', () {
+    final agora = DateTime(2026, 10, 2, 15);
+    final meses = [DateTime(2026, 8), DateTime(2026, 9), DateTime(2026, 10)];
+    Lancamento l(DateTime data, int cents, {bool receita = false}) =>
+        Lancamento(
+          id: '$data$cents',
+          descricao: 'x',
+          valorCents: cents,
+          categoria: 'Outros',
+          formaPagamento: 'Pix',
+          data: data,
+          tipo: receita ? TipoLancamento.receita : TipoLancamento.despesa,
+          createdAt: agora,
+          updatedAt: agora,
+        );
+
+    test('com patrimônio real: parte de hoje e desconta o que veio depois', () {
+      final valores = evolucaoPatrimonialPorMes(
+        meses: meses,
+        lancamentos: [
+          l(DateTime(2026, 8, 10), 300000, receita: true),
+          l(DateTime(2026, 9, 5), 100000),
+          l(DateTime(2026, 10, 1), 50000),
+          // Vencimento futuro: ainda não aconteceu, não mexe em nada.
+          l(DateTime(2026, 10, 20), 999999),
+        ],
+        agora: agora,
+        patrimonioAtualCents: 1000000,
+      );
+      // Out = hoje; Set = hoje + 500 gastos em out; Ago = + 1000 gastos em set.
+      expect(valores, [1150000, 1050000, 1000000]);
+    });
+
+    test('nunca soma de novo o que já está nos investimentos', () {
+      // Recebeu 37 mil ao longo do ano e aplicou tudo (aplicação é neutra e
+      // não entra aqui): o patrimônio é o de hoje, não 37 mil + investimentos.
+      final valores = evolucaoPatrimonialPorMes(
+        meses: meses,
+        lancamentos: [l(DateTime(2026, 8, 1), 3700000, receita: true)],
+        agora: agora,
+        patrimonioAtualCents: 3400000,
+      );
+      expect(valores.last, 3400000);
+    });
+
+    test('sem patrimônio real: saldo acumulado desde o início do período', () {
+      final valores = evolucaoPatrimonialPorMes(
+        meses: meses,
+        lancamentos: [
+          l(DateTime(2026, 7, 31), 999999, receita: true), // antes do período
+          l(DateTime(2026, 8, 10), 300000, receita: true),
+          l(DateTime(2026, 9, 5), 100000),
+        ],
+        agora: agora,
+      );
+      expect(valores, [300000, 200000, 200000]);
     });
   });
 

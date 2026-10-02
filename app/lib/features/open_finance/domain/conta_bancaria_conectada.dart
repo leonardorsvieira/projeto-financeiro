@@ -29,6 +29,8 @@ class ContaBancariaConectada {
     this.mascaraCartao,
     this.itemIdPluggy,
     this.capturaAutomaticaAtiva = true,
+    this.saldoContasCents,
+    this.faturaCartoesCents,
   });
 
   final String id;
@@ -41,6 +43,13 @@ class ContaBancariaConectada {
   final String? itemIdPluggy;
   final bool capturaAutomaticaAtiva;
 
+  /// Soma do saldo disponível das contas (corrente/poupança) desta conexão,
+  /// como a Pluggy informa na última sincronização. Null se não veio.
+  final int? saldoContasCents;
+
+  /// Soma das faturas em aberto dos cartões desta conexão (o que se deve).
+  final int? faturaCartoesCents;
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -52,6 +61,8 @@ class ContaBancariaConectada {
       'mascara_cartao': mascaraCartao,
       'item_id_pluggy': itemIdPluggy,
       'captura_automatica_ativa': capturaAutomaticaAtiva,
+      'saldo_contas_cents': saldoContasCents,
+      'fatura_cartoes_cents': faturaCartoesCents,
     };
   }
 
@@ -68,6 +79,8 @@ class ContaBancariaConectada {
       mascaraCartao: map['mascara_cartao'] as String?,
       itemIdPluggy: map['item_id_pluggy'] as String?,
       capturaAutomaticaAtiva: (map['captura_automatica_ativa'] as bool?) ?? true,
+      saldoContasCents: (map['saldo_contas_cents'] as num?)?.toInt(),
+      faturaCartoesCents: (map['fatura_cartoes_cents'] as num?)?.toInt(),
     );
   }
 }

@@ -40,12 +40,41 @@ const MOVIMENTACAO_INVESTIMENTO = "Investimento (aplicação/resgate)";
 const RE_INVESTIMENTO =
   /\b(rdb|cdb|lci|lca|b3)\b|resgate|aplica[cç][aã]o|caixinha|cofrinho|porquinho|dinheiro guardado|dinheiro resgatado|nuinvest|tesouro|poupan[cç]a|nota bov|bovespa/;
 
+// Recarga de celular: o banco às vezes põe o titular como recebedor e ela
+// parecia transferência entre contas.
+const RE_RECARGA = /\brecarga\b/;
+
 const soDigitos = (s?: string) => (s ?? "").replace(/\D/g, "");
 const nomeNormalizado = (s?: string) => (s ?? "").toLowerCase().replace(/\s+/g, " ").trim();
 
-/** Mesma regra do app (categoriaNeutra em pluggy_open_finance_service.dart). */
-function categoriaNeutra(tx: Transacao, descricao: string, entrada: boolean, conta: Conta) {
+/** Contraparte pela descrição: "Pix enviado - NOME" ou "...|NOME" (contraparteDaDescricao no app). */
+function contraparteDaDescricao(descricao: string): string | undefined {
+  const partes = descricao.split(/\s+-\s+|\|/);
+  if (partes.length < 2) return undefined;
+  const nome = partes[partes.length - 1].trim();
+  return nome.length >= 3 ? nome : undefined;
+}
+
+/**
+ * Mesma regra do app (categoriaNeutra em pluggy_open_finance_service.dart).
+ * [nomesProprios]: contas no nome de outra pessoa que o usuário marcou como
+ * dele (user_metadata.contas_proprias), já normalizadas.
+ */
+function categoriaNeutra(
+  tx: Transacao,
+  descricao: string,
+  entrada: boolean,
+  conta: Conta,
+  nomesProprios: Set<string>,
+) {
   const cat = (tx.category ?? "").toLowerCase();
+  if (RE_RECARGA.test(descricao.toLowerCase())) return null;
+  const parte = entrada ? tx.paymentData?.payer : tx.paymentData?.receiver;
+  if (
+    nomesProprios.size > 0 &&
+    [parte?.name, contraparteDaDescricao(descricao)]
+      .some((n) => n !== undefined && nomesProprios.has(nomeNormalizado(n)))
+  ) return TRANSFERENCIA_ENTRE_CONTAS;
   if (cat.includes("invest") || RE_INVESTIMENTO.test(descricao.toLowerCase())) {
     return MOVIMENTACAO_INVESTIMENTO;
   }
@@ -59,7 +88,6 @@ function categoriaNeutra(tx: Transacao, descricao: string, entrada: boolean, con
   if (nome && partes.length > 1 && nomeNormalizado(partes[partes.length - 1]) === nome) {
     return TRANSFERENCIA_ENTRE_CONTAS;
   }
-  const parte = entrada ? tx.paymentData?.payer : tx.paymentData?.receiver;
   if (!parte) return null;
   const doc = soDigitos(
     typeof parte.documentNumber === "string" ? parte.documentNumber : parte.documentNumber?.value,
@@ -98,6 +126,7 @@ function categoria(catPluggy: string | undefined, descricao: string): string {
     if (tem(cat, "home", "moradia", "aluguel", "luz", "água")) return "Moradia";
   }
   const d = descricao.toLowerCase();
+  if (RE_RECARGA.test(d)) return "Assinaturas";
   if (tem(d, "ifood", "mercado", "supermercado", "restaurante", "padaria")) {
     return "Alimentação";
   }
@@ -183,6 +212,7 @@ async function importar(
   userId: string,
   itemId: string,
   evento: Record<string, unknown>,
+  nomesProprios: Set<string>,
 ): Promise<void> {
   const itemResp = await pluggy("GET", `/items/${encodeURIComponent(itemId)}`);
   const item = itemResp.ok ? await itemResp.json() : {};
@@ -214,7 +244,7 @@ async function importar(
         user_id: userId,
         descricao,
         valor_cents: valor,
-        categoria: categoriaNeutra(tx, descricao, entrada, conta) ??
+        categoria: categoriaNeutra(tx, descricao, entrada, conta, nomesProprios) ??
           categoria(tx.category, descricao),
         forma_pagamento: pix ? "Pix" : credito ? `Cartão: ${nomeBanco}` : `Conta: ${nomeBanco}`,
         data: dataLocal(tx.date),
@@ -267,9 +297,17 @@ Deno.serve(async (req) => {
   }
 
   // Dono sem acesso ativo: ignora (o app importa de novo quando a conta voltar).
+  let nomesProprios = new Set<string>();
   try {
     const { data, error } = await admin.auth.admin.getUserById(dono);
     if (error) throw error;
+    const lista = data.user?.user_metadata?.contas_proprias;
+    if (Array.isArray(lista)) {
+      nomesProprios = new Set(
+        lista.filter((n): n is string => typeof n === "string")
+          .map((n) => nomeNormalizado(n)).filter(Boolean),
+      );
+    }
     if (!(await acessoAtivo(dono, data.user?.email))) {
       console.log(JSON.stringify({ evento: evento.event, ignorado: "acesso_inativo" }));
       return ok({ ignorado: true });
@@ -282,7 +320,7 @@ Deno.serve(async (req) => {
 
   // A Pluggy espera resposta rápida: importa em segundo plano.
   EdgeRuntime.waitUntil(
-    importar(dono, itemId, evento).catch((e) =>
+    importar(dono, itemId, evento, nomesProprios).catch((e) =>
       console.warn(JSON.stringify({ erro: "importar", tipo: e?.name }))
     ),
   );

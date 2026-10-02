@@ -6,6 +6,9 @@ import '../../../theme/icones.dart';
 import '../application/lancamentos_providers.dart';
 import '../../cartoes/application/cartoes_providers.dart';
 import '../../cartoes/domain/formas_pagamento.dart';
+import '../../open_finance/application/open_finance_providers.dart'
+    show contasPropriasRepositoryProvider;
+import '../../open_finance/domain/contas_proprias.dart';
 import '../domain/lancamento.dart';
 import '../domain/lancamento_converter.dart';
 import 'lancamento_form_validators.dart';
@@ -105,6 +108,60 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
   }
 
   int get _somaItens => _itens.fold(0, (s, i) => s + (i.valorCents ?? 0));
+
+  bool get _ehTransferenciaPropria =>
+      _categoria == categoriaTransferenciaEntreContas;
+
+  /// Depois de marcar um importado como transferência própria, oferece fazer
+  /// o mesmo com todos os lançamentos (e os próximos) da mesma contraparte.
+  Future<void> _oferecerSempreParaContraparte(Lancamento antes) async {
+    if (antes.ehMovimentacaoNeutra ||
+        !_ehTransferenciaPropria ||
+        !(antes.obs?.startsWith('pluggy_id:') ?? false)) {
+      return;
+    }
+    final nome = contraparteDaDescricao(antes.descricao);
+    if (nome == null || !mounted) return;
+    final sempre = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Fazer sempre?'),
+        content: Text(
+          'Tratar todas as transferências com "$nome" como transferência '
+          'entre suas contas? Vale para as que já vieram do banco e para as '
+          'próximas.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Só esta'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Sempre'),
+          ),
+        ],
+      ),
+    );
+    if (sempre != true || !mounted) return;
+    final mensageiro = ScaffoldMessenger.of(context);
+    try {
+      final alterados =
+          await ref.read(contasPropriasRepositoryProvider).marcar(nome);
+      mensageiro.showSnackBar(SnackBar(
+        content: Text(
+          alterados == 0
+              ? 'Pronto: as próximas com "$nome" já entram como transferência.'
+              : 'Pronto: mais $alterados lançamento(s) com "$nome" viraram '
+                  'transferência entre suas contas.',
+        ),
+      ));
+    } catch (_) {
+      mensageiro.showSnackBar(const SnackBar(
+        content: Text('Não foi possível aplicar às outras transferências.'),
+      ));
+    }
+  }
 
   bool get _temItensValidos => _itens.any((i) => i.descricao.isNotEmpty || i.valorCents != null);
 
@@ -207,6 +264,7 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
           fixoMensal: _fixoMensal,
           serieId: atual.serieId,
         );
+        await _oferecerSempreParaContraparte(atual);
       } else {
         await repo.create(
           descricao: descricao,
@@ -393,22 +451,42 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                       ),
                       const SizedBox(height: 16),
                     ],
-                    DropdownButtonFormField<String>(
-                      icon: const PhosphorIcon(Icones.abrirLista),
-                      initialValue: _categoria,
-                      decoration: const InputDecoration(
-                        labelText: 'Categoria',
-                        prefixIcon: PhosphorIcon(Icones.categoria),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Transferência entre minhas contas'),
+                      subtitle: const Text(
+                        'Não conta como gasto nem como receita',
                       ),
-                      items: [
-                        for (final c in categorias)
-                          DropdownMenuItem(value: c, child: Text(c)),
-                      ],
+                      value: _ehTransferenciaPropria,
                       onChanged: _isSaving
                           ? null
-                          : (value) =>
-                              setState(() => _categoria = value ?? 'Outros'),
+                          : (v) => setState(
+                                () => _categoria = v
+                                    ? categoriaTransferenciaEntreContas
+                                    : 'Outros',
+                              ),
                     ),
+                    if (!_ehTransferenciaPropria) ...[
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        icon: const PhosphorIcon(Icones.abrirLista),
+                        initialValue: _categoria,
+                        decoration: const InputDecoration(
+                          labelText: 'Categoria',
+                          prefixIcon: PhosphorIcon(Icones.categoria),
+                        ),
+                        items: [
+                          // Inclui a categoria atual (ex.: "Compras" de um
+                          // importado), que pode não estar na lista.
+                          for (final c in {...categorias, _categoria})
+                            DropdownMenuItem(value: c, child: Text(c)),
+                        ],
+                        onChanged: _isSaving
+                            ? null
+                            : (value) =>
+                                setState(() => _categoria = value ?? 'Outros'),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     Consumer(
                       builder: (context, ref, child) {

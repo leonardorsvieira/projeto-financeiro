@@ -109,7 +109,9 @@ class PdfReportService {
                 ),
                 pw.SizedBox(width: 8),
                 _buildKpiCard(
-                  rotulo: 'Patrimônio atual',
+                  rotulo: dados.patrimonioReal
+                      ? 'Patrimônio atual'
+                      : 'Saldo no período',
                   valor: fmtBrl.format(dados.patrimonioAtualCents / 100),
                   cor: PdfColors.blue800,
                 ),
@@ -132,7 +134,7 @@ class PdfReportService {
                 'Entradas (Receitas)',
                 'Saídas (Despesas)',
                 'Saldo do Mês',
-                'Patrimônio acumulado'
+                dados.patrimonioReal ? 'Patrimônio' : 'Saldo acumulado',
               ],
               headerStyle: pw.TextStyle(
                 fontWeight: pw.FontWeight.bold,

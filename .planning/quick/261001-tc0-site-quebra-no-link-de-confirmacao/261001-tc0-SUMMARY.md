@@ -23,3 +23,10 @@ Depois do `onException`, o site passou a ficar preso no splash ao abrir `?error=
 - confirmado.html: "Tudo certo! Seu cadastro foi salvo." + voltar ao app e fazer login (pedido do usuário).
 
 298 testes ok.
+
+## Rodada 3 (mesmo dia): link abria o app com a sessão do navegador
+
+Um cadastro feito com a versão antiga em cache do site gerou link de retorno para a raiz (`?code=...`, PKCE). No Chrome do dono, o app abriu com a sessão JÁ salva naquele navegador (conta do dono). Logs: a conta nova confirmou (00:32Z) e nunca teve login (`last_sign_in_at` nulo); nenhum dado foi exposto a outra pessoa. Mesmo assim, link de e-mail não pode abrir o app.
+
+- `app/web/retorno-email.js` (carregado antes do `flutter_bootstrap.js`; CSP proíbe inline): se a URL tiver `code`, `access_token`, `error` ou `error_code`, faz `location.replace('confirmado.html[#error_code=...]')`.
+- Testado localmente: `?code=` → "Tudo certo!"; `otp_expired` → "Este link não vale mais."; acesso normal → app abre.

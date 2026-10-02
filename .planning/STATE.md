@@ -118,6 +118,7 @@ Items acknowledged and carried forward from previous milestone close:
 | 261001-ktp | Assinatura de produção + APK comercial 1.1.0 (64 bits) | 2026-10-01 | [SUMMARY](quick/261001-ktp-assinatura-de-producao-do-apk/261001-ktp-SUMMARY.md) |
 | 261001-l9o | LGPD: política, termos, aceite e exclusão de conta | 2026-10-01 | [SUMMARY](quick/261001-l9o-lgpd-privacidade-termos-e-exclusao-de-co/261001-l9o-SUMMARY.md) |
 | 261001-rmt | Página de e-mail confirmado (Site URL) | 2026-10-01 | [SUMMARY](quick/261001-rmt-pagina-de-confirmacao-de-email/261001-rmt-SUMMARY.md) |
+| 261001-tc0 | Site não quebra mais com o retorno do link de confirmação | 2026-10-01 | [SUMMARY](quick/261001-tc0-site-quebra-no-link-de-confirmacao/261001-tc0-SUMMARY.md) |
 
 ## Session Continuity
 

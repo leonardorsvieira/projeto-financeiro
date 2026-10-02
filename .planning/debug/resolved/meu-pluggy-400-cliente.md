@@ -1,5 +1,5 @@
 ---
-status: awaiting-verification
+status: resolved
 trigger: "Botão \"Conectar meu.pluggy.ai\" em outro aparelho (conta de cliente) mostra \"Erro ao abrir autorização: Exception: Não foi possível iniciar a conexão com o meu.pluggy.ai (Status 400)\""
 created: 2026-10-02
 updated: 2026-10-02
@@ -18,7 +18,7 @@ updated: 2026-10-02
 ## Current Focus
 
 - hypothesis: a Pluggy recusa o `POST /items` do conector 200 para esta conta; o motivo está no corpo do erro, que a função não registra.
-- next_action: instalar o APK 1.2.1 no aparelho do cliente, conectar o Meu Pluggy pelo widget, voltar ao app e sincronizar; conferir no log `item_registrado` do `pluggy-webhook` e a linha em `pluggy_items`.
+- next_action: nenhuma — resolvido e confirmado no aparelho do cliente.
 
 ## Evidence
 
@@ -38,5 +38,5 @@ updated: 2026-10-02
 
 - root_cause: a conta Pluggy está no plano grátis, que só cria items pelo widget Connect; o botão "Conectar meu.pluggy.ai" criava o item por `POST /items` (400 CREATE_ITEMS_API_FREE_DISABLED). Agravante: a Pluggy não lista items (`GET /items` 401), então items criados pelo widget nunca eram vinculados ao cliente.
 - fix: app abre o widget com connect token no conector 200 (`urlConexaoMeuPluggy`), sem item provisório local; `pluggy-webhook` (v6) registra item sem dono pelo `clientUserId` lido na Pluggy (só o proxy define esse campo, sempre com o uid do JWT); `pluggy` registra a mensagem de erro da Pluggy (v12) e perdeu a listagem inútil (versão do repo ainda não publicada — o classificador bloqueou; o usuário publica). App 1.2.1+6.
-- verification: `flutter analyze` sem avisos novos; `flutter test` 359 passando; webhook v6 ignora item desconhecido (200 `{"ignorado":true}`). Falta o teste real no aparelho do cliente.
+- verification: `flutter analyze` sem avisos novos; `flutter test` 359 passando; webhook v6 ignora item desconhecido (200 `{"ignorado":true}`). Confirmado em 2026-10-02 17:21–17:39Z: o usuário conectou pelo widget no aparelho do cliente e o banco apareceu; logs do `pluggy-webhook` com `item_registrado: true` seguidos de importação (28, 13 e 30 transações) e 3 items novos de clientes em `pluggy_items`.
 - files_changed: app/lib/features/open_finance/data/pluggy_open_finance_service.dart, app/lib/features/open_finance/presentation/open_finance_screen.dart, app/lib/features/open_finance/presentation/widgets/conectar_banco_dialog.dart, app/test/features/open_finance/pluggy_open_finance_service_test.dart, app/pubspec.yaml, supabase/functions/pluggy/index.ts, supabase/functions/pluggy-webhook/index.ts, CLAUDE.md

@@ -331,6 +331,9 @@ class PluggyOpenFinanceService {
     if (resp.statusCode == 429 && resp.body.contains('limite_diario')) {
       throw Exception('Limite diário do Open Finance atingido. Tente amanhã.');
     }
+    if (ehAcessoInativo(resp.statusCode, resp.body)) {
+      throw Exception(mensagemAcessoInativo);
+    }
     return resp;
   }
 

@@ -3,7 +3,9 @@
 // confiável: usamos só o itemId/accountId, conferimos o dono em pluggy_items e
 // buscamos as transações na própria Pluggy. Um aviso forjado, no máximo,
 // sincroniza dados legítimos do próprio dono do item.
-import { admin, consumirCota } from "../_shared/seguranca.ts";
+// Como grava com service role (ignora o RLS), confere explicitamente se o dono
+// tem acesso ativo (assinatura) antes da cota e da importação.
+import { acessoAtivo, admin, consumirCota } from "../_shared/seguranca.ts";
 import { pluggy } from "../_shared/pluggy.ts";
 
 const EVENTOS = new Set(["transactions/created", "item/updated", "item/created"]);
@@ -225,6 +227,19 @@ Deno.serve(async (req) => {
     .eq("item_id", itemId)
     .maybeSingle();
   if (!dono) return ok({ ignorado: true });
+
+  // Dono sem acesso ativo: ignora (o app importa de novo quando a conta voltar).
+  try {
+    const { data, error } = await admin.auth.admin.getUserById(dono.user_id);
+    if (error) throw error;
+    if (!(await acessoAtivo(dono.user_id, data.user?.email))) {
+      console.log(JSON.stringify({ evento: evento.event, ignorado: "acesso_inativo" }));
+      return ok({ ignorado: true });
+    }
+  } catch {
+    console.warn(JSON.stringify({ erro: "verificar_acesso" }));
+    return ok({ ignorado: true });
+  }
   if (!(await consumirCota(dono.user_id, "webhook", 300))) return ok({ ignorado: true });
 
   // A Pluggy espera resposta rápida: importa em segundo plano.

@@ -2,6 +2,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'env.dart';
 
+/// Mensagem para conta sem assinatura ativa (403 `acesso_inativo` das funções).
+const mensagemAcessoInativo =
+    'Seu acesso não está ativo. Para continuar usando o Meu Bolso, fale com o vendedor.';
+
+/// A Edge Function recusou a chamada porque a conta não tem acesso ativo.
+/// Confere o CORPO: o 403 de `rota_nao_permitida` é outro erro.
+bool ehAcessoInativo(int status, String corpo) =>
+    status == 403 && corpo.contains('acesso_inativo');
+
 /// Endereço e credenciais para chamar uma Supabase Edge Function.
 ///
 /// Chaves de serviços externos (Gemini, Pluggy) ficam só nas Edge Functions:

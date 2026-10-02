@@ -74,8 +74,47 @@ export async function consumirCota(
   return data === true;
 }
 
+/** Data de hoje no fuso de Brasília, no formato aaaa-MM-dd. */
+export function hojeEmBrasilia(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" })
+    .format(new Date());
+}
+
 /**
- * Preâmbulo comum: CORS preflight, método, autenticação e cota.
+ * A conta tem acesso ativo? Administrador, ou e-mail em `acessos` sem prazo ou
+ * com validade em dia. Mesma regra de public.acesso_ativo() (migration
+ * 20261001220000_controle_de_acesso.sql) — mude as duas juntas. Usa o cliente
+ * service role (ignora o RLS), então quem chama decide o que fazer com o erro.
+ */
+export async function acessoAtivo(
+  userId: string,
+  email: string | null | undefined,
+): Promise<boolean> {
+  const { data: adm, error: erroAdm } = await admin
+    .from("administradores")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (erroAdm) throw erroAdm;
+  if (adm) return true;
+
+  const emailNormalizado = (email ?? "").trim().toLowerCase();
+  if (!emailNormalizado) return false;
+
+  const { data: linha, error } = await admin
+    .from("acessos")
+    .select("valido_ate")
+    .eq("email", emailNormalizado)
+    .maybeSingle();
+  if (error) throw error;
+  if (!linha) return false;
+  if (linha.valido_ate === null) return true;
+  // 'aaaa-MM-dd' compara certo como texto.
+  return String(linha.valido_ate) >= hojeEmBrasilia();
+}
+
+/**
+ * Preâmbulo comum: CORS preflight, método, autenticação, acesso ativo e cota.
  * Devolve o usuário ou a Response de erro a ser retornada.
  */
 export async function preambulo(
@@ -91,6 +130,18 @@ export async function preambulo(
   }
   const usuario = await usuarioAutenticado(req);
   if (!usuario) return resposta(req, 401, { erro: "nao_autenticado" });
+  // Conta sem acesso ativo não gasta cota nem chega ao Gemini/Pluggy.
+  let ativo: boolean;
+  try {
+    ativo = await acessoAtivo(usuario.id, usuario.email);
+  } catch (e) {
+    console.error(JSON.stringify({
+      etapa: "verificar_acesso",
+      erro: (e as { message?: string } | null)?.message ?? String(e),
+    }));
+    return resposta(req, 503, { erro: "verificacao_acesso_falhou" });
+  }
+  if (!ativo) return resposta(req, 403, { erro: "acesso_inativo" });
   if (!(await consumirCota(usuario.id, recurso, limitePadrao))) {
     return resposta(req, 429, { erro: "limite_diario" });
   }

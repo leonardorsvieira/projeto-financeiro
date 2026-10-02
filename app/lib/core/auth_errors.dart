@@ -3,6 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 String friendlyAuthError(Object error) {
   if (error is AuthException) {
     final message = error.message.toLowerCase();
+    // Recusa do hook "Before User Created" (e-mail sem acesso liberado).
+    if (message.contains('não tem acesso')) {
+      return 'Este e-mail ainda não tem acesso ao Meu Bolso. Fale com o vendedor.';
+    }
     if (message.contains('invalid login credentials')) {
       return 'E-mail ou senha incorretos.';
     }

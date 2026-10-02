@@ -96,6 +96,9 @@ class GeminiDitadoRepository implements DitadoRepository {
   /// Erros da própria Edge Function: não adianta repetir nem trocar de modelo.
   static void _falhaDefinitiva(http.Response resposta) {
     final corpo = resposta.body;
+    if (ehAcessoInativo(resposta.statusCode, corpo)) {
+      throw const DitadoException(mensagemAcessoInativo);
+    }
     if (resposta.statusCode == 401) {
       throw const DitadoException(
         'Sessão expirada ou e-mail não confirmado. Entre de novo.',

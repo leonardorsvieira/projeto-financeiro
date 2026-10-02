@@ -63,6 +63,32 @@ void main() {
       expect(chamadas, 1);
     });
 
+    test('conta sem acesso ativo vira mensagem clara, sem retry nem troca de modelo',
+        () async {
+      var chamadas = 0;
+      final cliente = MockClient((_) async {
+        chamadas++;
+        return http.Response('{"erro":"acesso_inativo"}', 403);
+      });
+      final repo = GeminiDitadoRepository(
+        cliente: cliente,
+        funcao: funcaoTeste(),
+        esperasRetry: const [],
+      );
+
+      await expectLater(
+        repo.reconhecer(audio),
+        throwsA(
+          isA<DitadoException>().having(
+            (e) => e.mensagem,
+            'mensagem',
+            mensagemAcessoInativo,
+          ),
+        ),
+      );
+      expect(chamadas, 1);
+    });
+
     test('faz POST para generateContent e devolve rascunho', () async {
       Uri? uriEnviada;
       String? corpoEnviado;

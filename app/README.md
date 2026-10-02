@@ -40,6 +40,40 @@ Opcionais: `OWNER_USER_ID` (uuid que pode reivindicar items Pluggy criados antes
 do proxy), `ALLOWED_ORIGINS` (origens web extras para CORS),
 `LIMITE_DIARIO_DITADO` (padrão 150) e `LIMITE_DIARIO_PLUGGY` (padrão 3000).
 
+## Controle de acesso (assinatura)
+
+O Meu Bolso é liberado à mão, pelo e-mail. Quem está na tabela `acessos` com a
+validade em dia (ou sem prazo, `valido_ate` nulo) usa o app. Quem está em
+`administradores` passa direto e gerencia a lista no menu **Clientes e
+acessos** (adicionar, editar, renovar +30 dias, bloquear e remover).
+
+Com o acesso vencido a conta só consulta e exporta os próprios dados e pode
+excluir a conta; não grava nada. Quem garante isso é o servidor (policies
+`RESTRICTIVE` em `lancamentos`, `metas` e `investimentos` + checagem nas Edge
+Functions `ditado`, `pluggy` e `pluggy-webhook`). A tela "Seu acesso não está
+ativo" do app é só a parte visível.
+
+Para tornar alguém administrador (SQL, no Dashboard do Supabase; nunca grave
+e-mails reais no repositório):
+
+```sql
+insert into public.administradores (user_id)
+select id from auth.users where email = '<e-mail-do-dono>';
+```
+
+**Hook de cadastro (opcional):** barra já no cadastro e-mails sem acesso. No
+Dashboard, Authentication → Hooks → Before User Created → tipo Postgres →
+`public.hook_antes_de_criar_usuario`. Sem o hook tudo funciona igual, só que a
+pessoa consegue criar a conta e cai na tela sem acesso.
+
+**Ordem de implantação:**
+
+1. Aplicar a migration `20261001220000_controle_de_acesso.sql`.
+2. Na mesma sessão, fazer o seed por SQL (o dono em `administradores` e as
+   contas que já existem em `acessos`); senão todo mundo perde a escrita.
+3. Só então publicar `ditado`, `pluggy` e `pluggy-webhook` (todas importam
+   `_shared/seguranca.ts`; publicar antes da migration devolve 503 a todos).
+
 ## Como rodar
 
 ```bash

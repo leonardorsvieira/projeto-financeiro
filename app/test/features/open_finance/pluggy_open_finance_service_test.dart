@@ -432,5 +432,37 @@ void main() {
         throwsA(predicate((e) => e.toString().contains('Limite diário'))),
       );
     });
+
+    test('conta sem acesso ativo vira mensagem clara', () async {
+      final service = _service(_proxy(
+        (_, _, _) async => http.Response('{"erro":"acesso_inativo"}', 403),
+      ));
+
+      await expectLater(
+        service.gerarConnectToken(),
+        throwsA(
+          predicate((e) => e.toString().contains('Seu acesso não está ativo')),
+        ),
+      );
+    });
+
+    test('403 de rota não permitida não vira mensagem de acesso', () async {
+      final service = _service(_proxy(
+        (_, _, _) async => http.Response('{"erro":"rota_nao_permitida"}', 403),
+      ));
+
+      await expectLater(
+        service.gerarConnectToken(),
+        throwsA(
+          predicate(
+            (e) =>
+                !e.toString().contains('Seu acesso não está ativo') &&
+                e.toString().contains(
+                  'Falha ao gerar Connect Token na Pluggy (Status 403).',
+                ),
+          ),
+        ),
+      );
+    });
   });
 }

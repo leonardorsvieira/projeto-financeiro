@@ -29,6 +29,13 @@ final statusAcessoProvider = FutureProvider<StatusAcesso?>((ref) async {
   return ref.watch(acessoRepositoryProvider).status();
 }, retry: (_, _) => null);
 
+/// Lista de acessos para a tela do administrador. Sem retry automático: a
+/// tela mostra o erro e oferece "Tentar de novo".
+final acessosAdminProvider = FutureProvider<List<Acesso>>(
+  (ref) => ref.watch(acessoRepositoryProvider).listar(),
+  retry: (_, _) => null,
+);
+
 enum DecisaoAcesso { aguardando, liberado, bloqueado }
 
 /// Decide o portão a partir do estado do [statusAcessoProvider].

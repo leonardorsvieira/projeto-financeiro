@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../theme/icones.dart';
+import '../../acesso/application/acesso_providers.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/presentation/lancamentos_list_screen.dart';
@@ -51,6 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // Mantém a sincronização automática do Open Finance ativa enquanto o
     // usuário está logado (a HomeScreen só existe autenticada).
     ref.watch(sincronizacaoAutomaticaProvider);
+    final ehAdmin = ref.watch(statusAcessoProvider).value?.admin ?? false;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -84,7 +86,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             tooltip: 'Opções',
             icon: const PhosphorIcon(Icones.menu),
             onSelected: (value) {
-              if (value == 'historico') {
+              if (value == 'admin_acessos') {
+                context.push(AppRoutes.adminAcessos);
+              } else if (value == 'historico') {
                 context.push(AppRoutes.historicoMeses);
               } else if (value == 'relatorios') {
                 context.push(AppRoutes.relatorios);
@@ -111,6 +115,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               }
             },
             itemBuilder: (context) => [
+              if (ehAdmin) ...const [
+                PopupMenuItem(
+                  value: 'admin_acessos',
+                  child: ListTile(
+                    leading: PhosphorIcon(Icones.chave),
+                    title: Text('Clientes e acessos'),
+                    dense: true,
+                  ),
+                ),
+                PopupMenuDivider(),
+              ],
               const PopupMenuItem(
                 value: 'historico',
                 child: ListTile(

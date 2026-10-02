@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/acesso/application/acesso_providers.dart';
 import '../features/acesso/domain/acesso.dart';
+import '../features/acesso/presentation/admin_acessos_screen.dart';
 import '../features/acesso/presentation/sem_acesso_screen.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/application/aviso_login.dart';
@@ -125,6 +126,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const SemAcessoScreen(),
       ),
       GoRoute(
+        path: AppRoutes.adminAcessos,
+        builder: (_, _) => const AdminAcessosScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.home,
         builder: (_, _) => const HomeScreen(),
       ),
@@ -227,6 +232,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             if (entrada.contains(location) || location == AppRoutes.semAcesso) {
               return AppRoutes.home;
             }
+            // A lista de acessos é só do administrador (o RLS já impede a
+            // escrita de quem não é; isto evita abrir uma tela vazia).
+            if (location == AppRoutes.adminAcessos &&
+                !(statusAcesso.value?.admin ?? false)) {
+              return AppRoutes.home;
+            }
             return null;
         }
       } else if (status == AuthStatus.unauthenticated) {
@@ -234,6 +245,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             location == AppRoutes.splash ||
             location == AppRoutes.aceiteTermos ||
             location == AppRoutes.semAcesso ||
+            location == AppRoutes.adminAcessos ||
             location == AppRoutes.privacidadeEDados) {
           return AppRoutes.login;
         }

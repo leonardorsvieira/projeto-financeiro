@@ -1,9 +1,32 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart'
     hide AuthState;
 
 import '../../privacidade/domain/aceite_termos.dart';
 import '../domain/auth_state.dart';
+
+/// Página (GitHub Pages) para onde o link de confirmação de cadastro leva.
+/// Precisa estar em Authentication → URL Configuration → Redirect URLs.
+const urlConfirmacaoEmail =
+    'https://leonardorsvieira.github.io/projeto-financeiro/confirmado.html';
+
+/// Troca erros do stream de autenticação pelo estado real da sessão.
+///
+/// Na web, o supabase_flutter lê o endereço ao iniciar; com um retorno de
+/// verificação inválido (`?error=...&error_code=otp_expired`) ele emite um
+/// ERRO em vez do estado inicial, o app ficava sem estado e o roteador preso
+/// no splash. Com sessão a pessoa continua logada; sem, vai para o login.
+Stream<AuthState> tolerarErrosDeSessao(
+  Stream<AuthState> origem,
+  AuthState Function() estadoAtual,
+) {
+  return origem.transform(
+    StreamTransformer<AuthState, AuthState>.fromHandlers(
+      handleError: (_, _, sink) => sink.add(estadoAtual()),
+    ),
+  );
+}
 
 abstract class AuthRepository {
   Stream<AuthState> get stateStream;
@@ -34,17 +57,17 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Stream<AuthState> get stateStream {
-    return _auth.onAuthStateChange.map((data) {
-      return AuthState(
-        data.session != null
-            ? AuthStatus.authenticated
-            : AuthStatus.unauthenticated,
-        email: data.session?.user.email,
-        termosVersao: data.session?.user.userMetadata?['termos_versao']
-            ?.toString(),
-      );
-    });
+    return tolerarErrosDeSessao(
+      _auth.onAuthStateChange.map((data) => _estadoDe(data.session)),
+      () => _estadoDe(_auth.currentSession),
+    );
   }
+
+  static AuthState _estadoDe(Session? sessao) => AuthState(
+    sessao != null ? AuthStatus.authenticated : AuthStatus.unauthenticated,
+    email: sessao?.user.email,
+    termosVersao: sessao?.user.userMetadata?['termos_versao']?.toString(),
+  );
 
   @override
   String? get currentEmail => _auth.currentSession?.user.email;
@@ -58,8 +81,10 @@ class SupabaseAuthRepository implements AuthRepository {
     final resposta = await _auth.signUp(
       email: email,
       password: password,
-      // Na web, o link de confirmação volta para este mesmo site.
-      emailRedirectTo: kIsWeb ? Uri.base.removeFragment().toString() : null,
+      // Celular e web: o link do e-mail termina na página "Cadastro
+      // confirmado" (fora do app), nunca no app web, que não deve receber
+      // tokens nem erros de verificação pelo endereço.
+      emailRedirectTo: urlConfirmacaoEmail,
       data: metadados,
     );
     return resposta.session == null;

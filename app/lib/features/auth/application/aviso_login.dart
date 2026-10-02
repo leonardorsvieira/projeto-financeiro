@@ -7,6 +7,8 @@ class AvisoLogin {
 
   String? _mensagem;
 
+  void definir(String mensagem) => _mensagem = mensagem;
+
   String? consumir() {
     final mensagem = _mensagem;
     _mensagem = null;

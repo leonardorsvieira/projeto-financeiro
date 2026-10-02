@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/application/auth_controller.dart';
+import '../features/auth/application/aviso_login.dart';
 import '../features/auth/domain/auth_state.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/signup_screen.dart';
@@ -42,6 +43,11 @@ class _AuthListenable extends ChangeNotifier {
   }
 }
 
+/// Aviso no login quando o link do e-mail já foi usado ou expirou.
+const avisoLinkInvalido =
+    'Este link de confirmação já foi usado ou expirou. Se você já confirmou '
+    'o e-mail, é só entrar.';
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final listenable = _AuthListenable(ref);
   ref.onDispose(listenable.dispose);
@@ -49,6 +55,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
     refreshListenable: listenable,
+    // Endereço desconhecido nunca quebra o app. Na web isso acontece quando o
+    // link de confirmação do Supabase volta com o resultado no fragmento
+    // (`#access_token=...` ou `#error=...&error_code=otp_expired`), que o
+    // roteador lê como rota. Vai para o splash, que leva ao login ou à home.
+    onException: (_, state, router) {
+      final endereco = state.uri.toString();
+      if (endereco.contains('error_code=') || endereco.contains('error=')) {
+        ref.read(avisoLoginProvider).definir(avisoLinkInvalido);
+      }
+      router.go(AppRoutes.splash);
+    },
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
       GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),

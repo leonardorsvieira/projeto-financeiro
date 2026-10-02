@@ -143,3 +143,10 @@ Nenhum além do mapeado em `<threat_model>` (T-uh5-01..11).
 - Push e APK feitos: o app libera a UX quando a RPC não existe, então funciona igual até a ativação.
 
 Pendente (usuário): rodar o script no SQL Editor; depois publicar `ditado`, `pluggy`, `pluggy-webhook`; opcional ativar o hook Before User Created.
+
+## Ativação (2026-10-02)
+
+- Usuário rodou `ativar_controle_de_acesso.local.sql`: tabelas e travas criadas, 1 administrador, 3 contas liberadas sem prazo, versão 20261001220000 registrada.
+- Verificado no banco (simulando JWT, só leitura): sem acesso → `acesso_ativo=false`; dono → admin; conta antiga → ativa. Hook recusa e-mail não liberado (403) e aceita liberado (case-insensitive).
+- Publicadas: `ditado` v4 e `pluggy` v11 (JWT obrigatório), respondem 401 sem login.
+- `pluggy-webhook` (sem JWT): deploy BLOQUEADO pelo classificador do auto mode — pendente do usuário: `supabase functions deploy pluggy-webhook --no-verify-jwt --project-ref tkfhthotspehsgvmpsjm`. Até lá a versão antiga importa transações também para contas vencidas (só leitura do banco do próprio dono; impacto baixo).

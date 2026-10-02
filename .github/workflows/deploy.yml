@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     paths: [app/**]
+  # Republicar sem commit novo (ex.: falha transitória do GitHub Pages; o
+  # "re-run" do mesmo run duplica o artefato github-pages e falha de novo).
+  workflow_dispatch:
 
 permissions:
   contents: read

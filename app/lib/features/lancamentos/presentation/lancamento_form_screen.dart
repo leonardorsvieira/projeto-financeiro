@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../theme/icones.dart';
 import '../application/lancamentos_providers.dart';
 import '../../cartoes/application/cartoes_providers.dart';
-import '../../cartoes/data/cartoes_repository.dart';
+import '../../cartoes/domain/formas_pagamento.dart';
 import '../domain/lancamento.dart';
 import '../domain/lancamento_converter.dart';
 import 'lancamento_form_validators.dart';
@@ -412,13 +412,12 @@ class _LancamentoFormScreenState extends ConsumerState<LancamentoFormScreen> {
                     const SizedBox(height: 16),
                     Consumer(
                       builder: (context, ref, child) {
-                        final cartoesState = ref.watch(cartoesControllerProvider);
-                        final cartoes = cartoesState.value ?? CartoesRepository.cartoesPadrao;
-                        final opcoesForma = <String>[
-                          'Pix',
-                          for (final c in cartoes) 'Cartão: ${c.nome}',
-                          'Cartão de Crédito',
-                        ];
+                        // Inclui a forma atual (ex.: "Conta: Itaú" de um
+                        // importado) para editar não trocá-la por Pix.
+                        final opcoesForma = formasComAtual(
+                          ref.watch(formasPagamentoProvider),
+                          _formaPagamento,
+                        );
 
                         final formaValida = opcoesForma.contains(_formaPagamento)
                             ? _formaPagamento

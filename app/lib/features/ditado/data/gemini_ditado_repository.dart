@@ -16,7 +16,9 @@ class GeminiDitadoRepository implements DitadoRepository {
     EdgeFunction? funcao,
     String? modelo,
     List<Duration>? esperasRetry,
-  })  : _cliente = cliente ?? http.Client(),
+    List<String> Function()? formasPagamento,
+  })  : _lerFormasPagamento = formasPagamento,
+        _cliente = cliente ?? http.Client(),
         _funcao = funcao ?? EdgeFunction.supabase('ditado'),
         _modelo = modelo ?? GeminiPrompt.modelo,
         _esperasRetry =
@@ -33,6 +35,10 @@ class GeminiDitadoRepository implements DitadoRepository {
   final EdgeFunction _funcao;
   final String _modelo;
   final List<Duration> _esperasRetry;
+
+  /// Formas de pagamento do usuário (dependem dos cartões dele), lidas na hora
+  /// de cada pedido.
+  final List<String> Function()? _lerFormasPagamento;
 
   static const List<String> _modelosCandidatos = [
     'gemini-2.5-flash',
@@ -116,7 +122,9 @@ class GeminiDitadoRepository implements DitadoRepository {
 
   @override
   Future<RascunhoLancamento> reconhecer(LancamentoAudio audio) async {
-    final resposta = await _post(GeminiPrompt.payloadReconhecer(audio));
+    final resposta = await _post(
+      GeminiPrompt.payloadReconhecer(audio, formas: _lerFormasPagamento?.call()),
+    );
     final texto = GeminiPrompt.textoResposta(resposta);
     if (texto == null) {
       throw const DitadoException('A IA retornou uma resposta vazia.');
@@ -137,6 +145,7 @@ class GeminiDitadoRepository implements DitadoRepository {
         audio: audio,
         texto: texto,
         rascunhoAtual: rascunhoAtual,
+        formas: _lerFormasPagamento?.call(),
       ),
     );
     final corpo = GeminiPrompt.textoResposta(resposta);

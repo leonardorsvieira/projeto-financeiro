@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../cartoes/application/cartoes_providers.dart';
 import '../data/audio_recorder_service.dart';
 import '../data/gemini_ditado_repository.dart';
 import '../domain/ditado_repository.dart';
@@ -36,8 +37,11 @@ class DitadoErro extends DitadoState {
   final String mensagem;
 }
 
-final ditadoRepositoryProvider =
-    Provider<DitadoRepository>((ref) => GeminiDitadoRepository());
+final ditadoRepositoryProvider = Provider<DitadoRepository>(
+  (ref) => GeminiDitadoRepository(
+    formasPagamento: () => ref.read(formasPagamentoProvider),
+  ),
+);
 
 final audioRecorderServiceProvider =
     Provider<AudioRecorderService>((ref) => RecordAudioRecorderService());

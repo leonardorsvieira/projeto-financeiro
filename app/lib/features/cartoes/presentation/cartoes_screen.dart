@@ -33,202 +33,295 @@ class CartoesScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: cartoesState.when(
-        data: (cartoes) {
-          if (cartoes.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const PhosphorIcon(Icones.semCartao,
-                        size: 64, color: Colors.grey),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Nenhum cartão cadastrado.',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    ElevatedButton.icon(
-                      onPressed: () => _abrirDialogoFormulario(context, ref, null),
-                      icon: const PhosphorIcon(Icones.adicionar),
-                      label: const Text('Cadastrar cartão'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: cartoes.length,
-            itemBuilder: (context, index) {
-              final c = cartoes[index];
-              Color cardColor;
-              try {
-                cardColor = Color(int.parse(c.corHex.replaceFirst('#', '0xFF')));
-              } catch (_) {
-                cardColor = theme.colorScheme.primary;
-              }
-
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: LinearGradient(
-                      colors: [cardColor.withValues(alpha: 0.9), cardColor],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const PhosphorIcon(Icones.cartao, color: Colors.white),
-                              const SizedBox(width: 8),
-                              Text(
-                                c.nome,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          PopupMenuButton<String>(
-                            icon: const PhosphorIcon(Icones.menu, color: Colors.white),
-                            onSelected: (val) {
-                              if (val == 'editar') {
-                                _abrirDialogoFormulario(context, ref, c);
-                              } else if (val == 'excluir') {
-                                ref
-                                    .read(cartoesControllerProvider.notifier)
-                                    .excluirCartao(c.id);
-                              }
-                            },
-                            itemBuilder: (context) => [
-                              const PopupMenuItem(
-                                value: 'editar',
-                                child: Text('Editar'),
-                              ),
-                              const PopupMenuItem(
-                                value: 'excluir',
-                                child: Text('Excluir'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Fechamento',
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 12),
-                                ),
-                                Text(
-                                  'Dia ${c.diaFechamento}',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Vencimento',
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 12),
-                                ),
-                                Text(
-                                  'Dia ${c.diaVencimento}',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (c.validadeMMYY != null)
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Validade',
-                                    style: TextStyle(
-                                        color: Colors.white70, fontSize: 12),
-                                  ),
-                                  Text(
-                                    c.validadeMMYY!,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                      if (c.limiteCents != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Limite: ${formatoBRL(c.limiteCents!)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Erro: $err')),
+      body: Column(
+        children: [
+          const _SugestoesCartoes(),
+          Expanded(child: _lista(context, ref, theme, cartoesState)),
+        ],
       ),
     );
   }
 
+  Widget _lista(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AsyncValue<List<CartaoCredito>> cartoesState,
+  ) {
+    return cartoesState.when(
+      data: (cartoes) {
+        if (cartoes.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const PhosphorIcon(
+                    Icones.semCartao,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Nenhum cartão cadastrado.',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    onPressed: () =>
+                        _abrirDialogoFormulario(context, ref, null),
+                    icon: const PhosphorIcon(Icones.adicionar),
+                    label: const Text('Cadastrar cartão'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: cartoes.length,
+          itemBuilder: (context, index) {
+            final c = cartoes[index];
+            Color cardColor;
+            try {
+              cardColor = Color(int.parse(c.corHex.replaceFirst('#', '0xFF')));
+            } catch (_) {
+              cardColor = theme.colorScheme.primary;
+            }
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    colors: [cardColor.withValues(alpha: 0.9), cardColor],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const PhosphorIcon(
+                              Icones.cartao,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              c.nome,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        PopupMenuButton<String>(
+                          icon: const PhosphorIcon(
+                            Icones.menu,
+                            color: Colors.white,
+                          ),
+                          onSelected: (val) {
+                            if (val == 'editar') {
+                              _abrirDialogoFormulario(context, ref, c);
+                            } else if (val == 'excluir') {
+                              final mensageiro = ScaffoldMessenger.of(context);
+                              ref
+                                  .read(cartoesControllerProvider.notifier)
+                                  .excluirCartao(c.id)
+                                  .catchError((_) {
+                                    mensageiro.showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Não foi possível excluir o cartão.',
+                                        ),
+                                      ),
+                                    );
+                                  });
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'editar',
+                              child: Text('Editar'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'excluir',
+                              child: Text('Excluir'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Fechamento',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                'Dia ${c.diaFechamento}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Vencimento',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                'Dia ${c.diaVencimento}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (c.validadeMMYY != null)
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Validade',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  c.validadeMMYY!,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (c.limiteCents != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Limite: ${formatoBRL(c.limiteCents!)}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, _) =>
+          const Center(child: Text('Não foi possível carregar os cartões.')),
+    );
+  }
+
   void _abrirDialogoFormulario(
-      BuildContext context, WidgetRef ref, CartaoCredito? cartao) {
-    showDialog(
-      context: context,
-      builder: (context) => _FormularioCartaoDialog(cartao: cartao),
+    BuildContext context,
+    WidgetRef ref,
+    CartaoCredito? cartao,
+  ) {
+    abrirFormularioCartao(context, cartao: cartao);
+  }
+}
+
+/// Cartões que vieram do banco e ainda não foram cadastrados: tocar abre o
+/// formulário com o nome preenchido.
+class _SugestoesCartoes extends ConsumerWidget {
+  const _SugestoesCartoes();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sugestoes = ref.watch(sugestoesCartoesProvider);
+    if (sugestoes.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Encontrados no seu banco — toque para cadastrar:'),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final nome in sugestoes)
+                ActionChip(
+                  avatar: const PhosphorIcon(Icones.adicionar, size: 16),
+                  label: Text(nome),
+                  onPressed: () =>
+                      abrirFormularioCartao(context, nomeSugerido: nome),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
+/// Formulário de novo cartão (ou edição de [cartao]). Devolve true se salvou.
+Future<bool?> abrirFormularioCartao(
+  BuildContext context, {
+  CartaoCredito? cartao,
+  String? nomeSugerido,
+}) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) =>
+        _FormularioCartaoDialog(cartao: cartao, nomeSugerido: nomeSugerido),
+  );
+}
+
 class _FormularioCartaoDialog extends ConsumerStatefulWidget {
-  const _FormularioCartaoDialog({this.cartao});
+  const _FormularioCartaoDialog({this.cartao, this.nomeSugerido});
 
   final CartaoCredito? cartao;
+  final String? nomeSugerido;
 
   @override
   ConsumerState<_FormularioCartaoDialog> createState() =>
@@ -244,21 +337,29 @@ class __FormularioCartaoDialogState
   late final TextEditingController _validadeCtrl;
   late final TextEditingController _limiteCtrl;
   String _corHex = '#8A05BE';
+  bool _salvando = false;
 
   @override
   void initState() {
     super.initState();
-    _nomeCtrl = TextEditingController(text: widget.cartao?.nome ?? '');
+    _nomeCtrl = TextEditingController(
+      text: widget.cartao?.nome ?? widget.nomeSugerido ?? '',
+    );
+    // Sem dias padrão: cada cartão fecha e vence num dia diferente.
     _fechamentoCtrl = TextEditingController(
-        text: widget.cartao?.diaFechamento.toString() ?? '5');
+      text: widget.cartao?.diaFechamento.toString() ?? '',
+    );
     _vencimentoCtrl = TextEditingController(
-        text: widget.cartao?.diaVencimento.toString() ?? '12');
-    _validadeCtrl =
-        TextEditingController(text: widget.cartao?.validadeMMYY ?? '');
+      text: widget.cartao?.diaVencimento.toString() ?? '',
+    );
+    _validadeCtrl = TextEditingController(
+      text: widget.cartao?.validadeMMYY ?? '',
+    );
     _limiteCtrl = TextEditingController(
-        text: widget.cartao?.limiteCents != null
-            ? (widget.cartao!.limiteCents! / 100).toStringAsFixed(2)
-            : '');
+      text: widget.cartao?.limiteCents != null
+          ? (widget.cartao!.limiteCents! / 100).toStringAsFixed(2)
+          : '',
+    );
     _corHex = widget.cartao?.corHex ?? '#8A05BE';
   }
 
@@ -339,8 +440,9 @@ class __FormularioCartaoDialogState
               const SizedBox(height: 12),
               TextFormField(
                 controller: _limiteCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Limite (opcional)',
                   prefixText: r'R$ ',
@@ -357,35 +459,56 @@ class __FormularioCartaoDialogState
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              final fechamento = int.parse(_fechamentoCtrl.text.trim());
-              final vencimento = int.parse(_vencimentoCtrl.text.trim());
-              final limiteCents = _limiteCtrl.text.trim().isNotEmpty
-                  ? (double.parse(_limiteCtrl.text.trim().replaceAll(',', '.')) *
-                          100)
-                      .round()
-                  : null;
+          onPressed: _salvando
+              ? null
+              : () async {
+                  if (_formKey.currentState!.validate()) {
+                    final fechamento = int.parse(_fechamentoCtrl.text.trim());
+                    final vencimento = int.parse(_vencimentoCtrl.text.trim());
+                    final limiteCents = _limiteCtrl.text.trim().isNotEmpty
+                        ? (double.parse(
+                                    _limiteCtrl.text.trim().replaceAll(
+                                      ',',
+                                      '.',
+                                    ),
+                                  ) *
+                                  100)
+                              .round()
+                        : null;
 
-              final novoCartao = CartaoCredito(
-                id: widget.cartao?.id ??
-                    DateTime.now().millisecondsSinceEpoch.toString(),
-                nome: _nomeCtrl.text.trim(),
-                diaFechamento: fechamento,
-                diaVencimento: vencimento,
-                validadeMMYY: _validadeCtrl.text.trim().isNotEmpty
-                    ? _validadeCtrl.text.trim()
-                    : null,
-                limiteCents: limiteCents,
-                corHex: _corHex,
-              );
+                    final novoCartao = CartaoCredito(
+                      id: widget.cartao?.id ?? '',
+                      nome: _nomeCtrl.text.trim(),
+                      diaFechamento: fechamento,
+                      diaVencimento: vencimento,
+                      validadeMMYY: _validadeCtrl.text.trim().isNotEmpty
+                          ? _validadeCtrl.text.trim()
+                          : null,
+                      limiteCents: limiteCents,
+                      corHex: _corHex,
+                    );
 
-              ref
-                  .read(cartoesControllerProvider.notifier)
-                  .salvarCartao(novoCartao);
-              Navigator.of(context).pop();
-            }
-          },
+                    setState(() => _salvando = true);
+                    final mensageiro = ScaffoldMessenger.of(context);
+                    final navegador = Navigator.of(context);
+                    try {
+                      await ref
+                          .read(cartoesControllerProvider.notifier)
+                          .salvarCartao(novoCartao);
+                      navegador.pop(true);
+                    } catch (_) {
+                      if (mounted) setState(() => _salvando = false);
+                      mensageiro.showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Não foi possível salvar o cartão. Confira a internet e '
+                            'tente de novo.',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
           child: const Text('Salvar'),
         ),
       ],

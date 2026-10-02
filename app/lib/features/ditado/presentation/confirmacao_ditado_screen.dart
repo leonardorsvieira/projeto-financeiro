@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../theme/icones.dart';
+import '../../cartoes/application/cartoes_providers.dart';
+import '../../cartoes/domain/formas_pagamento.dart';
 import '../../home/domain/app_routes.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
 import '../../lancamentos/domain/lancamento.dart'
     show LancamentoItem, TipoLancamento;
 import '../../lancamentos/domain/lancamento_converter.dart'
-    show parseValorBRLParaCentavos, formatoBRL, categorias, formasPagamento, formatoData;
+    show parseValorBRLParaCentavos, formatoBRL, categorias, formatoData;
 import '../../lancamentos/presentation/lancamento_form_validators.dart'
     show validateDescricao, validateValor;
 import '../application/ditado_providers.dart';
@@ -72,7 +74,9 @@ class _ConfirmacaoDitadoScreenState
     _categoria = categorias.contains(rascunho.categoria)
         ? rascunho.categoria!
         : 'Outros';
-    _formaPagamento = formasPagamento.contains(rascunho.formaPagamento)
+    _formaPagamento = ref
+            .read(formasPagamentoProvider)
+            .contains(rascunho.formaPagamento)
         ? rascunho.formaPagamento!
         : 'Pix';
     _tipo =
@@ -134,7 +138,9 @@ class _ConfirmacaoDitadoScreenState
         case CampoDitado.categoria:
           if (categorias.contains(valor)) _categoria = valor;
         case CampoDitado.formaPagamento:
-          if (formasPagamento.contains(valor)) _formaPagamento = valor;
+          if (ref.read(formasPagamentoProvider).contains(valor)) {
+            _formaPagamento = valor;
+          }
         case CampoDitado.data:
           final data = DateTime.tryParse(valor);
           if (data != null) _data = data;
@@ -475,7 +481,10 @@ class _ConfirmacaoDitadoScreenState
                               prefixIcon: PhosphorIcon(Icones.formaPagamento),
                             ),
                             items: [
-                              for (final f in formasPagamento)
+                              for (final f in formasComAtual(
+                                ref.watch(formasPagamentoProvider),
+                                _formaPagamento,
+                              ))
                                 DropdownMenuItem(value: f, child: Text(f)),
                             ],
                             onChanged: _isSaving

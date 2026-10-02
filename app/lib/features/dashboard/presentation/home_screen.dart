@@ -14,6 +14,7 @@ import '../../open_finance/application/open_finance_providers.dart';
 import '../../seguranca/presentation/bloqueio_biometrico_dialog.dart';
 import '../../../theme/theme_selector_dialog.dart';
 import '../../cartoes/presentation/cartoes_screen.dart';
+import '../../cartoes/presentation/pergunta_cartoes.dart';
 import '../../cartoes/application/cartoes_providers.dart';
 import '../../cartoes/application/cartoes_notificacoes_service.dart';
 import 'dashboard_screen.dart';
@@ -35,10 +36,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final cartoes = await ref.read(cartoesRepositoryProvider).getCartoes();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _prepararCartoes());
+  }
+
+  /// Lembretes de fatura e, para quem ainda não tem cartões nem respondeu,
+  /// a pergunta "quais cartões você usa?".
+  Future<void> _prepararCartoes() async {
+    try {
+      final cartoes = await ref.read(cartoesControllerProvider.future);
       await CartoesNotificacoesService.agendarNotificacoesCartoes(cartoes);
-    });
+      if (cartoes.isNotEmpty) return;
+      final respondida =
+          await ref.read(cartoesRepositoryProvider).perguntaRespondida();
+      if (!respondida && mounted) await perguntarCartoes(context);
+    } catch (e) {
+      debugPrint('Cartões indisponíveis: $e');
+    }
   }
 
   @override

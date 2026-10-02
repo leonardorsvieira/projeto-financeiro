@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../theme/icones.dart';
 import '../../cartoes/application/cartoes_providers.dart';
-import '../../cartoes/data/cartoes_repository.dart';
-import '../../cartoes/domain/cartao_credito.dart';
+import '../../cartoes/domain/formas_pagamento.dart';
+import '../../cartoes/presentation/cartoes_screen.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
 import '../../lancamentos/domain/lancamento.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
@@ -20,57 +20,31 @@ class RelatorioCartoesWidget extends ConsumerWidget {
     final theme = Theme.of(context);
     final lancamentos = ref.watch(lancamentosContabeisProvider);
     final mesAno = ref.watch(mesSelecionadoProvider);
-    final cartoesState = ref.watch(cartoesControllerProvider);
+    final cartoes = ref.watch(cartoesControllerProvider).value ?? const [];
+    final paleta = Caderneta.paletaCategorias(theme.brightness);
 
-    final List<CartaoCredito> cartoes =
-        cartoesState.value ?? CartoesRepository.cartoesPadrao;
+    // Só o mês selecionado no painel.
+    final despesas = lancamentos.where(
+      (l) =>
+          l.tipo == TipoLancamento.despesa &&
+          l.data.year == mesAno.year &&
+          l.data.month == mesAno.month,
+    );
+    final grupos = agruparPorFormaPagamento(despesas, cartoes);
+    final totalGasto = grupos.fold<int>(0, (s, g) => s + g.totalCents);
 
-    // Só o mês selecionado no painel (antes somava todos os meses).
-    final despesas = lancamentos
-        .where(
-          (l) =>
-              l.tipo == TipoLancamento.despesa &&
-              l.data.year == mesAno.year &&
-              l.data.month == mesAno.month,
-        )
-        .toList();
-
-    int totalPixCents = 0;
-    final Map<String, int> totaisPorCartao = {};
-
-    for (final c in cartoes) {
-      totaisPorCartao[c.nome] = 0;
-    }
-
-    for (final d in despesas) {
-      final fp = d.formaPagamento.toLowerCase();
-      final int valCents = d.valorCents;
-      if (fp.contains('pix') ||
-          fp.contains('débito') ||
-          fp.contains('dinheiro')) {
-        totalPixCents = totalPixCents + valCents;
-      } else {
-        bool mapeado = false;
-        for (final c in cartoes) {
-          if (fp.contains(c.nome.toLowerCase())) {
-            totaisPorCartao[c.nome] = (totaisPorCartao[c.nome] ?? 0) + valCents;
-            mapeado = true;
-            break;
-          }
-        }
-        if (!mapeado) {
-          final primeiroNome = cartoes.isNotEmpty
-              ? cartoes.first.nome
-              : 'Cartão';
-          totaisPorCartao[primeiroNome] =
-              (totaisPorCartao[primeiroNome] ?? 0) + valCents;
-        }
-      }
-    }
-
-    final totalGasto =
-        totalPixCents +
-        totaisPorCartao.values.fold<int>(0, (sum, val) => sum + val);
+    // Cor fixa por grupo: Pix e débito, cor do cartão cadastrado, ou uma cor
+    // da paleta para cartões não cadastrados e outras formas.
+    var proximaCor = 0;
+    final cores = <GrupoFormaPagamento, Color>{
+      for (final g in grupos)
+        g: switch (g) {
+          GrupoFormaPagamento(tipo: TipoGrupoForma.conta) => paleta[4],
+          GrupoFormaPagamento(:final cartao?) =>
+            _corDoCartao(cartao.corHex) ?? theme.colorScheme.primary,
+          _ => paleta[(proximaCor++ * 2 + 1) % paleta.length],
+        },
+    };
 
     return Card(
       child: Padding(
@@ -80,7 +54,8 @@ class RelatorioCartoesWidget extends ConsumerWidget {
           children: [
             Row(
               children: [
-                PhosphorIcon(Icones.distribuicao, color: Theme.of(context).colorScheme.primary),
+                PhosphorIcon(Icones.distribuicao,
+                    color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   'Despesas por forma de pagamento',
@@ -107,12 +82,12 @@ class RelatorioCartoesWidget extends ConsumerWidget {
                     sectionsSpace: 2,
                     centerSpaceRadius: 40,
                     sections: [
-                      if (totalPixCents > 0)
+                      for (final g in grupos)
                         PieChartSectionData(
-                          color: Caderneta.paletaCategorias(Theme.of(context).brightness)[4],
-                          value: totalPixCents.toDouble(),
+                          color: cores[g],
+                          value: g.totalCents.toDouble(),
                           title:
-                              '${((totalPixCents / totalGasto) * 100).toStringAsFixed(0)}%',
+                              '${((g.totalCents / totalGasto) * 100).toStringAsFixed(0)}%',
                           radius: 35,
                           titleStyle: const TextStyle(
                             fontSize: 12,
@@ -120,90 +95,65 @@ class RelatorioCartoesWidget extends ConsumerWidget {
                             color: Colors.white,
                           ),
                         ),
-                      ...totaisPorCartao.entries.where((e) => e.value > 0).map((
-                        e,
-                      ) {
-                        final c = cartoes.firstWhere(
-                          (element) => element.nome == e.key,
-                          orElse: () => cartoes.first,
-                        );
-                        Color color;
-                        try {
-                          color = Color(
-                            int.parse(c.corHex.replaceFirst('#', '0xFF')),
-                          );
-                        } catch (_) {
-                          color = theme.colorScheme.primary;
-                        }
-
-                        return PieChartSectionData(
-                          color: color,
-                          value: e.value.toDouble(),
-                          title:
-                              '${((e.value / totalGasto) * 100).toStringAsFixed(0)}%',
-                          radius: 35,
-                          titleStyle: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        );
-                      }),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 16),
               const Divider(),
-              ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  backgroundColor: Caderneta.paletaCategorias(Theme.of(context).brightness)[4],
-                  radius: 12,
-                  child: PhosphorIcon(Icones.pix, size: 14, color: Colors.white),
-                ),
-                title: const Text('Acumulado Pix'),
-                trailing: Text(
-                  formatoBRL(totalPixCents),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-              for (final c in cartoes)
-                if ((totaisPorCartao[c.nome] ?? 0) > 0)
-                  ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: CircleAvatar(
-                      backgroundColor: () {
-                        try {
-                          return Color(
-                            int.parse(c.corHex.replaceFirst('#', '0xFF')),
-                          );
-                        } catch (_) {
-                          return theme.colorScheme.primary;
-                        }
-                      }(),
-                      radius: 12,
-                      child: const PhosphorIcon(
-                        Icones.cartao,
-                        size: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                    title: Text('Fatura ${c.nome}'),
-                    subtitle: Text(
-                      'Fecha dia ${c.diaFechamento} | Vence dia ${c.diaVencimento}',
-                    ),
-                    trailing: Text(
-                      formatoBRL(totaisPorCartao[c.nome] ?? 0),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+              for (final g in grupos)
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: cores[g],
+                    radius: 12,
+                    child: PhosphorIcon(
+                      g.tipo == TipoGrupoForma.conta
+                          ? Icones.pix
+                          : Icones.cartao,
+                      size: 14,
+                      color: Colors.white,
                     ),
                   ),
+                  title: Text(g.titulo),
+                  subtitle: _subtitulo(g),
+                  onTap: g.nomeNaoCadastrado == null
+                      ? null
+                      : () => abrirFormularioCartao(
+                            context,
+                            nomeSugerido: g.nomeNaoCadastrado,
+                          ),
+                  trailing: Text(
+                    formatoBRL(g.totalCents),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
             ],
           ],
         ),
       ),
     );
+  }
+
+  static Widget? _subtitulo(GrupoFormaPagamento g) {
+    final cartao = g.cartao;
+    if (cartao != null) {
+      return Text(
+        'Fecha dia ${cartao.diaFechamento} | Vence dia ${cartao.diaVencimento}',
+      );
+    }
+    if (g.nomeNaoCadastrado != null) {
+      return const Text('Toque para cadastrar este cartão');
+    }
+    return null;
+  }
+
+  static Color? _corDoCartao(String hex) {
+    try {
+      return Color(int.parse(hex.replaceFirst('#', '0xFF')));
+    } catch (_) {
+      return null;
+    }
   }
 }

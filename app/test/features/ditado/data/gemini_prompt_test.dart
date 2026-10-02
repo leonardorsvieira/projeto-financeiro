@@ -45,6 +45,30 @@ void main() {
       expect(inline['data'], 'AQID');
     });
 
+    test('formas de pagamento são as do usuário, nunca os cartões do dono', () {
+      String instrucao(Map<String, dynamic> payload) =>
+          ((payload['system_instruction'] as Map)['parts'] as List)
+              .first['text']
+              .toString();
+
+      final semCartoes = instrucao(GeminiPrompt.payloadReconhecer(audio));
+      expect(semCartoes, isNot(contains('Nubank')));
+      expect(semCartoes, isNot(contains('Cartão: Inter')));
+
+      final comCartoes = instrucao(GeminiPrompt.payloadReconhecer(
+        audio,
+        formas: ['Pix', 'Cartão: Santander Gold', 'Cartão de Crédito'],
+      ));
+      expect(comCartoes, contains('Cartão: Santander Gold'));
+
+      final correcao = instrucao(GeminiPrompt.payloadCorrigir(
+        CampoDitado.formaPagamento,
+        texto: 'no gold',
+        formas: ['Pix', 'Cartão: Santander Gold'],
+      ));
+      expect(correcao, contains('Cartão: Santander Gold'));
+    });
+
     test('resposta é JSON com temperature baixa', () {
       final payload = GeminiPrompt.payloadReconhecer(audio);
       final config = payload['generation_config'] as Map<String, dynamic>;

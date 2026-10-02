@@ -55,9 +55,5 @@ const categorias = [
   'Outros',
 ];
 
-const formasPagamento = [
-  'Pix',
-  'Cartão: Nubank',
-  'Cartão: Inter',
-  'Cartão de Crédito',
-];
+// Formas de pagamento dependem dos cartões de cada usuário:
+// `formasPagamentoProvider` (cartoes/application/cartoes_providers.dart).

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../lancamentos/domain/lancamento_converter.dart';
+import '../../cartoes/domain/formas_pagamento.dart';
 import '../domain/ditado_repository.dart';
 import '../domain/rascunho_lancamento.dart';
 
@@ -9,7 +10,7 @@ class GeminiPrompt {
 
   static const String modelo = 'gemini-3.5-flash-lite';
 
-  static final String _instrucaoReconhecer =
+  static String _instrucaoReconhecer(List<String> formas) =>
       'Você é o assistente financeiro do aplicativo "Meu Bolso". '
       'O usuário dita um lançamento em português do Brasil — um gasto ou um '
       'recebimento.\n\n'
@@ -31,7 +32,7 @@ class GeminiPrompt {
       '"transferi"). Em dúvida, use "despesa".\n'
       '- categoria deve ser escolhida APENAS entre: ${categorias.join(', ')}.\n'
       '- forma_pagamento deve ser escolhida APENAS entre: '
-      '${formasPagamento.join(', ')}.\n'
+      '${formas.join(', ')}.\n'
       '- categoria e forma_pagamento DEVEM ser exatamente uma das opções '
       'listadas (mesmo texto). Se houver dúvida ou nenhuma opção encaixar, '
       'use "Outros" para categoria e "Outro" para forma de pagamento. Nunca '
@@ -56,7 +57,7 @@ class GeminiPrompt {
       'valor_reais do item pode ser null se não citado. O valor total do '
       'lançamento será a soma dos itens (se houver itens) ou o valor_reais raiz.';
 
-  static final String _instrucaoCorrecao =
+  static String _instrucaoCorrecao(List<String> formas) =>
       'Você receberá um áudio (ou texto) com a correção de UM campo de um '
       'lançamento financeiro do aplicativo "Meu Bolso".\n'
       'Devolva APENAS um JSON válido — sem texto fora do JSON — no formato '
@@ -69,7 +70,7 @@ class GeminiPrompt {
       '${categorias.join(', ')}; em dúvida, use "Outros". Nunca invente '
       '(ex.: {"categoria": "Alimentação"}).\n'
       '- forma_pagamento: escolha APENAS entre '
-      '${formasPagamento.join(', ')}; em dúvida, use "Outro".\n'
+      '${formas.join(', ')}; em dúvida, use "Outro".\n'
       '- data e vencimento: "AAAA-MM-DD" apenas se citada a data; senão null '
       '(não use hoje se não foi falado). Hoje é {hoje}.\n'
       '- tipo: exatamente "despesa" ou "receita", conforme o usuário descrever '
@@ -85,17 +86,25 @@ class GeminiPrompt {
         .replaceAll('{campo}', campo);
   }
 
+  /// Formas de pagamento do usuário; sem a lista, só as que não dependem de
+  /// cartão cadastrado.
+  static List<String> _formas(List<String>? formas) =>
+      formas ?? formasPagamentoDoUsuario(const []);
+
   static String _dataHoje() {
     final agora = DateTime.now();
     String dois(int n) => n.toString().padLeft(2, '0');
     return '${agora.year}-${dois(agora.month)}-${dois(agora.day)}';
   }
 
-  static Map<String, dynamic> payloadReconhecer(LancamentoAudio audio) {
+  static Map<String, dynamic> payloadReconhecer(
+    LancamentoAudio audio, {
+    List<String>? formas,
+  }) {
     return {
       'system_instruction': {
         'parts': [
-          {'text': _instrucao(_instrucaoReconhecer, campo: '')},
+          {'text': _instrucao(_instrucaoReconhecer(_formas(formas)), campo: '')},
         ],
       },
       'contents': [
@@ -124,6 +133,7 @@ class GeminiPrompt {
     LancamentoAudio? audio,
     String? texto,
     RascunhoLancamento? rascunhoAtual,
+    List<String>? formas,
   }) {
     final partes = <Map<String, dynamic>>[
       {
@@ -146,7 +156,7 @@ class GeminiPrompt {
     return {
       'system_instruction': {
         'parts': [
-          {'text': _instrucao(_instrucaoCorrecao, campo: campo.chaveJson)},
+          {'text': _instrucao(_instrucaoCorrecao(_formas(formas)), campo: campo.chaveJson)},
         ],
       },
       'contents': [

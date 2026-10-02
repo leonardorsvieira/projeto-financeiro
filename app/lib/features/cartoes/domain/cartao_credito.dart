@@ -1,3 +1,5 @@
+/// Cartão de crédito do usuário (tabela `cartoes`). `id` vazio = ainda não
+/// salvo (o banco gera o uuid).
 class CartaoCredito {
   const CartaoCredito({
     required this.id,
@@ -36,9 +38,9 @@ class CartaoCredito {
     );
   }
 
-  Map<String, dynamic> toMap() {
+  /// Colunas editáveis (sem `id` e `user_id`, que o banco preenche).
+  Map<String, dynamic> toRow() {
     return {
-      'id': id,
       'nome': nome,
       'dia_fechamento': diaFechamento,
       'dia_vencimento': diaVencimento,

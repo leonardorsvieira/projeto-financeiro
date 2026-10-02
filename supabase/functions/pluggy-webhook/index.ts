@@ -1,8 +1,9 @@
 // Webhook da Pluggy: importa transações novas como lançamentos mesmo com o app
 // fechado. Quem chama é a Pluggy (sem JWT), então o conteúdo do aviso NÃO é
-// confiável: usamos só o itemId/accountId, conferimos o dono em pluggy_items e
-// buscamos as transações na própria Pluggy. Um aviso forjado, no máximo,
-// sincroniza dados legítimos do próprio dono do item.
+// confiável: usamos só o itemId/accountId, conferimos o dono em pluggy_items (ou,
+// para item novo do widget, o clientUserId na própria Pluggy) e buscamos as
+// transações na própria Pluggy. Um aviso forjado, no máximo, sincroniza dados
+// legítimos do próprio dono do item.
 // Como grava com service role (ignora o RLS), confere explicitamente se o dono
 // tem acesso ativo (assinatura) antes da cota e da importação.
 import { acessoAtivo, admin, consumirCota } from "../_shared/seguranca.ts";
@@ -150,6 +151,34 @@ async function transacoes(
   return todas;
 }
 
+/**
+ * Item ainda sem dono em pluggy_items: os items nascem pelo widget Connect (o
+ * plano grátis da Pluggy não cria items pela API) e a Pluggy não deixa listar
+ * items, então este aviso é a única forma de o servidor saber que ele existe.
+ * O dono vem do `clientUserId` lido na PRÓPRIA Pluggy (nunca do aviso), que só
+ * o proxy `pluggy` define, sempre com o id do usuário do JWT.
+ */
+async function reivindicarPeloClientUserId(itemId: string): Promise<string | null> {
+  const r = await pluggy("GET", `/items/${encodeURIComponent(itemId)}`);
+  if (!r.ok) return null;
+  const { clientUserId } = await r.json();
+  if (typeof clientUserId !== "string" || !UUID.test(clientUserId)) return null;
+  const { data, error } = await admin.auth.admin.getUserById(clientUserId);
+  if (error || !data.user) return null;
+  await admin
+    .from("pluggy_items")
+    .upsert({ item_id: itemId, user_id: clientUserId }, {
+      onConflict: "item_id",
+      ignoreDuplicates: true,
+    });
+  const { data: dono } = await admin
+    .from("pluggy_items")
+    .select("user_id")
+    .eq("item_id", itemId)
+    .maybeSingle();
+  return dono?.user_id ?? null;
+}
+
 async function importar(
   userId: string,
   itemId: string,
@@ -221,18 +250,27 @@ Deno.serve(async (req) => {
     return ok({ ignorado: true });
   }
 
-  const { data: dono } = await admin
+  const { data: registro } = await admin
     .from("pluggy_items")
     .select("user_id")
     .eq("item_id", itemId)
     .maybeSingle();
-  if (!dono) return ok({ ignorado: true });
+  let dono: string | null = registro?.user_id ?? null;
+  if (!dono) {
+    try {
+      dono = await reivindicarPeloClientUserId(itemId);
+    } catch {
+      console.warn(JSON.stringify({ erro: "reivindicar_item" }));
+    }
+    if (!dono) return ok({ ignorado: true });
+    console.log(JSON.stringify({ evento: evento.event, item_registrado: true }));
+  }
 
   // Dono sem acesso ativo: ignora (o app importa de novo quando a conta voltar).
   try {
-    const { data, error } = await admin.auth.admin.getUserById(dono.user_id);
+    const { data, error } = await admin.auth.admin.getUserById(dono);
     if (error) throw error;
-    if (!(await acessoAtivo(dono.user_id, data.user?.email))) {
+    if (!(await acessoAtivo(dono, data.user?.email))) {
       console.log(JSON.stringify({ evento: evento.event, ignorado: "acesso_inativo" }));
       return ok({ ignorado: true });
     }
@@ -240,11 +278,11 @@ Deno.serve(async (req) => {
     console.warn(JSON.stringify({ erro: "verificar_acesso" }));
     return ok({ ignorado: true });
   }
-  if (!(await consumirCota(dono.user_id, "webhook", 300))) return ok({ ignorado: true });
+  if (!(await consumirCota(dono, "webhook", 300))) return ok({ ignorado: true });
 
   // A Pluggy espera resposta rápida: importa em segundo plano.
   EdgeRuntime.waitUntil(
-    importar(dono.user_id, itemId, evento).catch((e) =>
+    importar(dono, itemId, evento).catch((e) =>
       console.warn(JSON.stringify({ erro: "importar", tipo: e?.name }))
     ),
   );

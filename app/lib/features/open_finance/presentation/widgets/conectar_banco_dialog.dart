@@ -5,7 +5,6 @@ import '../../../../theme/icones.dart';
 import '../../application/open_finance_providers.dart';
 import 'abrir_autorizacao.dart';
 import '../../data/pluggy_open_finance_service.dart';
-import '../../domain/conta_bancaria_conectada.dart';
 
 void mostrarDialogoConectarBanco(BuildContext context) {
   showModalBottomSheet(
@@ -58,21 +57,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
     setState(() => _conectando = true);
     try {
       final service = ref.read(pluggyOpenFinanceServiceProvider);
-      final resultado = await service.iniciarConexaoMeuPluggyDireta();
-
-      final contaMeuPluggy = ContaBancariaConectada(
-        id: resultado.itemId,
-        nomeBanco: 'Meu Pluggy (meu.pluggy.ai)',
-        tipoConta: 'Contas & Cartões vinculados',
-        corHex: '#EF294B',
-        ultimoSync: DateTime.now(),
-        status: StatusConexaoBanco.conectado,
-        itemIdPluggy: resultado.itemId,
-        capturaAutomaticaAtiva: true,
-      );
-      await ref.read(contasConectadasProvider.notifier).adicionarConta(contaMeuPluggy);
-
-      final url = Uri.parse(resultado.oauthUrl);
+      final url = await service.urlConexaoMeuPluggy();
       final abriu = await abrirAutorizacaoPluggy(url);
 
       if (!mounted) return;
@@ -82,7 +67,7 @@ class __ConectarBancoModalState extends ConsumerState<_ConectarBancoModal> {
         abriu
             ? SnackBar(
                 content: const Text(
-                  'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar agora".',
+                  'Pluggy aberta no navegador! Entre no meu.pluggy.ai, autorize e depois volte e toque em "Sincronizar agora".',
                 ),
                 backgroundColor: Colors.purple.shade700,
                 duration: const Duration(seconds: 10),

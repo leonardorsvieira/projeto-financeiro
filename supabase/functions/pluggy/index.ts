@@ -62,8 +62,16 @@ function repassar(req: Request, r: Response, texto: string): Response {
   if (!r.ok) {
     const url = new URL(r.url);
     let codigo: unknown;
+    let mensagem: string | undefined;
     try {
-      codigo = JSON.parse(texto)?.code;
+      const erro = JSON.parse(texto);
+      codigo = erro?.code;
+      // Mensagem de validação da Pluggy (sem valores de parâmetros nem dados
+      // financeiros), cortada para não crescer o log.
+      mensagem = [erro?.message, erro?.codeDescription, JSON.stringify(erro?.details ?? "")]
+        .filter((p) => typeof p === "string" && p && p !== '""')
+        .join(" | ")
+        .slice(0, 300);
     } catch {
       // corpo não-JSON
     }
@@ -71,6 +79,7 @@ function repassar(req: Request, r: Response, texto: string): Response {
       rota: url.pathname.split("/").slice(0, 3).join("/"),
       status: r.status,
       codigo,
+      mensagem,
     }));
   }
   return resposta(req, r.status, texto);
@@ -143,7 +152,8 @@ async function atender(req: Request): Promise<Response> {
     return repassar(req, r, await r.text());
   }
 
-  // Criação direta de item (ex.: Meu Pluggy via OAuth).
+  // Criação direta de item. No plano grátis a Pluggy recusa (400
+  // CREATE_ITEMS_API_FREE_DISABLED): o app usa o widget Connect.
   if (metodo === "POST" && seg[0] === "items" && seg.length === 1) {
     if (typeof corpo?.connectorId !== "number") {
       return resposta(req, 400, { erro: "connector_invalido" });
@@ -183,23 +193,10 @@ async function atender(req: Request): Promise<Response> {
     return resposta(req, 200, { removidas, total: data?.length ?? 0 });
   }
 
-  // Lista apenas os items do próprio usuário.
+  // Lista apenas os items do próprio usuário. A Pluggy não deixa listar items
+  // (responde 401); os criados pelo widget Connect entram em pluggy_items pelo
+  // aviso item/created do `pluggy-webhook`, que confere o clientUserId.
   if (metodo === "GET" && seg[0] === "items" && seg.length === 1) {
-    // Items criados pelo widget Connect vêm com clientUserId = usuário, mas o
-    // app não recebe o id deles; registra aqui os que forem deste usuário.
-    // (Items antigos sem clientUserId NÃO são reivindicados em massa: podem
-    // ser de outros clientes. Só via id explícito + OWNER_USER_ID.)
-    const lista = await pluggy("GET", "/items");
-    if (lista.ok) {
-      const { results: todos } = await lista.json();
-      for (const item of todos ?? []) {
-        if (item?.clientUserId === uid && typeof item.id === "string") {
-          await registrar(uid, item.id);
-        }
-      }
-    } else {
-      registrarFalha("GET /items (listagem)", lista.status);
-    }
     const { data } = await admin
       .from("pluggy_items")
       .select("item_id")

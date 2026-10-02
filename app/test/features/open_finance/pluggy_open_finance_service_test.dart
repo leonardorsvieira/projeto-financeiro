@@ -322,60 +322,24 @@ void main() {
       expect(item.mascaraCartao, equals('•••• 5432'));
     });
 
-    test('Meu Pluggy: espera o link de autorização ficar pronto', () async {
-      var consultas = 0;
-      final service = PluggyOpenFinanceService(
-        httpClient: _proxy((metodo, caminho, _) async {
-          if (metodo == 'POST' && caminho.path == '/items') {
-            return http.Response(jsonEncode({'id': 'item_mp'}), 201);
-          }
-          if (caminho.path == '/items/item_mp') {
-            consultas++;
-            return http.Response(
-              jsonEncode({
-                'id': 'item_mp',
-                if (consultas >= 2)
-                  'parameter': {'data': 'https://meu.pluggy.ai/oauth?x=1'},
-              }),
-              200,
-            );
-          }
-          return http.Response('', 404);
-        }),
-        funcao: _funcao,
-        esperasAutorizacao: List.filled(5, Duration.zero),
-      );
-
-      final r = await service.iniciarConexaoMeuPluggyDireta();
-      expect(r.itemId, 'item_mp');
-      expect(r.oauthUrl, 'https://meu.pluggy.ai/oauth?x=1');
-      expect(consultas, 2);
-    });
-
-    test('Meu Pluggy sem link: widget continua o MESMO item (sem id inventado)', () async {
+    test('Meu Pluggy: abre o widget no conector 200 sem criar item pela API',
+        () async {
       Map<String, dynamic>? corpoToken;
-      final service = PluggyOpenFinanceService(
-        httpClient: _proxy((metodo, caminho, corpo) async {
-          if (metodo == 'POST' && caminho.path == '/items') {
-            return http.Response(jsonEncode({'id': 'item_mp'}), 201);
-          }
-          if (caminho.path == '/items/item_mp') {
-            return http.Response(jsonEncode({'id': 'item_mp'}), 200);
-          }
-          if (caminho.path == '/connect_token') {
-            corpoToken = corpo;
-            return http.Response(jsonEncode({'accessToken': 'tok'}), 200);
-          }
-          return http.Response('', 404);
-        }),
-        funcao: _funcao,
-        esperasAutorizacao: List.filled(2, Duration.zero),
-      );
+      final rotas = <String>[];
+      final service = _service(_proxy((metodo, caminho, corpo) async {
+        rotas.add('$metodo ${caminho.path}');
+        if (metodo == 'POST' && caminho.path == '/connect_token') {
+          corpoToken = corpo;
+          return http.Response(jsonEncode({'accessToken': 'tok'}), 200);
+        }
+        return http.Response('', 404);
+      }));
 
-      final r = await service.iniciarConexaoMeuPluggyDireta();
-      expect(r.itemId, 'item_mp');
-      expect(r.oauthUrl, 'https://connect.pluggy.ai/?connect_token=tok');
-      expect(corpoToken!['itemId'], 'item_mp');
+      final url = await service.urlConexaoMeuPluggy();
+      expect(url.toString(), 'https://connect.pluggy.ai/?connect_token=tok');
+      expect(corpoToken!['options'], {'connectorId': 200});
+      // Plano grátis da Pluggy: POST /items responde 400.
+      expect(rotas, ['POST /connect_token']);
     });
 
     test('Meu Pluggy: usa o nome do banco da conta em vez de "MeuPluggy"',

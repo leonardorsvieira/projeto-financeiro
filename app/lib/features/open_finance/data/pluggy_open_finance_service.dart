@@ -223,13 +223,6 @@ class InvestimentosOpenFinance {
   final bool completo;
 }
 
-class ConexaoMeuPluggyResult {
-  final String itemId;
-  final String oauthUrl;
-
-  const ConexaoMeuPluggyResult({required this.itemId, required this.oauthUrl});
-}
-
 /// Acesso à Pluggy através da Edge Function `pluggy`.
 ///
 /// As credenciais da Pluggy ficam só no servidor, e a função só devolve
@@ -239,18 +232,9 @@ class PluggyOpenFinanceService {
   final http.Client _httpClient;
   final EdgeFunction _funcao;
 
-  PluggyOpenFinanceService({
-    http.Client? httpClient,
-    EdgeFunction? funcao,
-    List<Duration>? esperasAutorizacao,
-  }) : _httpClient = httpClient ?? http.Client(),
-       _funcao = funcao ?? EdgeFunction.supabase('pluggy'),
-       _esperasAutorizacao =
-           esperasAutorizacao ??
-           List.filled(10, const Duration(milliseconds: 1500));
-
-  /// Intervalos de consulta enquanto a Pluggy prepara o link de autorização.
-  final List<Duration> _esperasAutorizacao;
+  PluggyOpenFinanceService({http.Client? httpClient, EdgeFunction? funcao})
+    : _httpClient = httpClient ?? http.Client(),
+      _funcao = funcao ?? EdgeFunction.supabase('pluggy');
 
   static const int connectorMeuPluggy = 200;
 
@@ -399,61 +383,15 @@ class PluggyOpenFinanceService {
     }
   }
 
-  /// Inicia a conexão direta com o meu.pluggy.ai via API, retornando a URL direta de autorização OAuth
-  /// sem exigir passos redundantes de seleção de conector no widget.
-  Future<ConexaoMeuPluggyResult> iniciarConexaoMeuPluggyDireta() async {
-    final resp = await _chamar(
-      'POST',
-      '/items',
-      corpo: {
-        'connectorId': connectorMeuPluggy,
-        'parameters': <String, dynamic>{},
-      },
-    );
-
-    if (resp.statusCode != 200 && resp.statusCode != 201) {
-      throw Exception(
-        'Não foi possível iniciar a conexão com o meu.pluggy.ai '
-        '(Status ${resp.statusCode}).',
-      );
-    }
-    final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    final itemId = data['id'] as String;
-
-    // A Pluggy cria o item primeiro e só depois (alguns segundos) publica o
-    // link de autorização em `parameter.data`: espera por ele.
-    var oauthUrl = _urlAutorizacao(data);
-    for (final espera in _esperasAutorizacao) {
-      if (oauthUrl != null) break;
-      await Future<void>.delayed(espera);
-      final atual = await _chamar(
-        'GET',
-        '/items/${Uri.encodeComponent(itemId)}',
-      );
-      if (atual.statusCode == 200) {
-        oauthUrl = _urlAutorizacao(
-          jsonDecode(atual.body) as Map<String, dynamic>,
-        );
-      }
-    }
-    if (oauthUrl != null) {
-      return ConexaoMeuPluggyResult(itemId: itemId, oauthUrl: oauthUrl);
-    }
-
-    // Sem link direto: abre o widget da Pluggy continuando ESTE item, para que
-    // a conexão fique registrada no usuário (o app não consegue descobrir
-    // items criados do zero pelo widget).
-    final token = await gerarConnectToken(itemId: itemId);
-    return ConexaoMeuPluggyResult(
-      itemId: itemId,
-      oauthUrl: 'https://connect.pluggy.ai/?connect_token=$token',
-    );
-  }
-
-  static String? _urlAutorizacao(Map<String, dynamic> item) {
-    final parameter = item['parameter'] as Map<String, dynamic>?;
-    final url = parameter?['data'] as String?;
-    return (url != null && url.startsWith('https://')) ? url : null;
+  /// Link do widget da Pluggy já no conector do meu.pluggy.ai.
+  ///
+  /// No plano grátis a Pluggy só cria items pelo widget (o `POST /items`
+  /// responde 400 CREATE_ITEMS_API_FREE_DISABLED). O app não recebe o id do
+  /// item criado: o servidor o vincula ao usuário pelo aviso `item/created`
+  /// (função `pluggy-webhook`) e ele aparece na próxima sincronização.
+  Future<Uri> urlConexaoMeuPluggy() async {
+    final token = await gerarConnectToken(connectorId: connectorMeuPluggy);
+    return Uri.parse('https://connect.pluggy.ai/?connect_token=$token');
   }
 
   /// Busca um item específico da Pluggy pelo seu ID. O servidor só o devolve se

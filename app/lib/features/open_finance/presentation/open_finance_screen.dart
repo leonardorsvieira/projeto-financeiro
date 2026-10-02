@@ -35,24 +35,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
     setState(() => _abrindoMeuPluggy = true);
     try {
       final service = ref.read(pluggyOpenFinanceServiceProvider);
-      final resultado = await service.iniciarConexaoMeuPluggyDireta();
-
-      // Salva ou adiciona a conta Meu Pluggy com o Item ID real gerado
-      final contaMeuPluggy = ContaBancariaConectada(
-        id: resultado.itemId,
-        nomeBanco: 'Meu Pluggy (meu.pluggy.ai)',
-        tipoConta: 'Contas & Cartões vinculados',
-        corHex: '#EF294B',
-        ultimoSync: DateTime.now(),
-        status: StatusConexaoBanco.conectado,
-        itemIdPluggy: resultado.itemId,
-        capturaAutomaticaAtiva: true,
-      );
-      await ref
-          .read(contasConectadasProvider.notifier)
-          .adicionarConta(contaMeuPluggy);
-
-      final url = Uri.parse(resultado.oauthUrl);
+      final url = await service.urlConexaoMeuPluggy();
       final abriu = await abrirAutorizacaoPluggy(url);
 
       if (!mounted) return;
@@ -60,7 +43,7 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
         abriu
             ? SnackBar(
                 content: const Text(
-                  'Tela de autorização do meu.pluggy.ai aberta! Clique em "Permitir" e depois em "Sincronizar agora".',
+                  'Pluggy aberta no navegador! Entre no meu.pluggy.ai, autorize e depois volte e toque em "Sincronizar agora".',
                 ),
                 backgroundColor: Colors.purple.shade700,
                 duration: const Duration(seconds: 10),

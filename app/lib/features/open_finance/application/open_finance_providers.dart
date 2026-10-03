@@ -16,6 +16,7 @@ import '../data/pluggy_open_finance_service.dart';
 import '../data/supabase_contas_proprias_repository.dart';
 import '../domain/conta_bancaria_conectada.dart';
 import '../domain/contas_proprias.dart';
+import '../domain/saldo_nas_contas.dart';
 import '../domain/transacao_bancaria_importada.dart';
 
 /// Contas no nome de outra pessoa que o usuário marcou como dele.
@@ -95,6 +96,12 @@ class ContasConectadasNotifier
     state = AsyncValue.data(contas);
   }
 }
+
+/// Saldo nas contas dos bancos conectados (última sincronização). Null sem
+/// banco que tenha informado saldo.
+final saldoNasContasProvider = Provider<SaldoNasContas?>((ref) {
+  return saldoNasContas(ref.watch(contasConectadasProvider).value ?? const []);
+});
 
 /// Controla o estado de ativação da captura automática por notificações de bancos.
 final capturaNotificacoesAtivaProvider =

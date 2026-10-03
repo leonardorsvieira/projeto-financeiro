@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:meubolso/features/dashboard/presentation/dashboard_screen.dart';
 import 'package:meubolso/features/investimentos/application/investimentos_providers.dart';
@@ -9,6 +12,7 @@ import 'package:meubolso/features/lancamentos/application/lancamentos_providers.
 import 'package:meubolso/features/lancamentos/domain/lancamento.dart';
 import 'package:meubolso/features/metas/application/metas_providers.dart';
 import 'package:meubolso/features/metas/domain/meta.dart';
+import 'package:meubolso/features/open_finance/domain/conta_bancaria_conectada.dart';
 
 import 'package:meubolso/features/ditado/application/ditado_providers.dart';
 import 'package:meubolso/theme/app_theme.dart';
@@ -91,6 +95,49 @@ class ProviderScopeContainer extends StatelessWidget {
 }
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets('mostra o saldo nas contas dos bancos conectados',
+      (tester) async {
+    final agora = DateTime.now();
+    SharedPreferences.setMockInitialValues({
+      'open_finance_contas_v1': jsonEncode([
+        ContaBancariaConectada(
+          id: 'i1',
+          nomeBanco: 'Nubank',
+          tipoConta: 'Conta & Cartão',
+          corHex: '#8A05BE',
+          ultimoSync: DateTime(agora.year, agora.month, agora.day, 9, 30),
+          saldoContasCents: 123456,
+          faturaCartoesCents: 50000,
+        ).toMap(),
+        ContaBancariaConectada(
+          id: 'i2',
+          nomeBanco: 'Inter',
+          tipoConta: 'Conta',
+          corHex: '#FF7A00',
+          ultimoSync: DateTime(agora.year, agora.month, agora.day, 10),
+          saldoContasCents: 20000,
+        ).toMap(),
+      ]),
+    });
+
+    await _pump(tester, FakeLancamentosRepository());
+
+    expect(find.text('Saldo nas contas'), findsOneWidget);
+    expect(find.text('R\$ 1.434,56'), findsOneWidget); // sem a fatura
+    expect(find.text('Nubank'), findsOneWidget);
+    expect(find.text('R\$ 1.234,56'), findsOneWidget);
+    expect(find.text('Inter'), findsOneWidget);
+    expect(find.text('Atualizado hoje às 09:30'), findsOneWidget);
+  });
+
+  testWidgets('sem banco conectado não mostra o saldo nas contas',
+      (tester) async {
+    await _pump(tester, FakeLancamentosRepository());
+    expect(find.text('Saldo nas contas'), findsNothing);
+  });
+
   testWidgets('DashboardScreen mostra saldo do mês (entradas − saídas)',
       (tester) async {
     final agora = DateTime.now();

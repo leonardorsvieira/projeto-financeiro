@@ -17,6 +17,8 @@ import '../../investimentos/application/investimentos_providers.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../../metas/application/metas_providers.dart';
+import '../../open_finance/application/open_finance_providers.dart';
+import '../../open_finance/domain/saldo_nas_contas.dart';
 import '../application/dashboard_providers.dart';
 import '../application/home_widget_service.dart';
 import '../application/saudacao.dart';
@@ -56,6 +58,7 @@ class DashboardScreen extends ConsumerWidget {
     final resumo = ref.watch(resumoMesProvider);
     final porCategoria = ref.watch(gastosPorCategoriaMesProvider);
     final proximos = ref.watch(proximosVencimentosProvider);
+    final saldoContas = ref.watch(saldoNasContasProvider);
 
     HomeWidgetService.atualizarWidget(
       saldoFormatado: formatoBRL(resumo.saldoCents),
@@ -71,6 +74,11 @@ class DashboardScreen extends ConsumerWidget {
           const AvisoVencimentoAcesso(),
           _Saudacao(nome: ref.watch(primeiroNomeUsuarioProvider)),
           const SizedBox(height: 12),
+          // Não depende do mês: fica antes do seletor.
+          if (saldoContas != null) ...[
+            _CardSaldoContas(saldo: saldoContas),
+            const SizedBox(height: 12),
+          ],
           const _SeletorMesHeader(),
           const SizedBox(height: 12),
           _CardGastosMes(resumo: resumo),
@@ -161,6 +169,97 @@ String _textoVencimento(DateTime vencimento) {
   if (dias == 0) return 'Vence hoje';
   if (dias == 1) return 'Vence amanhã';
   return 'Vence em $dias dias';
+}
+
+/// "Atualizado hoje às 14:32", "Atualizado ontem às 09:10" ou
+/// "Atualizado em 28/09 às 09:10".
+String textoAtualizacaoSaldo(DateTime atualizado, DateTime agora) {
+  final dias = DateTime(agora.year, agora.month, agora.day)
+      .difference(DateTime(atualizado.year, atualizado.month, atualizado.day))
+      .inDays;
+  final hora = DateFormat('HH:mm').format(atualizado);
+  if (dias <= 0) return 'Atualizado hoje às $hora';
+  if (dias == 1) return 'Atualizado ontem às $hora';
+  return 'Atualizado em ${DateFormat('dd/MM').format(atualizado)} às $hora';
+}
+
+/// Saldo real das contas nos bancos conectados (última sincronização).
+class _CardSaldoContas extends StatelessWidget {
+  const _CardSaldoContas({required this.saldo});
+
+  final SaldoNasContas saldo;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final total = saldo.totalCents;
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push(AppRoutes.openFinance),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const PhosphorIcon(Icones.banco, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Saldo nas contas',
+                      style: theme.textTheme.labelLarge,
+                    ),
+                  ),
+                  const PhosphorIcon(Icones.proximo, size: 18),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                formatoBRL(total),
+                style: CadernetaTexto.numero(size: 28).copyWith(
+                  color: total < 0 ? theme.colorScheme.error : null,
+                ),
+              ),
+              if (saldo.porBanco.length > 1) ...[
+                const SizedBox(height: 8),
+                for (final b in saldo.porBanco)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            b.nomeBanco,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          formatoBRL(b.saldoCents),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color:
+                                b.saldoCents < 0 ? theme.colorScheme.error : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                textoAtualizacaoSaldo(saldo.atualizadoEm, DateTime.now()),
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _CardGastosMes extends StatelessWidget {

@@ -218,7 +218,6 @@ class _CardSaldoContas extends StatelessWidget {
                       style: theme.textTheme.labelLarge,
                     ),
                   ),
-                  const PhosphorIcon(Icones.proximo, size: 18),
                 ],
               ),
               const SizedBox(height: 8),

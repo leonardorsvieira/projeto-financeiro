@@ -132,6 +132,7 @@ Items acknowledged and carried forward from previous milestone close:
 | 261003-juq | Agendamento dos bancos desligado + horário do Meu Pluggy (24 h após a última atualização) | 2026-10-03 | [SUMMARY](quick/261003-juq-desligar-atualizacao-agendada/261003-juq-SUMMARY.md) |
 | 261003-k74 | Análise do mês só com o mês (em reais) + Guia de investimentos (IA) + documentos legais | 2026-10-03 | [SUMMARY](quick/261003-k74-consultoria-de-investimentos-e-analise-d/261003-k74-SUMMARY.md) |
 | 261003-lid | Guia de investimentos no plano gratuito: indicadores BCB/IBGE (função indicadores), busca só com BUSCA_GOOGLE=1, modelos 3.x | 2026-10-03 | [SUMMARY](quick/261003-lid-guia-de-investimentos-no-plano-gratuito/261003-lid-SUMMARY.md) |
+| fast | Seta removida do card "Saldo nas contas" (o toque continua abrindo Meus bancos) | 2026-10-03 | — |
 
 ## Session Continuity
 

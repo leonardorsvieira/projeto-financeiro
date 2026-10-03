@@ -72,6 +72,27 @@ class PerfilInvestidor {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+        'objetivo': objetivo?.name,
+        'prazo': prazo?.name,
+        'risco': risco?.name,
+        'observacao': observacao,
+      };
+
+  /// Perfil salvo na conta; null se faltar alguma das três respostas.
+  static PerfilInvestidor? fromJson(Object? json) {
+    if (json is! Map) return null;
+    T? valor<T extends Enum>(List<T> valores, Object? nome) =>
+        valores.where((v) => v.name == nome).firstOrNull;
+    final perfil = PerfilInvestidor(
+      objetivo: valor(ObjetivoInvestimento.values, json['objetivo']),
+      prazo: valor(PrazoInvestimento.values, json['prazo']),
+      risco: valor(ToleranciaRisco.values, json['risco']),
+      observacao: json['observacao'] is String ? json['observacao'] as String : '',
+    );
+    return perfil.completo ? perfil : null;
+  }
+
   /// Texto do perfil para o prompt; a observação é cortada no limite.
   String paraPrompt() {
     final obs = observacao.trim();

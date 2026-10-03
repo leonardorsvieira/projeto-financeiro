@@ -13,58 +13,262 @@ import '../data/consultoria_prompt.dart';
 import '../domain/guia_investimentos.dart';
 import '../domain/perfil_investidor.dart';
 
-/// Guia de investimentos (IA): o cliente escolhe objetivo, prazo e risco e a
-/// IA cruza os números dele com o mercado de hoje e os livros de
-/// investimento mais lidos. Conteúdo educativo — não é recomendação.
-class GuiaInvestimentosScreen extends ConsumerWidget {
+/// Guia de investimentos (IA): o cliente responde objetivo, prazo e risco uma
+/// vez (o perfil fica na conta) e a IA cruza os números dele com os
+/// indicadores do dia e os livros de investimento mais lidos. O último
+/// relatório fica salvo; "Gerar novo relatório" refaz com os dados de agora.
+/// Conteúdo educativo — não é recomendação.
+class GuiaInvestimentosScreen extends ConsumerStatefulWidget {
   const GuiaInvestimentosScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final guia = ref.watch(guiaInvestimentosProvider);
-    final perfil = ref.watch(perfilInvestidorProvider);
-    final carregando = guia.isLoading;
-    final temGuia = guia.value != null;
+  ConsumerState<GuiaInvestimentosScreen> createState() =>
+      _GuiaInvestimentosScreenState();
+}
 
+class _GuiaInvestimentosScreenState
+    extends ConsumerState<GuiaInvestimentosScreen> {
+  /// Respondendo de novo às perguntas ("Alterar perfil").
+  bool _alterandoPerfil = false;
+  bool _salvandoPerfil = false;
+
+  void _aviso(String texto) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
+  }
+
+  Future<bool> _salvarPerfil(PerfilInvestidor perfil) async {
+    setState(() => _salvandoPerfil = true);
+    try {
+      await ref.read(guiaSalvoProvider.notifier).salvarPerfil(perfil);
+      return true;
+    } on Object {
+      if (mounted) {
+        _aviso('Não foi possível salvar o perfil. Confira a conexão e tente '
+            'de novo.');
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _salvandoPerfil = false);
+    }
+  }
+
+  /// Primeira vez: guarda as respostas e já gera o relatório.
+  Future<void> _salvarPerfilEGerar() async {
+    final perfil = ref.read(perfilInvestidorProvider);
+    if (!await _salvarPerfil(perfil) || !mounted) return;
+    await ref.read(geracaoGuiaProvider.notifier).gerar(perfil);
+  }
+
+  Future<void> _salvarAlteracao() async {
+    if (!await _salvarPerfil(ref.read(perfilInvestidorProvider)) || !mounted) {
+      return;
+    }
+    setState(() => _alterandoPerfil = false);
+    _aviso('Perfil atualizado. Toque em "Gerar novo relatório" para usar o '
+        'perfil novo.');
+  }
+
+  void _alterarPerfil(PerfilInvestidor atual) {
+    ref.read(perfilInvestidorProvider.notifier).carregar(atual);
+    setState(() => _alterandoPerfil = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final salvo = ref.watch(guiaSalvoProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Guia de investimentos')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: switch (salvo) {
+        AsyncData(:final value) => _conteudo(context, value),
+        AsyncError() => _ErroAoCarregar(
+            onTentar: () => ref.invalidate(guiaSalvoProvider),
+          ),
+        _ => const Center(child: CircularProgressIndicator()),
+      },
+    );
+  }
+
+  Widget _conteudo(BuildContext context, GuiaSalvo salvo) {
+    final theme = Theme.of(context);
+    // Mantém lançamentos, bancos e investimentos carregando enquanto a tela
+    // está aberta (o relatório usa esses números).
+    ref.watch(dadosConsultoriaProvider);
+    final rascunho = ref.watch(perfilInvestidorProvider);
+    final geracao = ref.watch(geracaoGuiaProvider);
+    final gerando = geracao.isLoading;
+    final perfil = salvo.perfil;
+    final guia = salvo.guia;
+    final perguntando = perfil == null || _alterandoPerfil;
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (guia == null) ...[
           const _Apresentacao(),
           const SizedBox(height: 16),
+        ],
+        if (perguntando) ...[
           const _Perfil(),
+          const SizedBox(height: 16),
+          if (perfil == null) ...[
+            FilledButton.icon(
+              onPressed: rascunho.completo && !_salvandoPerfil && !gerando
+                  ? _salvarPerfilEGerar
+                  : null,
+              icon: const PhosphorIcon(Icones.analisar),
+              label: const Text('Gerar meu relatório'),
+            ),
+            if (!rascunho.completo) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Responda objetivo, prazo e risco. As perguntas são feitas só '
+                'uma vez.',
+                style: theme.textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ] else
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _salvandoPerfil
+                        ? null
+                        : () => setState(() => _alterandoPerfil = false),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: rascunho.completo && !_salvandoPerfil
+                        ? _salvarAlteracao
+                        : null,
+                    child: const Text('Salvar perfil'),
+                  ),
+                ),
+              ],
+            ),
+        ] else ...[
+          _ResumoPerfil(
+            perfil: perfil,
+            onAlterar: gerando ? null : () => _alterarPerfil(perfil),
+          ),
           const SizedBox(height: 8),
           const _DadosEnviados(),
           const SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: perfil.completo && !carregando
-                ? () => ref.read(guiaInvestimentosProvider.notifier).gerar()
-                : null,
-            icon: PhosphorIcon(temGuia ? Icones.atualizar : Icones.analisar),
-            label: Text(temGuia ? 'Gerar de novo' : 'Gerar meu guia'),
+            onPressed: gerando
+                ? null
+                : () => ref.read(geracaoGuiaProvider.notifier).gerar(perfil),
+            icon: PhosphorIcon(guia == null ? Icones.analisar : Icones.atualizar),
+            label: Text(
+              guia == null ? 'Gerar meu relatório' : 'Gerar novo relatório',
+            ),
           ),
-          if (!perfil.completo) ...[
+          if (guia != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Escolha objetivo, prazo e risco para gerar o guia.',
-              style: Theme.of(context).textTheme.bodySmall,
+              'O novo relatório usa os dados mais recentes dos seus bancos e '
+              'lançamentos e substitui este.',
+              style: theme.textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
           ],
-          const SizedBox(height: 16),
-          switch (guia) {
-            AsyncLoading() => const _Carregando(),
-            AsyncError(:final error) => _Erro(erro: error),
-            AsyncData(:final value) when value != null => _Resultado(guia: value),
-            _ => const SizedBox.shrink(),
-          },
-          const SizedBox(height: 16),
-          Text(
-            ConsultoriaPrompt.avisoFinal,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
         ],
+        const SizedBox(height: 16),
+        if (gerando) ...[
+          const _Carregando(),
+          const SizedBox(height: 16),
+        ] else if (geracao case AsyncError(:final error)) ...[
+          _Erro(erro: error),
+          const SizedBox(height: 16),
+        ],
+        if (guia != null && !perguntando) ...[
+          _Resultado(guia: guia),
+          const SizedBox(height: 16),
+        ],
+        Text(ConsultoriaPrompt.avisoFinal, style: theme.textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+class _ErroAoCarregar extends StatelessWidget {
+  const _ErroAoCarregar({required this.onTentar});
+
+  final VoidCallback onTentar;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Não foi possível abrir o seu guia agora.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            FilledButton(onPressed: onTentar, child: const Text('Tentar de novo')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Perfil salvo, com a opção de responder de novo.
+class _ResumoPerfil extends StatelessWidget {
+  const _ResumoPerfil({required this.perfil, required this.onAlterar});
+
+  final PerfilInvestidor perfil;
+  final VoidCallback? onAlterar;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final obs = perfil.observacao.trim();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: PhosphorIcon(Icones.meta, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Seu perfil', style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${perfil.objetivo!.rotulo} · ${perfil.prazo!.rotulo} · '
+                    '${perfil.risco!.rotulo}',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  if (obs.isNotEmpty)
+                    Text(
+                      '"$obs"',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: onAlterar,
+              child: const Text('Alterar perfil'),
+            ),
+          ],
+        ),
       ),
     );
   }

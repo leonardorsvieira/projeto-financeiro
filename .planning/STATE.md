@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-09-06 after v1.0)
 Phase: 8 — Investimentos (concluída) — todas as 8 fases do roadmap completas
 Plan: 08-01..08-05 ✅ (05-02 push FCM/APNs adiado de propósito — lembretes usam notificação local)
 Status: **Milestone v1.1 completo.** Depois dele: Open Finance via Pluggy (Edge Functions `pluggy`/`pluggy-webhook`, meu.pluggy.ai direto, `/v2/transactions`, sincronização automática, sinal do cartão, categorias neutras) e hardening multiusuário (quick 260928-n3q).
-Last activity: 2026-10-03 — quick 261003-0x1: faturas dos cartões (Open Finance, `GET /bills`) no painel de despesas; antes, 261003-0pj (saldo nas contas) e 261003-0a6 (investimentos no saldo do mês)
+Last activity: 2026-10-03 — quick 261003-1sn: número da parcela na descrição e estorno de cartão abate despesas; antes, 261003-0x1 (faturas dos cartões), 261003-0pj (saldo nas contas) e 261003-0a6 (investimentos no saldo do mês)
 
 ## Performance Metrics
 
@@ -126,6 +126,7 @@ Items acknowledged and carried forward from previous milestone close:
 | 261003-0a6 | Saldo do mês com aplicações e resgates de investimento | 2026-10-03 | [SUMMARY](quick/261003-0a6-saldo-com-aplicacoes-e-resgates/261003-0a6-SUMMARY.md) |
 | 261003-0pj | "Saldo nas contas" no Resumo (saldo real dos bancos) | 2026-10-03 | [SUMMARY](quick/261003-0pj-saldo-nas-contas-no-resumo/261003-0pj-SUMMARY.md) |
 | 261003-0x1 | Faturas dos cartões (Open Finance) no painel de despesas | 2026-10-03 | [SUMMARY](quick/261003-0x1-faturas-dos-cartoes-no-painel/261003-0x1-SUMMARY.md) |
+| 261003-1sn | Número da parcela na descrição e estorno de cartão abate despesas | 2026-10-03 | [SUMMARY](quick/261003-1sn-parcela-na-descricao-e-estorno-de-cartao/261003-1sn-SUMMARY.md) |
 
 ## Session Continuity
 

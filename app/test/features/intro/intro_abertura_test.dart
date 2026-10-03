@@ -88,15 +88,36 @@ void main() {
     terminou = 0;
   });
 
-  Future<void> abrirIntro(WidgetTester tester) async {
+  Future<void> abrirIntro(WidgetTester tester, {bool escuro = false}) async {
     await tester.pumpWidget(
       Directionality(
         textDirection: TextDirection.ltr,
-        child: IntroAbertura(aoTerminar: () => terminou++),
+        child: IntroAbertura(escuro: escuro, aoTerminar: () => terminou++),
       ),
     );
     await tester.pump();
   }
+
+  Color? fundoDaIntro(WidgetTester tester) => tester
+      .widget<ColoredBox>(
+        find.descendant(
+          of: find.byKey(const ValueKey('intro-abertura')),
+          matching: find.byType(ColoredBox),
+        ),
+      )
+      .color;
+
+  group('introEscura', () {
+    test('segue o tema escolhido no app', () {
+      expect(introEscura(ThemeMode.dark, Brightness.light), isTrue);
+      expect(introEscura(ThemeMode.light, Brightness.dark), isFalse);
+    });
+
+    test('em "Sistema", segue o tema do aparelho', () {
+      expect(introEscura(ThemeMode.system, Brightness.dark), isTrue);
+      expect(introEscura(ThemeMode.system, Brightness.light), isFalse);
+    });
+  });
 
   // Desmonta a intro: cancela os timers do vídeo e o tempo máximo.
   Future<void> fechar(WidgetTester tester) async {
@@ -109,6 +130,7 @@ void main() {
   ) async {
     await abrirIntro(tester);
     expect(plataforma.assetCriado, videoIntroAsset);
+    expect(fundoDaIntro(tester), corFundoIntro);
     expect(find.byKey(const ValueKey('video')), findsNothing);
 
     plataforma.carregar();
@@ -121,6 +143,16 @@ void main() {
     plataforma.acabar();
     await tester.pump();
     expect(terminou, 1);
+
+    await fechar(tester);
+  });
+
+  testWidgets('tema escuro toca o vídeo escuro, com o fundo escuro', (
+    tester,
+  ) async {
+    await abrirIntro(tester, escuro: true);
+    expect(plataforma.assetCriado, videoIntroEscuroAsset);
+    expect(fundoDaIntro(tester), corFundoIntroEscuro);
 
     await fechar(tester);
   });

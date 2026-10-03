@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Fundo do vídeo escuro da intro (modo escuro do aparelho). -->
+    <color name="intro_fundo">#14203A</color>
     <color name="widget_papel">#17213A</color>
     <color name="widget_tinta">#F1E8D2</color>
     <color name="widget_margem">#EF7A70</color>

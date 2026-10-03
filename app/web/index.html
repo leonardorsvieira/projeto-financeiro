@@ -52,8 +52,14 @@
 
   <title>Meu Bolso</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Fundo da intro em vídeo (intro.js) enquanto nada carregou: o do tema
+       do aparelho, para não piscar branco nem creme no escuro. -->
+  <style>
+    body { background: #F1E8D7; }
+    @media (prefers-color-scheme: dark) { body { background: #14203A; } }
+  </style>
 </head>
-<body style="background: #F1E8D7">
+<body>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -64,7 +70,7 @@
   -->
   <!-- Antes do app: desvia retornos do link de confirmação de e-mail. -->
   <script src="retorno-email.js"></script>
-  <!-- Intro em vídeo (mudo) enquanto o Flutter carrega. -->
+  <!-- Intro em vídeo (muda, clara ou escura) enquanto o Flutter carrega. -->
   <script src="intro.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

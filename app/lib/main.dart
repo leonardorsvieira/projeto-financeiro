@@ -33,7 +33,14 @@ Future<void> main() async {
   }
 
   _registrarLicencasDeFontes();
-  runApp(const _AberturaComIntro());
+  // A intro segue o tema do app (o escolhido ou, em "Sistema", o do aparelho).
+  final introNoEscuro =
+      _temIntroNoFlutter &&
+      introEscura(
+        await lerTemaSalvo(),
+        WidgetsBinding.instance.platformDispatcher.platformBrightness,
+      );
+  runApp(_AberturaComIntro(introNoEscuro: introNoEscuro));
 }
 
 /// No celular, a intro em vídeo toca uma vez por abertura e o app só é montado
@@ -45,7 +52,9 @@ bool get _temIntroNoFlutter =>
         defaultTargetPlatform == TargetPlatform.iOS);
 
 class _AberturaComIntro extends StatefulWidget {
-  const _AberturaComIntro();
+  const _AberturaComIntro({required this.introNoEscuro});
+
+  final bool introNoEscuro;
 
   @override
   State<_AberturaComIntro> createState() => _AberturaComIntroState();
@@ -81,7 +90,10 @@ class _AberturaComIntroState extends State<_AberturaComIntro> {
                 opacity: _saindo ? 0 : 1,
                 duration: const Duration(milliseconds: 400),
                 onEnd: () => setState(() => _introNaTela = false),
-                child: IntroAbertura(aoTerminar: _introTerminou),
+                child: IntroAbertura(
+                  escuro: widget.introNoEscuro,
+                  aoTerminar: _introTerminou,
+                ),
               ),
             ),
         ],

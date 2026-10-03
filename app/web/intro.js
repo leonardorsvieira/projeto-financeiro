@@ -1,13 +1,28 @@
 // Intro em vídeo da versão web (no celular ela é do próprio app:
 // lib/features/intro). Toca enquanto o Flutter carrega e some com fade quando
 // o vídeo acabou (ou o usuário tocou) E o app já desenhou a primeira tela
-// (evento "flutter-first-frame"). Sempre mudo: o navegador não deixa tocar
+// (evento "flutter-first-frame"). Sempre muda: o navegador não deixa tocar
 // som sem um toque antes. Se o navegador nem deixar tocar, fica só o fundo
-// creme até o app abrir.
+// até o app abrir. Versão clara ou escura conforme o tema do app.
 (function () {
   if (window.meuBolsoDesviando) return; // retorno-email.js já está saindo
 
-  var FUNDO = "#F1E8D7"; // mesmo creme do vídeo
+  // Tema escolhido no app (shared_preferences guarda em JSON no
+  // localStorage); sem escolha ("Sistema"), o tema do aparelho.
+  function temaEscuro() {
+    var salvo = null;
+    try {
+      salvo = JSON.parse(localStorage.getItem("flutter.app_theme_mode"));
+    } catch (e) {}
+    if (salvo === "dark") return true;
+    if (salvo === "light") return false;
+    return !!(window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }
+
+  var escuro = temaEscuro();
+  var FUNDO = escuro ? "#14203A" : "#F1E8D7"; // mesmo fundo de cada vídeo
+  document.body.style.background = FUNDO;
   var VIDEO_TRAVADO_MS = 10000;
   var APP_SEM_SINAL_MS = 60000;
 
@@ -32,7 +47,9 @@
   video.setAttribute("playsinline", "");
   video.preload = "auto";
   // Asset do Flutter (pubspec), relativo ao <base href>.
-  video.src = "assets/assets/intro/intro.mp4";
+  video.src = escuro
+    ? "assets/assets/intro/intro_escuro.mp4"
+    : "assets/assets/intro/intro.mp4";
   var v = video.style;
   v.width = "min(100vw, 100vh)";
   v.height = "min(100vw, 100vh)";

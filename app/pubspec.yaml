@@ -84,6 +84,7 @@ flutter:
     - assets/fonts/OFL-IBMPlexMono.txt
     - assets/fonts/LICENSE-Phosphor.txt
     - assets/intro/intro.mp4
+    - assets/intro/intro_escuro.mp4
 
   fonts:
     - family: Fraunces

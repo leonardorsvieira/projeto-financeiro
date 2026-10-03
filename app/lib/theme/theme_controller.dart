@@ -12,19 +12,7 @@ class ThemeController extends Notifier<ThemeMode> {
   }
 
   Future<void> _carregarTema() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final savedTheme = prefs.getString(_themePrefKey);
-      if (savedTheme == 'light') {
-        state = ThemeMode.light;
-      } else if (savedTheme == 'dark') {
-        state = ThemeMode.dark;
-      } else {
-        state = ThemeMode.system;
-      }
-    } catch (_) {
-      state = ThemeMode.system;
-    }
+    state = await lerTemaSalvo();
   }
 
   Future<void> definirTema(ThemeMode mode) async {
@@ -39,6 +27,21 @@ class ThemeController extends Notifier<ThemeMode> {
         await prefs.remove(_themePrefKey);
       }
     } catch (_) {}
+  }
+}
+
+/// Tema escolhido no app (`system` se nunca escolheu ou se a leitura falhar).
+/// Também lido antes do app montar, para escolher a intro clara ou escura.
+Future<ThemeMode> lerTemaSalvo() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return switch (prefs.getString(_themePrefKey)) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+  } catch (_) {
+    return ThemeMode.system;
   }
 }
 

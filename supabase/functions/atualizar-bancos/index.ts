@@ -24,6 +24,17 @@ async function atualizarItem(itemId: string): Promise<string> {
   const atual = await pluggy("GET", `/items/${encodeURIComponent(itemId)}`);
   if (!atual.ok) return `item_${atual.status}`;
   const item = await atual.json();
+  // Diagnóstico sem identificadores nem valores: quando a Pluggy atualizou a
+  // conexão e quando pretende atualizar de novo.
+  console.log(JSON.stringify({
+    conexao: {
+      conector: item.connector?.id,
+      status: item.status,
+      atualizada_em: item.lastUpdatedAt ?? null,
+      proxima_auto_sync: item.nextAutoSyncAt ?? null,
+      auto_sync_desligada_em: item.autoSyncDisabledAt ?? null,
+    },
+  }));
   if (item.connector?.id === CONECTOR_MEU_PLUGGY) return "meu_pluggy";
   if (PRECISA_USUARIO.has(item.status)) return "precisa_usuario";
   if (item.status === "UPDATING") return "ja_atualizando";

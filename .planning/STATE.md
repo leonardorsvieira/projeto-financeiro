@@ -135,6 +135,7 @@ Items acknowledged and carried forward from previous milestone close:
 | fast | Seta removida do card "Saldo nas contas" (o toque continua abrindo Meus bancos) | 2026-10-03 | — |
 | 261003-m6f | "Sincronizar agora" sincroniza e em seguida importa os últimos 12 meses; botão "Importar últimos 12 meses" removido | 2026-10-03 | [SUMMARY](quick/261003-m6f-sincronizar-ja-importa-12-meses/261003-m6f-SUMMARY.md) |
 | 261003-nig | Perfil de investidor e último guia salvos na conta (guias_investimento): perguntas uma vez, "Alterar perfil", "Gerar novo relatório" | 2026-10-03 | [SUMMARY](quick/261003-nig-perfil-e-guia-salvos-na-nuvem/261003-nig-SUMMARY.md) |
+| fast | APK release 1.2.4 (versionCode 9) com as atualizações de 2026-10-03 (guia de investimentos, análise do mês, sincronizar + 12 meses, card sem seta) | 2026-10-03 | — |
 
 ## Session Continuity
 

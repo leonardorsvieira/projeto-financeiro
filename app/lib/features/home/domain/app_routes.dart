@@ -23,6 +23,8 @@ class AppRoutes {
   static const String openFinance = '/open-finance';
   static const String investimentos = '/investimentos';
   static const String investimentoDetalhe = '/investimentos/:id';
+  // Fora de /investimentos/ para não casar com o :id do detalhe.
+  static const String guiaInvestimentos = '/guia-investimentos';
 
   static String lancamentoEditar(String id) => '/lancamentos/$id';
   static String investimentoDetalheDe(String id) => '/investimentos/$id';

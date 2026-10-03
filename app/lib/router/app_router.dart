@@ -12,6 +12,7 @@ import '../features/auth/domain/auth_state.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/signup_screen.dart';
 import '../features/auth/presentation/splash_screen.dart';
+import '../features/consultoria/presentation/guia_investimentos_screen.dart';
 import '../features/home/domain/app_routes.dart';
 import '../features/privacidade/domain/aceite_termos.dart';
 import '../features/privacidade/domain/textos_legais.dart';
@@ -185,6 +186,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return InvestimentoDetalheScreen(investimentoId: id);
         },
+      ),
+      GoRoute(
+        path: AppRoutes.guiaInvestimentos,
+        builder: (_, _) => const GuiaInvestimentosScreen(),
       ),
     ],
     redirect: (context, state) {

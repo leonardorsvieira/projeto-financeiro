@@ -54,6 +54,11 @@ class _InvestimentosScreenState extends ConsumerState<InvestimentosScreen> {
         title: const Text('Investimentos'),
         actions: [
           IconButton(
+            tooltip: 'Guia de investimentos (IA)',
+            icon: const PhosphorIcon(Icones.ia),
+            onPressed: () => context.push(AppRoutes.guiaInvestimentos),
+          ),
+          IconButton(
             tooltip: _porRendimento
                 ? 'Agrupar por classe'
                 : 'Ordenar por rendimento',
@@ -141,6 +146,12 @@ class _EmptyState extends StatelessWidget {
                   'dos bancos conectados no Open Finance.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 24),
+                FilledButton.tonalIcon(
+                  onPressed: () => context.push(AppRoutes.guiaInvestimentos),
+                  icon: const PhosphorIcon(Icones.ia),
+                  label: const Text('Como começar a investir? Abrir o guia'),
                 ),
               ],
             ),

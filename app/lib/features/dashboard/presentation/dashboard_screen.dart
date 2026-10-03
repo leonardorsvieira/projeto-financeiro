@@ -90,6 +90,8 @@ class DashboardScreen extends ConsumerWidget {
           // Chave pelo mês: ao trocar de mês, a análise anterior some.
           _CardAnaliseIA(key: ValueKey(ref.watch(mesSelecionadoProvider))),
           const SizedBox(height: 16),
+          const _CardGuiaInvestimentos(),
+          const SizedBox(height: 16),
           _PatrimonioSection(
             patrimonioCents: ref.watch(patrimonioTotalProvider),
             resumo: ref.watch(resumoRendimentosProvider),
@@ -748,6 +750,53 @@ class _SeletorMesHeader extends ConsumerWidget {
                   ref.read(mesSelecionadoProvider.notifier).resetarParaAtual();
                 },
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Entrada do Guia de investimentos (IA).
+class _CardGuiaInvestimentos extends StatelessWidget {
+  const _CardGuiaInvestimentos();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.25),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                PhosphorIcon(Icones.rendimento, color: Caderneta.ocre(context)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Guia de investimentos (IA)',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Um plano para investir melhor: seus números, o mercado de hoje '
+              'e as lições dos livros de investimento mais lidos.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => context.push(AppRoutes.guiaInvestimentos),
+              icon: const PhosphorIcon(Icones.ia),
+              label: const Text('Abrir meu guia'),
+            ),
           ],
         ),
       ),

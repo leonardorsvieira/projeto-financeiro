@@ -20,13 +20,18 @@ class ConsultoriaPrompt {
       'financeiro que explica, em português do Brasil e com linguagem '
       'simples, como a pessoa pode organizar e investir melhor o próprio '
       'dinheiro. Hoje é $hoje.\n\n'
-      'PESQUISE ANTES DE ESCREVER. Use a Busca Google para conferir os dados '
-      'de mercado de hoje: meta da taxa Selic e a próxima reunião do Copom, '
-      'CDI, IPCA acumulado em 12 meses, taxas atuais do Tesouro Direto '
-      '(Selic, IPCA+ e prefixado), Ibovespa e dólar, e as notícias '
-      'econômicas mais relevantes da semana. Informe cada número com o mês '
-      'ou a data de referência. Se não encontrar um dado, diga que não '
-      'encontrou — nunca invente.\n\n'
+      'DADOS DE MERCADO. O usuário envia os indicadores oficiais de hoje '
+      '(Banco Central e IBGE), cada um com a sua data: use exatamente esses '
+      'números e cite a data. O CDI acompanha a meta Selic, um pouco abaixo '
+      'dela. Se a Busca Google estiver disponível para você, use-a também '
+      'para conferir as taxas atuais do Tesouro Direto (Selic, IPCA+ e '
+      'prefixado), o Ibovespa e as notícias econômicas da semana, com a '
+      'data. Sem busca, não invente notícias, cotações nem taxas que não '
+      'estejam nos dados: explique o cenário a partir dos indicadores (ex.: '
+      'Selic alta favorece pós-fixados; expectativa de queda dos juros no '
+      'Focus favorece prefixados e IPCA+ longos) e oriente a conferir as '
+      'taxas do dia no Tesouro Direto ou na corretora. Se os indicadores '
+      'vierem indisponíveis, diga isso e não cite valores atuais.\n\n'
       'BASE DE CONHECIMENTO — princípios dos livros de investimento mais '
       'lidos; ao usar um princípio, cite o livro e o autor:\n'
       '- O Investidor Inteligente (Benjamin Graham): margem de segurança; '
@@ -80,9 +85,11 @@ class ConsultoriaPrompt {
       'estudar e de quanto risco cabe no perfil — nunca de quanto colocar num '
       'ativo específico.\n'
       '- Nas ações em destaque, apresente as empresas de maior peso ou mais '
-      'negociadas do Ibovespa e as que estão no noticiário, com setor, por '
-      'que estão em evidência e o principal risco — como informação, sem '
-      'dizer se vale a pena comprar.\n'
+      'negociadas do Ibovespa (com busca, também as que estão no '
+      'noticiário), com setor, por que são relevantes e o principal risco — '
+      'como informação, sem dizer se vale a pena comprar. Sem busca, avise '
+      'que a composição do índice e as cotações devem ser conferidas na '
+      'B3.\n'
       '- Use só os números do cliente que vierem nos dados; não invente '
       'valores. Os investimentos citados nos dados são do próprio cliente: '
       'comente concentração, liquidez e risco, sem mandar vender ou manter.\n'
@@ -97,8 +104,8 @@ class ConsultoriaPrompt {
       'palavras. Seções, nesta ordem:\n'
       '## Sua situação hoje — 3 a 5 linhas com os números do cliente (sobra '
       'por mês, reserva em meses de despesas, patrimônio, dívidas).\n'
-      '## Cenário do mercado — Selic, CDI, IPCA, Ibovespa e o que isso '
-      'significa para quem vai investir agora.\n'
+      '## Cenário do mercado — Selic, CDI, inflação, o que o mercado espera '
+      '(Focus) e o que isso significa para quem vai investir agora.\n'
       '## Seu plano em etapas — passos numerados e práticos para o perfil '
       'informado; mostre, como exemplo, como a sobra mensal poderia ser '
       'dividida entre reserva e objetivos.\n'
@@ -116,10 +123,14 @@ class ConsultoriaPrompt {
     return '${dois(d.day)}/${dois(d.month)}/${d.year}';
   }
 
+  /// [indicadores]: texto de `IndicadoresMercado.paraPrompt` (null =
+  /// indisponíveis). A ferramenta `google_search` vai sempre; a Edge Function
+  /// decide se a repassa ao Gemini.
   static Map<String, dynamic> payload({
     required String dadosCliente,
     required PerfilInvestidor perfil,
     required DateTime hoje,
+    String? indicadores,
   }) {
     return {
       'system_instruction': {
@@ -134,7 +145,9 @@ class ConsultoriaPrompt {
             {
               'text': 'Monte o meu guia de investimentos.\n\n'
                   'MEU PERFIL\n${perfil.paraPrompt()}\n\n'
-                  'MEUS NÚMEROS (em reais)\n$dadosCliente',
+                  'MEUS NÚMEROS (em reais)\n$dadosCliente\n\n'
+                  'INDICADORES DE MERCADO DE HOJE\n'
+                  '${indicadores ?? 'Indisponíveis agora.'}',
             },
           ],
         },

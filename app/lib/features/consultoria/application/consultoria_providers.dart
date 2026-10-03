@@ -3,13 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../investimentos/application/investimentos_providers.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
 import '../../open_finance/application/open_finance_providers.dart';
+import '../data/edge_indicadores_repository.dart';
 import '../data/gemini_consultoria_repository.dart';
 import '../domain/guia_investimentos.dart';
+import '../domain/indicadores_mercado.dart';
 import '../domain/perfil_investidor.dart';
 import 'dados_consultoria.dart';
 
 final consultoriaRepositoryProvider = Provider<ConsultoriaRepository>(
   (ref) => GeminiConsultoriaRepository(),
+);
+
+final indicadoresRepositoryProvider = Provider<IndicadoresRepository>(
+  (ref) => EdgeIndicadoresRepository(),
 );
 
 final consultoriaRelogioProvider = Provider<DateTime Function()>(
@@ -66,12 +72,16 @@ class GuiaInvestimentosController
 
     state = const AsyncLoading();
     try {
+      // Sem indicadores (fonte fora do ar) o guia sai mesmo assim.
+      final indicadores = await ref.read(indicadoresRepositoryProvider).buscar();
+      if (!ref.mounted) return;
       final guia = await ref.read(consultoriaRepositoryProvider).gerar(
             dadosCliente: dados.paraPrompt(),
             perfil: perfil,
+            indicadores: indicadores?.paraPrompt(),
           );
       if (!ref.mounted) return;
-      state = AsyncData(guia);
+      state = AsyncData(guia.comFontes(indicadores?.fontes ?? const []));
     } catch (e, st) {
       if (!ref.mounted) return;
       state = AsyncError(e, st);

@@ -56,6 +56,47 @@ void main() {
     });
   });
 
+  group('indicadores de mercado', () {
+    String usuarioDe(Map<String, dynamic> p) =>
+        (((p['contents'] as List).first as Map)['parts'] as List)
+            .first['text']
+            .toString();
+    String sistemaDe(Map<String, dynamic> p) =>
+        ((p['system_instruction'] as Map)['parts'] as List)
+            .first['text']
+            .toString();
+
+    test('vão no pedido; sem eles, o pedido avisa que estão indisponíveis',
+        () {
+      final com = ConsultoriaPrompt.payload(
+        dadosCliente: '',
+        perfil: perfil,
+        hoje: DateTime(2026, 10, 3),
+        indicadores: '- Meta da taxa Selic: 13,75% ao ano',
+      );
+      expect(usuarioDe(com), contains('INDICADORES DE MERCADO DE HOJE\n'
+          '- Meta da taxa Selic: 13,75% ao ano'));
+
+      final sem = ConsultoriaPrompt.payload(
+        dadosCliente: '',
+        perfil: perfil,
+        hoje: DateTime(2026, 10, 3),
+      );
+      expect(usuarioDe(sem), contains('Indisponíveis agora.'));
+    });
+
+    test('sem busca, a IA não inventa dados de hoje', () {
+      final sistema = sistemaDe(ConsultoriaPrompt.payload(
+        dadosCliente: '',
+        perfil: perfil,
+        hoje: DateTime(2026, 10, 3),
+      ));
+      expect(sistema, contains('use exatamente esses números'));
+      expect(sistema, contains('Sem busca, não invente notícias'));
+      expect(sistema, contains('não cite valores atuais'));
+    });
+  });
+
   test('observação longa é cortada no limite', () {
     final longa = 'a' * 500;
     final texto = const PerfilInvestidor().copyWith(observacao: longa).paraPrompt();

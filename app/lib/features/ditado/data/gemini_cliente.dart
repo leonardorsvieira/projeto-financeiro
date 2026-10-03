@@ -34,10 +34,12 @@ class GeminiCliente {
   final String _modelo;
   final List<Duration> _esperasRetry;
 
+  /// Reservas quando o modelo padrão falha. Os 2.x não servem mais (o Google
+  /// restringiu o 2.5 a quem já o usava; 2.0/1.5 saíram do ar). Mantenha em
+  /// sincronia com MODELOS_PERMITIDOS da Edge Function `ditado`.
   static const List<String> _modelosCandidatos = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
+    'gemini-3.5-flash',
+    'gemini-3.1-flash-lite',
     'gemini-3.5-flash-lite',
   ];
 

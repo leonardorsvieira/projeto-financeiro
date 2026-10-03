@@ -787,8 +787,8 @@ class _CardGuiaInvestimentos extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Um plano para investir melhor: seus números, o mercado de hoje '
-              'e as lições dos livros de investimento mais lidos.',
+              'Um plano para investir melhor: seus números, os indicadores de '
+              'hoje e as lições dos livros de investimento mais lidos.',
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),

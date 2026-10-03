@@ -22,14 +22,25 @@ class GuiaInvestimentos {
   final DateTime geradoEm;
   final List<FonteConsultada> fontes;
   final List<String> buscas;
+
+  /// O mesmo guia com [outras] fontes antes das da busca.
+  GuiaInvestimentos comFontes(List<FonteConsultada> outras) =>
+      GuiaInvestimentos(
+        texto: texto,
+        geradoEm: geradoEm,
+        fontes: [...outras, ...fontes],
+        buscas: buscas,
+      );
 }
 
 /// Gera o guia educativo de investimentos.
 abstract class ConsultoriaRepository {
   /// [dadosCliente]: números agregados do cliente, em reais (ver
-  /// `DadosConsultoria.paraPrompt`).
+  /// `DadosConsultoria.paraPrompt`). [indicadores]: indicadores de mercado
+  /// do dia (`IndicadoresMercado.paraPrompt`), ou null se indisponíveis.
   Future<GuiaInvestimentos> gerar({
     required String dadosCliente,
     required PerfilInvestidor perfil,
+    String? indicadores,
   });
 }

@@ -99,10 +99,11 @@ class _Apresentacao extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'A IA pesquisa o mercado de hoje (Selic, inflação, Tesouro, '
-              'bolsa), cruza com os seus números — renda, gastos, reserva e '
-              'patrimônio — e com as lições dos livros de investimento mais '
-              'lidos, e monta um plano em etapas para o seu perfil.',
+              'A IA usa os indicadores de hoje do Banco Central e do IBGE '
+              '(Selic, inflação, expectativas do mercado, dólar), cruza com os '
+              'seus números — renda, gastos, reserva e patrimônio — e com as '
+              'lições dos livros de investimento mais lidos, e monta um plano '
+              'em etapas para o seu perfil.',
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 8),
@@ -217,7 +218,8 @@ class _DadosEnviados extends ConsumerWidget {
           SelectableText(dados.paraPrompt(), style: theme.textTheme.bodySmall),
           const SizedBox(height: 8),
           Text(
-            'Só totais e médias: descrições de lançamentos não são enviadas.',
+            'Só totais e médias: descrições de lançamentos não são enviadas. '
+            'Junto vão os indicadores públicos de mercado do dia.',
             style: theme.textTheme.bodySmall?.copyWith(
               fontStyle: FontStyle.italic,
             ),
@@ -246,7 +248,7 @@ class _Carregando extends StatelessWidget {
             SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Pesquisando o mercado de hoje e montando o seu guia… '
+                'Consultando os indicadores de hoje e montando o seu guia… '
                 'Pode levar até um minuto.',
               ),
             ),

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:meubolso/features/consultoria/application/consultoria_providers.dart';
 import 'package:meubolso/features/consultoria/domain/guia_investimentos.dart';
+import 'package:meubolso/features/consultoria/domain/indicadores_mercado.dart';
 import 'package:meubolso/features/consultoria/presentation/guia_investimentos_screen.dart';
 import 'package:meubolso/features/ditado/domain/ditado_repository.dart';
 import 'package:meubolso/features/investimentos/application/investimentos_providers.dart';
@@ -20,6 +21,7 @@ Future<void> _pump(
   WidgetTester tester,
   FakeConsultoriaRepository consultoria, {
   List<Lancamento> lancamentos = const [],
+  IndicadoresMercado? indicadores,
 }) async {
   await tester.binding.setSurfaceSize(const Size(800, 3000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -27,6 +29,9 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         consultoriaRepositoryProvider.overrideWithValue(consultoria),
+        indicadoresRepositoryProvider.overrideWithValue(
+          FakeIndicadoresRepository(indicadores),
+        ),
         consultoriaRelogioProvider.overrideWithValue(
           () => DateTime(2026, 10, 3),
         ),
@@ -80,6 +85,11 @@ void main() {
     await _pump(
       tester,
       consultoria,
+      indicadores: IndicadoresMercado(
+        consultadoEm: DateTime(2026, 10, 3, 15),
+        selicMeta: 13.75,
+        selicReuniao: DateTime(2026, 9, 16),
+      ),
       lancamentos: [
         Lancamento(
           id: 'a',
@@ -107,8 +117,11 @@ void main() {
     expect(consultoria.ultimoPerfil!.completo, isTrue);
     expect(consultoria.ultimosDados, contains('Lazer: R\$ 100,00'));
     expect(consultoria.ultimosDados, isNot(contains('Fulano')));
+    expect(consultoria.ultimosIndicadores, contains('Meta da taxa Selic: 13,75%'));
 
     expect(find.text('Sua situação hoje'), findsOneWidget);
+    // Fonte oficial dos indicadores vem antes das da busca.
+    expect(find.text('Banco Central — histórico da taxa Selic'), findsOneWidget);
     expect(find.textContaining('Você guarda'), findsOneWidget);
     expect(find.text('Gerado em 03/10/2026 às 14:30'), findsOneWidget);
     expect(find.text('Fontes consultadas'), findsOneWidget);

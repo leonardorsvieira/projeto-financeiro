@@ -81,19 +81,19 @@ void main() {
     expect(chamadas, 1);
   });
 
-  test('modelo que recusa troca para o gemini-2.5-flash; no máximo 2 '
+  test('modelo que recusa troca para o gemini-3.5-flash; no máximo 2 '
       'modelos × 2 tentativas', () async {
     final modelos = <String>[];
     final r = repo(MockClient((req) async {
       final modelo = (jsonDecode(req.body) as Map)['modelo'] as String;
       modelos.add(modelo);
-      if (modelo == 'gemini-2.5-flash') return ok('Guia');
+      if (modelo == 'gemini-3.5-flash') return ok('Guia');
       return http.Response('{"error":{"status":"INVALID_ARGUMENT"}}', 400);
     }));
 
     final guia = await r.gerar(dadosCliente: '', perfil: perfil);
     expect(guia.texto, 'Guia');
-    expect(modelos, [GeminiPrompt.modelo, 'gemini-2.5-flash']);
+    expect(modelos, [GeminiPrompt.modelo, 'gemini-3.5-flash']);
 
     var chamadas = 0;
     await expectLater(

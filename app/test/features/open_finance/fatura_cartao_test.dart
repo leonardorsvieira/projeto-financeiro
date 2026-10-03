@@ -145,6 +145,68 @@ void main() {
     });
   });
 
+  group('fatura aberta pelo banco (billId)', () {
+    Map<String, dynamic> tx(
+      String data,
+      double amount, {
+      String? bill,
+      String descricao = 'MERCADOLIVRE',
+    }) =>
+        {
+          'date': '${data}T12:00:00.000Z',
+          'amount': amount,
+          'description': descricao,
+          'creditCardMetadata': {'billId': ?bill},
+        };
+
+    // Caso real do Mercado Pago (2026-10-03): o banco mostra R$ 217,00.
+    final transacoes = [
+      tx('2026-09-07', -344.90, bill: 'fatura-set'), // estorno
+      tx('2026-09-09', 43.11, bill: 'fatura-set'), // 2ª parcela
+      tx('2026-09-16', -500, descricao: 'Pagamento recebido'), // pagou a fatura
+      tx('2026-09-17', 216, descricao: 'BARATAO DO CELULAR'),
+      tx('2026-09-17', 1, descricao: 'RealizaImportados'),
+      tx('2026-11-04', 216, descricao: 'BARATAO DO CELUL'), // parcela futura
+    ];
+
+    test('soma só o que ainda não tem fatura, até o vencimento', () {
+      expect(
+        faturaAbertaDasTransacoes(transacoes, ate: DateTime(2026, 10, 15)),
+        21700,
+      );
+    });
+
+    test('banco sem billId: null (o app estima pelas datas)', () {
+      expect(
+        faturaAbertaDasTransacoes(
+          [tx('2026-09-17', 216), tx('2026-09-20', 10)],
+          ate: DateTime(2026, 10, 15),
+        ),
+        isNull,
+      );
+      expect(
+        faturaAbertaDasTransacoes(const [], ate: DateTime(2026, 10, 15)),
+        isNull,
+      );
+    });
+
+    test('faturasDoMes usa a fatura aberta do banco quando existe', () {
+      final comBanco = CartaoOpenFinance(
+        formasPagamento: gold.formasPagamento,
+        faturas: gold.faturas,
+        faturaAbertaCents: 21700,
+      );
+      final f = faturasDoMes(
+        cartoes: [comBanco],
+        lancamentos: lancamentos,
+        mes: DateTime(2026, 10),
+        agora: agora,
+      ).single;
+      expect(f.valorCents, 21700);
+      expect(f.aberta, isTrue);
+    });
+  });
+
   group('faturasDaPluggy', () {
     test('lê vencimento e fechamento sem fuso e o total em centavos', () {
       final faturas = faturasDaPluggy([
@@ -186,11 +248,18 @@ void main() {
       tipoConta: 'Cartão',
       corHex: '#000000',
       ultimoSync: DateTime(2026, 10, 3),
-      cartoes: [gold],
+      cartoes: [
+        CartaoOpenFinance(
+          formasPagamento: gold.formasPagamento,
+          faturas: gold.faturas,
+          faturaAbertaCents: 21700,
+        ),
+      ],
     );
     final lida = ContaBancariaConectada.fromMap(conta.toMap());
 
     expect(lida.cartoes.single.formasPagamento, gold.formasPagamento);
+    expect(lida.cartoes.single.faturaAbertaCents, 21700);
     expect(lida.cartoes.single.faturas.first.vencimento, DateTime(2026, 9, 12));
     expect(lida.cartoes.single.faturas.first.fechamento, DateTime(2026, 9, 5));
     expect(lida.cartoes.single.faturas.first.valorCents, 180000);

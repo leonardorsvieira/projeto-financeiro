@@ -300,6 +300,33 @@ List<FaturaCartao> faturasDaPluggy(List<dynamic> bills) {
   return faturas.take(24).toList();
 }
 
+/// Fatura aberta de um cartão pelas transações do Open Finance: as que ainda
+/// não têm fatura (`creditCardMetadata.billId` vazio) com data antes de [ate]
+/// (o vencimento dela; depois disso são parcelas de faturas seguintes), sem o
+/// pagamento de fatura. No cartão, positivo = compra e negativo = estorno.
+/// Null se nenhuma transação traz `billId` (o banco não informa a fatura de
+/// cada uma — aí o app estima pelas datas).
+int? faturaAbertaDasTransacoes(List<dynamic> transacoes, {required DateTime ate}) {
+  String? fatura(Map<String, dynamic> tx) {
+    final id =
+        (tx['creditCardMetadata'] as Map<String, dynamic>?)?['billId'];
+    return id is String && id.isNotEmpty ? id : null;
+  }
+
+  final txs = transacoes.whereType<Map<String, dynamic>>().toList();
+  if (!txs.any((tx) => fatura(tx) != null)) return null;
+  var total = 0;
+  for (final tx in txs) {
+    if (fatura(tx) != null) continue;
+    final data = DateTime.tryParse(tx['date'] as String? ?? '')?.toLocal();
+    if (data == null || !data.isBefore(ate)) continue;
+    final descricao = (tx['description'] ?? tx['descriptionRaw'] ?? '') as String;
+    if (ehPagamentoDeFatura(tx['category'] as String?, descricao)) continue;
+    total += (((tx['amount'] as num?) ?? 0).toDouble() * 100).round();
+  }
+  return total;
+}
+
 /// Quanto foi aplicado: `amountOriginal`; sem ele, o valor bruto menos o
 /// lucro informado (`amount − amountProfit`). Null se o banco não informar.
 int? valorInvestidoDaPluggy(Map<String, dynamic> inv) {
@@ -601,6 +628,7 @@ class PluggyOpenFinanceService {
             final accountId = a['id'] as String?;
             if (accountId == null) continue;
             final nomeConta = (a['name'] as String?)?.trim() ?? '';
+            final faturas = await _faturasDoCartao(accountId);
             cartoes.add(CartaoOpenFinance(
               // Os rótulos com que as compras do cartão são importadas: o da
               // sincronização do app e o do `pluggy-webhook`.
@@ -608,7 +636,11 @@ class PluggyOpenFinanceService {
                 'Cartão: ${nomeBancoDaConta(nomeBanco, nomeConta)}',
                 'Cartão: ${ehAgregador && nomeConta.isNotEmpty ? nomeConta : nomeConector}',
               }.toList(),
-              faturas: await _faturasDoCartao(accountId),
+              faturas: faturas,
+              faturaAbertaCents: await _faturaAbertaDoCartao(
+                accountId,
+                faturas,
+              ),
             ));
           }
         }
@@ -644,6 +676,32 @@ class PluggyOpenFinanceService {
       return faturasDaPluggy((data['results'] as List<dynamic>?) ?? const []);
     } catch (_) {
       return const [];
+    }
+  }
+
+  /// Fatura aberta do cartão pelo banco (ver [faturaAbertaDasTransacoes]):
+  /// transações desde 25 dias antes do último vencimento — cobre o fechamento
+  /// da última fatura, então a janela tem transações com e sem `billId`.
+  Future<int?> _faturaAbertaDoCartao(
+    String accountId,
+    List<FaturaCartao> faturas,
+  ) async {
+    if (faturas.isEmpty) return null;
+    final ultimoVencimento = faturas.first.vencimento;
+    try {
+      final transacoes = await _transacoesDaConta(
+        accountId,
+        ultimoVencimento
+            .subtract(const Duration(days: 25))
+            .toIso8601String()
+            .substring(0, 10),
+      );
+      return faturaAbertaDasTransacoes(
+        transacoes,
+        ate: vencimentoSeguinte(ultimoVencimento),
+      );
+    } catch (_) {
+      return null;
     }
   }
 

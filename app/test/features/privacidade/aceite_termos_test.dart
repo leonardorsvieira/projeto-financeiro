@@ -141,7 +141,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(DocumentoLegalScreen), findsOneWidget);
-      expect(find.text('Versão de 01/10/2026'), findsOneWidget);
+      expect(find.text('Versão de 03/10/2026'), findsOneWidget);
     });
 
     testWidgets('link da Política de Privacidade abre o documento', (

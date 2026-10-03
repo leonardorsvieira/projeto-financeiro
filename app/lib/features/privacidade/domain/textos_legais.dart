@@ -4,8 +4,8 @@ import 'documento_legal.dart';
 /// Frases curtas em destaque (LGPD art. 33, VIII): mostradas no cadastro e na
 /// tela de re-aceite, ao lado do aceite dos documentos.
 const List<String> destaquesPrivacidade = [
-  'O ditado envia o áudio ao Google (Gemini), fora do Brasil, só para '
-      'transcrever. No plano gratuito, o Google pode usar o conteúdo para '
+  'O ditado e as análises por IA são processados pelo Google (Gemini), '
+      'fora do Brasil. No plano gratuito, o Google pode usar o conteúdo para '
       'melhorar seus serviços.',
   'O Open Finance é opcional e só funciona com a sua autorização no '
       'próprio banco.',
@@ -58,6 +58,16 @@ const DocumentoLegal politicaDePrivacidade = DocumentoLegal(
           'do app ao Google Gemini só para transcrever e classificar. O '
           'servidor do app não armazena o áudio nem a transcrição. Fica salvo '
           'apenas o lançamento que você revisar e confirmar.',
+        ),
+        ParagrafoLegal(
+          'Análise do mês e Guia de investimentos, só quando você toca no '
+          'botão: o servidor do app envia ao Google Gemini totais e médias — '
+          'receitas, despesas, despesas por categoria, saldo das contas, '
+          'faturas em aberto e seus investimentos (nome, classe, valor e '
+          'rendimento) —, além do perfil e da observação que você escrever '
+          'no guia. Descrições de lançamentos não são enviadas. O guia usa a '
+          'Busca Google para consultar dados de mercado. O servidor do app '
+          'não armazena a resposta.',
         ),
         ParagrafoLegal(
           'Open Finance, se você conectar um banco: por meio da Pluggy, o '
@@ -137,7 +147,8 @@ const DocumentoLegal politicaDePrivacidade = DocumentoLegal(
           'Supabase: banco de dados, autenticação e funções do servidor. Os '
               'dados ficam armazenados em São Paulo, Brasil.',
           'Google (API Gemini): recebe o áudio do ditado e as instruções de '
-              'classificação.',
+              'classificação e, quando você pede a análise do mês ou o guia '
+              'de investimentos, os totais descritos acima.',
           'Pluggy: serviço de Open Finance, empresa brasileira, usado só se '
               'você conectar um banco.',
           'Autoridades, quando a lei exigir.',
@@ -149,7 +160,7 @@ const DocumentoLegal politicaDePrivacidade = DocumentoLegal(
           'seus produtos e serviços, inclusive com revisão humana. Por isso, '
           'dite só o necessário para o lançamento e evite informações '
           'sensíveis, como senhas, número completo de cartão e dados de '
-          'saúde.',
+          'saúde — inclusive na observação do guia de investimentos.',
         ),
       ],
     ),
@@ -157,10 +168,10 @@ const DocumentoLegal politicaDePrivacidade = DocumentoLegal(
       titulo: '6. Transferência internacional (art. 33)',
       blocos: [
         ParagrafoLegal(
-          'O ditado é processado pelo Google nos Estados Unidos e em outros '
-          'países. A base é o seu consentimento específico e em destaque '
-          '(art. 33, VIII), dado ao aceitar estes documentos e ao usar o '
-          'ditado.',
+          'O ditado, a análise do mês e o guia de investimentos são '
+          'processados pelo Google nos Estados Unidos e em outros países. A '
+          'base é o seu consentimento específico e em destaque (art. 33, '
+          'VIII), dado ao aceitar estes documentos e ao usar esses recursos.',
         ),
         ParagrafoLegal(
           'Os demais provedores também podem trafegar dados por outros '
@@ -312,7 +323,13 @@ const DocumentoLegal termosDeUso = DocumentoLegal(
           'você confirma passa a ser um registro seu.',
         ),
         ParagrafoLegal(
-          'Podem ser aplicados limites diários de uso do ditado.',
+          'A análise do mês e o guia de investimentos são textos gerados por '
+          'IA a partir dos seus números e de pesquisas na internet: podem '
+          'conter erros ou dados desatualizados. Confira antes de decidir.',
+        ),
+        ParagrafoLegal(
+          'Podem ser aplicados limites diários de uso do ditado, da análise '
+          'e do guia.',
         ),
       ],
     ),
@@ -323,6 +340,12 @@ const DocumentoLegal termosDeUso = DocumentoLegal(
           'O Meu Bolso oferece informação para organizar suas finanças. Ele '
           'não é consultoria financeira, de investimentos, contábil ou '
           'tributária. As decisões são suas.',
+        ),
+        ParagrafoLegal(
+          'O Guia de investimentos é conteúdo educativo: explica classes de '
+          'investimento, critérios de escolha e o cenário de mercado, mas não '
+          'recomenda comprar, vender ou manter nenhum ativo e não substitui '
+          'um profissional certificado.',
         ),
       ],
     ),

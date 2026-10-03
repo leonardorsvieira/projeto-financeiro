@@ -14,7 +14,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(politicaDePrivacidade.titulo), findsWidgets);
-    expect(find.text('Versão de 01/10/2026'), findsOneWidget);
+    expect(find.text('Versão de 03/10/2026'), findsOneWidget);
     expect(find.textContaining(emailPrivacidade), findsWidgets);
   });
 
@@ -49,6 +49,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Termos de Uso'), findsWidgets);
-    expect(find.text('Versão de 01/10/2026'), findsOneWidget);
+    expect(find.text('Versão de 03/10/2026'), findsOneWidget);
   });
 }

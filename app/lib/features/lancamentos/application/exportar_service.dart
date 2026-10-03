@@ -66,13 +66,15 @@ class ExportarService {
     buffer.write('\uFEFF');
 
     buffer.writeln(
-      'Mês/Ano;Entradas (R\$);Saídas (R\$);Saldo do Mês (R\$);Patrimônio Acumulado (R\$)',
+      'Mês/Ano;Entradas (R\$);Saídas (R\$);Investimentos (R\$);Saldo do Mês (R\$);Patrimônio Acumulado (R\$)',
     );
 
     for (final p in dados.pontos) {
       final nomeMes = '${_meses[p.mesAno.month - 1]} ${p.mesAno.year}';
       final entradasStr = p.entradasReais.toStringAsFixed(2).replaceAll('.', ',');
       final saidasStr = p.saidasReais.toStringAsFixed(2).replaceAll('.', ',');
+      final investimentosStr =
+          p.investimentosReais.toStringAsFixed(2).replaceAll('.', ',');
       final saldoStr = p.saldoMesReais.toStringAsFixed(2).replaceAll('.', ',');
       final patrimonioStr =
           p.patrimonioAcumuladoReais.toStringAsFixed(2).replaceAll('.', ',');
@@ -81,6 +83,7 @@ class ExportarService {
         _escaparCampo(nomeMes),
         entradasStr,
         saidasStr,
+        investimentosStr,
         saldoStr,
         patrimonioStr,
       ].join(';');

@@ -12,9 +12,10 @@ final lancamentosStreamProvider = StreamProvider<List<Lancamento>>((ref) {
   return ref.watch(lancamentosRepositoryProvider).watch();
 });
 
-/// Lançamentos que contam para saldo, gráficos e relatórios: todos, menos as
-/// movimentações neutras (transferência entre contas próprias, aplicação e
-/// resgate de investimento).
+/// Lançamentos que contam como receita/despesa (gráficos, metas, patrimônio):
+/// todos, menos as movimentações neutras (transferência entre contas próprias,
+/// aplicação e resgate de investimento). O saldo do mês soma à parte as
+/// aplicações e resgates (ver `resumoDoMes`).
 final lancamentosContabeisProvider = Provider<List<Lancamento>>((ref) {
   final todos = ref.watch(lancamentosStreamProvider).value ?? [];
   return todos.where((l) => !l.ehMovimentacaoNeutra).toList();

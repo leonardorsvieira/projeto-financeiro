@@ -182,12 +182,28 @@ class _CardMesHistorico extends StatelessWidget {
                   ),
                 ],
               ),
+              if (resumo.resgatesCents > 0 || resumo.aplicacoesCents > 0) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _textoInvestimentos(resumo),
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
             ],
           ),
         ),
       ),
     );
   }
+}
+
+/// "Investimentos no saldo: +R$ 1.500,00 resgatado · -R$ 300,00 aplicado".
+String _textoInvestimentos(ResumoMes r) {
+  final partes = [
+    if (r.resgatesCents > 0) '+${formatoBRL(r.resgatesCents)} resgatado',
+    if (r.aplicacoesCents > 0) '-${formatoBRL(r.aplicacoesCents)} aplicado',
+  ];
+  return 'Investimentos no saldo: ${partes.join(' · ')}';
 }
 
 class _InfoColuna extends StatelessWidget {

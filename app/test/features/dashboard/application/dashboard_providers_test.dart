@@ -15,12 +15,13 @@ Lancamento _lanc({
   required DateTime data,
   DateTime? vencimento,
   TipoLancamento tipo = TipoLancamento.despesa,
+  String categoria = 'Outros',
 }) {
   final agora = DateTime.now();
   return Lancamento(
     id: id,
     descricao: id,
-    categoria: 'Outros',
+    categoria: categoria,
     valorCents: valorCents,
     formaPagamento: 'Pix',
     data: data,
@@ -167,6 +168,100 @@ void main() {
     expect(resumo.previstoCents, 5000, reason: 'só despesa');
     expect(resumo.saldoCents, 290000);
     expect(resumo.totalCents, 15000, reason: 'saídas + previsto');
+  });
+
+  group('investimentos no saldo do mês (como no extrato)', () {
+    final mes = DateTime(2026, 9);
+    final lancamentos = [
+      _lanc(
+        id: 'salario',
+        valorCents: 500000,
+        data: DateTime(2026, 9, 5),
+        tipo: TipoLancamento.receita,
+      ),
+      _lanc(id: 'mercado', valorCents: 120000, data: DateTime(2026, 9, 6)),
+      // Resgatou da caixinha: entra no saldo.
+      _lanc(
+        id: 'resgate',
+        valorCents: 80000,
+        data: DateTime(2026, 9, 7),
+        tipo: TipoLancamento.receita,
+        categoria: categoriaMovimentacaoInvestimento,
+      ),
+      // Aplicou no CDB: sai do saldo.
+      _lanc(
+        id: 'aplicacao',
+        valorCents: 300000,
+        data: DateTime(2026, 9, 8),
+        categoria: categoriaMovimentacaoInvestimento,
+      ),
+      // Aplicação com vencimento no mês, mas data fora: nunca é previsto.
+      _lanc(
+        id: 'aplicacao-agosto',
+        valorCents: 7000,
+        data: DateTime(2026, 8, 30),
+        vencimento: DateTime(2026, 9, 10),
+        categoria: categoriaMovimentacaoInvestimento,
+      ),
+      // Transferência entre contas próprias continua fora de tudo.
+      _lanc(
+        id: 'transf',
+        valorCents: 99999,
+        data: DateTime(2026, 9, 9),
+        tipo: TipoLancamento.receita,
+        categoria: categoriaTransferenciaEntreContas,
+      ),
+    ];
+
+    test('resgate soma, aplicação subtrai; receitas/despesas inalteradas', () {
+      final r = resumoDoMes(lancamentos, mes);
+
+      expect(r.entradasCents, 500000, reason: 'resgate não é renda');
+      expect(r.saidasCents, 120000, reason: 'aplicação não é gasto');
+      expect(r.previstoCents, 0);
+      expect(r.resgatesCents, 80000);
+      expect(r.aplicacoesCents, 300000);
+      expect(r.investimentosLiquidoCents, -220000);
+      // 5000 − 1200 + 800 − 3000 = 1600
+      expect(r.saldoCents, 160000);
+    });
+
+    test('toString (análise por IA) inclui investimentos e saldo', () {
+      final texto = resumoDoMes(lancamentos, mes).toString();
+      expect(texto, contains('resgates de investimento: 80000'));
+      expect(texto, contains('aplicações em investimento: 300000'));
+      expect(texto, contains('saldo: 160000'));
+    });
+
+    test('resumoMesProvider e histórico usam a mesma regra', () async {
+      final agora = DateTime.now();
+      final noMes = DateTime(agora.year, agora.month, 1);
+      final repo = FakeLancamentosRepository([
+        _lanc(
+          id: 'resgate',
+          valorCents: 10000,
+          data: noMes,
+          tipo: TipoLancamento.receita,
+          categoria: categoriaMovimentacaoInvestimento,
+        ),
+        _lanc(id: 'gasto', valorCents: 4000, data: noMes),
+      ]);
+      final container = ProviderContainer(
+        overrides: [lancamentosRepositoryProvider.overrideWithValue(repo)],
+      );
+      addTearDown(container.dispose);
+
+      await aguardarEmissao(container);
+
+      expect(container.read(resumoMesProvider).saldoCents, 6000);
+      expect(
+        container.read(historicoUltimosMesesProvider).first.resumo.saldoCents,
+        6000,
+      );
+      // Donut continua só com gastos de verdade.
+      expect(container.read(gastosPorCategoriaMesProvider).single.valorCents,
+          4000);
+    });
   });
 
   test('gastosPorCategoriaMesProvider ignora receitas no donut', () async {

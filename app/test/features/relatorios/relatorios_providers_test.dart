@@ -101,6 +101,61 @@ void main() {
       // Sem banco conectado não há patrimônio real (vale o saldo do período).
       expect(dados.patrimonioReal, isFalse);
     });
+
+    test('resgate soma e aplicação subtrai só no saldo (não no patrimônio)',
+        () async {
+      final agora = DateTime.now();
+      final mesAtual = DateTime(agora.year, agora.month, 1);
+      Lancamento l(String id, int cents, String categoria, TipoLancamento t) =>
+          Lancamento(
+            id: id,
+            data: mesAtual,
+            tipo: t,
+            descricao: id,
+            categoria: categoria,
+            formaPagamento: 'Pix',
+            valorCents: cents,
+            createdAt: agora,
+            updatedAt: agora,
+          );
+
+      final lancamentos = [
+        l('salario', 500000, 'Trabalho', TipoLancamento.receita),
+        l('aluguel', 200000, 'Moradia', TipoLancamento.despesa),
+        l('resgate', 150000, categoriaMovimentacaoInvestimento,
+            TipoLancamento.receita),
+        l('aplicacao', 50000, categoriaMovimentacaoInvestimento,
+            TipoLancamento.despesa),
+        l('transf', 99999, categoriaTransferenciaEntreContas,
+            TipoLancamento.receita),
+      ];
+
+      final container = ProviderContainer(
+        overrides: [
+          lancamentosStreamProvider
+              .overrideWith((ref) => Stream.value(lancamentos)),
+          investimentosStreamProvider.overrideWith((ref) => Stream.value([])),
+          patrimonioRealAtualProvider.overrideWithValue(null),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.listen(relatoriosComparativosProvider, (_, _) {});
+      await container.read(lancamentosStreamProvider.future);
+
+      final dados = container.read(relatoriosComparativosProvider);
+      final atual = dados.pontos.last;
+
+      expect(dados.totalEntradasCents, 500000);
+      expect(dados.totalSaidasCents, 200000);
+      expect(dados.totalInvestimentosCents, 100000);
+      expect(dados.saldoTotalCents, 400000);
+      expect(atual.investimentosCents, 100000);
+      expect(atual.saldoMesCents, 400000);
+      expect(dados.temMovimentoInvestimento, isTrue);
+      // Saldo acumulado/patrimônio não conta aplicação nem resgate.
+      expect(atual.patrimonioAcumuladoCents, 300000);
+    });
   });
 
   group('evolucaoPatrimonialPorMes', () {
@@ -170,13 +225,15 @@ void main() {
             mesAno: DateTime(2026, 9),
             entradasCents: 500000,
             saidasCents: 150000,
-            saldoMesCents: 350000,
+            saldoMesCents: 330000,
             patrimonioAcumuladoCents: 350000,
+            investimentosCents: -20000,
           ),
         ],
         totalEntradasCents: 500000,
         totalSaidasCents: 150000,
-        saldoTotalCents: 350000,
+        saldoTotalCents: 330000,
+        totalInvestimentosCents: -20000,
         patrimonioInicialCents: 350000,
         patrimonioAtualCents: 350000,
         variacaoPatrimonialPercent: 0.0,
@@ -185,8 +242,8 @@ void main() {
       final csv = ExportarService.gerarCSVComparativo(dados);
 
       expect(csv.startsWith('\uFEFF'), isTrue);
-      expect(csv, contains('Mês/Ano;Entradas (R\$);Saídas (R\$);Saldo do Mês (R\$);Patrimônio Acumulado (R\$)'));
-      expect(csv, contains('Setembro 2026;5000,00;1500,00;3500,00;3500,00'));
+      expect(csv, contains('Mês/Ano;Entradas (R\$);Saídas (R\$);Investimentos (R\$);Saldo do Mês (R\$);Patrimônio Acumulado (R\$)'));
+      expect(csv, contains('Setembro 2026;5000,00;1500,00;-200,00;3300,00;3500,00'));
     });
   });
 }

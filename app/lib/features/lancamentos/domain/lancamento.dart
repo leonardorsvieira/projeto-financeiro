@@ -12,7 +12,9 @@ enum TipoLancamento {
 
 /// Movimentação neutra: dinheiro trocando de lugar entre contas do próprio
 /// usuário ou indo/voltando de investimentos. Aparece na lista, mas não é
-/// renda nem gasto — fica fora do saldo, dos gráficos e dos relatórios.
+/// renda nem gasto — fica fora de receitas, despesas, gráficos e patrimônio.
+/// Aplicação e resgate só entram no saldo do mês (como no extrato do banco:
+/// resgatar aumenta o saldo da conta, aplicar diminui).
 const categoriaTransferenciaEntreContas = 'Transferência entre contas';
 const categoriaMovimentacaoInvestimento = 'Investimento (aplicação/resgate)';
 const categoriasNeutras = {
@@ -84,6 +86,10 @@ class Lancamento {
 
   /// Não conta como entrada nem saída (ver [categoriasNeutras]).
   bool get ehMovimentacaoNeutra => categoriasNeutras.contains(categoria);
+
+  /// Aplicação (despesa) ou resgate (receita) de investimento.
+  bool get ehMovimentacaoInvestimento =>
+      categoria == categoriaMovimentacaoInvestimento;
 
   Lancamento copyWith({
     String? descricao,

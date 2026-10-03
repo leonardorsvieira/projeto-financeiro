@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../lancamentos/application/lancamentos_providers.dart';
-import '../../lancamentos/domain/lancamento.dart' show TipoLancamento;
+import '../../lancamentos/domain/lancamento.dart';
 
 /// Resumo do fluxo do mês vigente (entradas e saídas + previsto).
 ///
@@ -9,22 +9,33 @@ import '../../lancamentos/domain/lancamento.dart' show TipoLancamento;
 /// com data no mês (alias de compat: [realCents]); [previstoCents] soma
 /// despesas que vencem no mês mas ainda não foram contabilizadas (vencimento
 /// no mês e data fora dele). Receitas não têm previsto.
+///
+/// [resgatesCents] e [aplicacoesCents] são o dinheiro que voltou de / foi para
+/// investimentos: não são renda nem gasto, mas mexem no saldo da conta.
 class ResumoMes {
   const ResumoMes({
     required this.entradasCents,
     required this.saidasCents,
     required this.previstoCents,
+    this.resgatesCents = 0,
+    this.aplicacoesCents = 0,
   });
 
   final int entradasCents;
   final int saidasCents;
   final int previstoCents;
+  final int resgatesCents;
+  final int aplicacoesCents;
 
   /// Alias de compatibilidade: saídas do mês.
   int get realCents => saidasCents;
 
-  /// Saldo do mês: entradas − saídas.
-  int get saldoCents => entradasCents - saidasCents;
+  /// Resgatado − aplicado em investimentos no mês.
+  int get investimentosLiquidoCents => resgatesCents - aplicacoesCents;
+
+  /// Saldo do mês, como no extrato: entradas − saídas + resgates − aplicações.
+  int get saldoCents =>
+      entradasCents - saidasCents + investimentosLiquidoCents;
 
   /// Total de gasto (saídas + previsto) — mantém semântica de gasto.
   int get totalCents => saidasCents + previstoCents;
@@ -32,7 +43,55 @@ class ResumoMes {
   @override
   String toString() =>
       'ResumoMes(entradas: $entradasCents, saídas: $saidasCents, '
-      'previsto: $previstoCents)';
+      'previsto: $previstoCents, resgates de investimento: $resgatesCents, '
+      'aplicações em investimento: $aplicacoesCents, saldo: $saldoCents)';
+}
+
+/// Resumo de [mes] a partir de TODOS os lançamentos: transferência entre
+/// contas próprias fica de fora; aplicação/resgate de investimento só entra
+/// no saldo (nunca em entradas, saídas ou previsto).
+ResumoMes resumoDoMes(List<Lancamento> lancamentos, DateTime mes) {
+  int entradas = 0;
+  int saidas = 0;
+  int previsto = 0;
+  int resgates = 0;
+  int aplicacoes = 0;
+  for (final l in lancamentos) {
+    final dataNoMes = l.data.year == mes.year && l.data.month == mes.month;
+    final receita = l.tipo == TipoLancamento.receita;
+    if (l.ehMovimentacaoInvestimento) {
+      if (dataNoMes) {
+        if (receita) {
+          resgates += l.valorCents;
+        } else {
+          aplicacoes += l.valorCents;
+        }
+      }
+      continue;
+    }
+    if (l.ehMovimentacaoNeutra) continue;
+
+    if (dataNoMes) {
+      if (receita) {
+        entradas += l.valorCents;
+      } else {
+        saidas += l.valorCents;
+      }
+    }
+
+    if (receita) continue;
+    final venc = l.vencimento;
+    final venceNoMes =
+        venc != null && venc.year == mes.year && venc.month == mes.month;
+    if (venceNoMes && !dataNoMes) previsto += l.valorCents;
+  }
+  return ResumoMes(
+    entradasCents: entradas,
+    saidasCents: saidas,
+    previstoCents: previsto,
+    resgatesCents: resgates,
+    aplicacoesCents: aplicacoes,
+  );
 }
 
 /// Mês e Ano selecionado para o Dashboard e Histórico.
@@ -65,36 +124,10 @@ class MesSelecionadoNotifier extends Notifier<DateTime> {
   }
 }
 
-/// Fluxo do mês selecionado (real + previsto).
+/// Fluxo do mês selecionado (real + previsto + investimentos).
 final resumoMesProvider = Provider<ResumoMes>((ref) {
-  final todos = ref.watch(lancamentosContabeisProvider);
-  final mesAno = ref.watch(mesSelecionadoProvider);
-
-  int entradas = 0;
-  int saidas = 0;
-  int previsto = 0;
-  for (final l in todos) {
-    final dataNoMes = l.data.year == mesAno.year && l.data.month == mesAno.month;
-    final receita = l.tipo == TipoLancamento.receita;
-    if (dataNoMes) {
-      if (receita) {
-        entradas += l.valorCents;
-      } else {
-        saidas += l.valorCents;
-      }
-    }
-
-    if (receita) continue;
-    final venc = l.vencimento;
-    final venceNoMes =
-        venc != null && venc.year == mesAno.year && venc.month == mesAno.month;
-    if (venceNoMes && !dataNoMes) previsto += l.valorCents;
-  }
-  return ResumoMes(
-    entradasCents: entradas,
-    saidasCents: saidas,
-    previstoCents: previsto,
-  );
+  final todos = ref.watch(lancamentosStreamProvider).value ?? const [];
+  return resumoDoMes(todos, ref.watch(mesSelecionadoProvider));
 });
 
 /// Gasto agregado por categoria no mês vigente.
@@ -143,41 +176,13 @@ class MesHistorico {
 
 /// Histórico dos últimos 6 meses com totais de fluxo para comparativo.
 final historicoUltimosMesesProvider = Provider<List<MesHistorico>>((ref) {
-  final todos = ref.watch(lancamentosContabeisProvider);
+  final todos = ref.watch(lancamentosStreamProvider).value ?? const [];
   final agora = DateTime.now();
 
   final resultado = <MesHistorico>[];
   for (var i = 0; i < 6; i++) {
     final mes = DateTime(agora.year, agora.month - i);
-    int entradas = 0;
-    int saidas = 0;
-    int previsto = 0;
-    for (final l in todos) {
-      final dataNoMes = l.data.year == mes.year && l.data.month == mes.month;
-      final receita = l.tipo == TipoLancamento.receita;
-      if (dataNoMes) {
-        if (receita) {
-          entradas += l.valorCents;
-        } else {
-          saidas += l.valorCents;
-        }
-      }
-      if (receita) continue;
-      final venc = l.vencimento;
-      final venceNoMes =
-          venc != null && venc.year == mes.year && venc.month == mes.month;
-      if (venceNoMes && !dataNoMes) previsto += l.valorCents;
-    }
-    resultado.add(
-      MesHistorico(
-        mesAno: mes,
-        resumo: ResumoMes(
-          entradasCents: entradas,
-          saidasCents: saidas,
-          previstoCents: previsto,
-        ),
-      ),
-    );
+    resultado.add(MesHistorico(mesAno: mes, resumo: resumoDoMes(todos, mes)));
   }
   return resultado;
 });

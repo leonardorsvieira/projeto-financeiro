@@ -30,16 +30,23 @@ class PontoHistoricoMes {
     required this.saidasCents,
     required this.saldoMesCents,
     required this.patrimonioAcumuladoCents,
+    this.investimentosCents = 0,
   });
 
   final DateTime mesAno;
   final int entradasCents;
   final int saidasCents;
+
+  /// Entradas − saídas + [investimentosCents] (como no extrato).
   final int saldoMesCents;
   final int patrimonioAcumuladoCents;
 
+  /// Resgatado − aplicado em investimentos no mês.
+  final int investimentosCents;
+
   double get entradasReais => entradasCents / 100.0;
   double get saidasReais => saidasCents / 100.0;
+  double get investimentosReais => investimentosCents / 100.0;
   double get saldoMesReais => saldoMesCents / 100.0;
   double get patrimonioAcumuladoReais => patrimonioAcumuladoCents / 100.0;
 }
@@ -55,12 +62,18 @@ class DadosRelatorioComparativo {
     required this.patrimonioAtualCents,
     required this.variacaoPatrimonialPercent,
     this.patrimonioReal = false,
+    this.totalInvestimentosCents = 0,
   });
 
   final List<PontoHistoricoMes> pontos;
   final int totalEntradasCents;
   final int totalSaidasCents;
+
+  /// Entradas − saídas + [totalInvestimentosCents] do período.
   final int saldoTotalCents;
+
+  /// Resgatado − aplicado em investimentos no período.
+  final int totalInvestimentosCents;
   final int patrimonioInicialCents;
   final int patrimonioAtualCents;
   final double variacaoPatrimonialPercent;
@@ -73,6 +86,9 @@ class DadosRelatorioComparativo {
       pontos.isEmpty ? 0 : (totalEntradasCents / 100.0) / pontos.length;
   double get mediaSaidasReais =>
       pontos.isEmpty ? 0 : (totalSaidasCents / 100.0) / pontos.length;
+
+  bool get temMovimentoInvestimento =>
+      pontos.any((p) => p.investimentosCents != 0);
 }
 
 /// Patrimônio real de hoje: saldo das contas + investimentos − faturas em
@@ -137,6 +153,10 @@ final relatoriosComparativosProvider =
     Provider<DadosRelatorioComparativo>((ref) {
   final numMeses = ref.watch(numMesesRelatorioProvider);
   final lancamentos = ref.watch(lancamentosContabeisProvider);
+  final movimentosInvestimento = (ref.watch(lancamentosStreamProvider).value ??
+          const <Lancamento>[])
+      .where((l) => l.ehMovimentacaoInvestimento)
+      .toList();
   final patrimonioAtualReal = ref.watch(patrimonioRealAtualProvider);
 
   final agora = DateTime.now();
@@ -156,12 +176,14 @@ final relatoriosComparativosProvider =
 
   int totalEntradas = 0;
   int totalSaidas = 0;
+  int totalInvestimentos = 0;
   final pontos = <PontoHistoricoMes>[];
 
   for (var i = 0; i < meses.length; i++) {
     final mes = meses[i];
     int entradasNoMes = 0;
     int saidasNoMes = 0;
+    int investimentosNoMes = 0;
 
     for (final l in lancamentos) {
       if (l.data.year == mes.year && l.data.month == mes.month) {
@@ -172,9 +194,16 @@ final relatoriosComparativosProvider =
         }
       }
     }
+    // Resgate soma e aplicação subtrai no saldo do mês (não no patrimônio).
+    for (final l in movimentosInvestimento) {
+      if (l.data.year == mes.year && l.data.month == mes.month) {
+        investimentosNoMes += _fluxo(l);
+      }
+    }
 
     totalEntradas += entradasNoMes;
     totalSaidas += saidasNoMes;
+    totalInvestimentos += investimentosNoMes;
     final patrimonioAcumulado = evolucao[i];
 
     pontos.add(
@@ -182,8 +211,9 @@ final relatoriosComparativosProvider =
         mesAno: mes,
         entradasCents: entradasNoMes,
         saidasCents: saidasNoMes,
-        saldoMesCents: entradasNoMes - saidasNoMes,
+        saldoMesCents: entradasNoMes - saidasNoMes + investimentosNoMes,
         patrimonioAcumuladoCents: patrimonioAcumulado,
+        investimentosCents: investimentosNoMes,
       ),
     );
   }
@@ -206,7 +236,8 @@ final relatoriosComparativosProvider =
     pontos: pontos,
     totalEntradasCents: totalEntradas,
     totalSaidasCents: totalSaidas,
-    saldoTotalCents: totalEntradas - totalSaidas,
+    saldoTotalCents: totalEntradas - totalSaidas + totalInvestimentos,
+    totalInvestimentosCents: totalInvestimentos,
     patrimonioInicialCents: patrimonioInicial,
     patrimonioAtualCents: patrimonioAtual,
     variacaoPatrimonialPercent: variacaoPercent,

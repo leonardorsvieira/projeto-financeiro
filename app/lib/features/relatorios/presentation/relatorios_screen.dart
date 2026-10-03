@@ -225,6 +225,17 @@ class RelatoriosScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  if (dados.totalInvestimentosCents != 0) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'O saldo inclui '
+                      '${dados.totalInvestimentosCents > 0 ? '+' : '-'}'
+                      '${fmtBrl.format(dados.totalInvestimentosCents.abs() / 100)}'
+                      ' de investimentos (resgates − aplicações), '
+                      'como no extrato do banco.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   ComparativoMensalChart(pontos: dados.pontos),
                 ],

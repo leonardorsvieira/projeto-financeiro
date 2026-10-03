@@ -33,6 +33,7 @@ class PdfReportService {
     final fmtBrl = NumberFormat.currency(locale: 'pt_BR', symbol: r'R$ ');
     final fmtData = DateFormat('dd/MM/yyyy');
     final agoraStr = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
+    final comInvestimentos = dados.temMovimentoInvestimento;
 
     pdf.addPage(
       pw.MultiPage(
@@ -133,6 +134,8 @@ class PdfReportService {
                 'Mês / Ano',
                 'Entradas (Receitas)',
                 'Saídas (Despesas)',
+                // Hífen ASCII: a fonte padrão do PDF não tem o sinal "−".
+                if (comInvestimentos) 'Investimentos (resgates - aplicações)',
                 'Saldo do Mês',
                 dados.patrimonioReal ? 'Patrimônio' : 'Saldo acumulado',
               ],
@@ -153,6 +156,7 @@ class PdfReportService {
                 2: pw.Alignment.centerRight,
                 3: pw.Alignment.centerRight,
                 4: pw.Alignment.centerRight,
+                if (comInvestimentos) 5: pw.Alignment.centerRight,
               },
               data: dados.pontos.map((p) {
                 final nomeMes =
@@ -161,6 +165,7 @@ class PdfReportService {
                   nomeMes,
                   fmtBrl.format(p.entradasReais),
                   fmtBrl.format(p.saidasReais),
+                  if (comInvestimentos) fmtBrl.format(p.investimentosReais),
                   fmtBrl.format(p.saldoMesReais),
                   fmtBrl.format(p.patrimonioAcumuladoReais),
                 ];

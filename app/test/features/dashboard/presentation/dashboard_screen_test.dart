@@ -129,6 +129,60 @@ void main() {
     expect(find.text('Conta luz'), findsOneWidget);
   });
 
+  testWidgets('saldo do mês soma resgate e desconta aplicação', (tester) async {
+    final agora = DateTime.now();
+    final mes = DateTime(agora.year, agora.month);
+
+    final repo = FakeLancamentosRepository([
+      _lanc(
+        id: 'Salário',
+        valorCents: 300000,
+        data: mes,
+        tipo: TipoLancamento.receita,
+      ),
+      _lanc(id: 'Mercado', valorCents: 10000, data: mes),
+      _lanc(
+        id: 'Resgate caixinha',
+        valorCents: 50000,
+        data: mes,
+        tipo: TipoLancamento.receita,
+        categoria: categoriaMovimentacaoInvestimento,
+      ),
+      _lanc(
+        id: 'Aplicação RDB',
+        valorCents: 20000,
+        data: mes,
+        categoria: categoriaMovimentacaoInvestimento,
+      ),
+    ]);
+
+    await _pump(tester, repo);
+
+    // 3000 − 100 + 500 − 200 = 3200
+    expect(find.text('R\$ 3.200,00'), findsOneWidget);
+    expect(find.text('R\$ 3.000,00'), findsWidgets); // receitas sem resgate
+    expect(find.text('R\$ 100,00'), findsWidgets); // despesas sem aplicação
+    expect(
+      find.text('Resgatado de investimentos: +R\$ 500,00'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Aplicado em investimentos: -R\$ 200,00'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('sem investimentos no mês não mostra as linhas', (tester) async {
+    final agora = DateTime.now();
+    final repo = FakeLancamentosRepository([
+      _lanc(id: 'Mercado', valorCents: 10000, data: agora),
+    ]);
+
+    await _pump(tester, repo);
+
+    expect(find.textContaining('investimentos:'), findsNothing);
+  });
+
   testWidgets('DashboardScreen mostra empty state sem vencimentos próximos',
       (tester) async {
     final repo = FakeLancamentosRepository([

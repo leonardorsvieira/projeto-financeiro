@@ -206,6 +206,27 @@ class _CardGastosMes extends StatelessWidget {
                 ),
               ],
             ),
+            // Não é renda nem gasto, mas mexe no saldo como no extrato.
+            if (resumo.resgatesCents > 0) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Resgatado de investimentos: '
+                '+${formatoBRL(resumo.resgatesCents)}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Caderneta.corReceita(context),
+                ),
+              ),
+            ],
+            if (resumo.aplicacoesCents > 0) ...[
+              SizedBox(height: resumo.resgatesCents > 0 ? 4 : 12),
+              Text(
+                'Aplicado em investimentos: '
+                '-${formatoBRL(resumo.aplicacoesCents)}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             Text(
               'Previsto no mês: ${formatoBRL(resumo.previstoCents)}',

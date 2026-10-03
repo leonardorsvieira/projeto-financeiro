@@ -36,5 +36,8 @@ date: 2026-10-03
   (retrato e 1280×720 conferidos pelo DOM), capa some no fim e o app aparece;
   toque pula; `/?code=` vai direto para `confirmado.html` sem intro; sem
   erros de console/CSP.
-- Celular: não testado em aparelho nesta sessão (APK gerado para o usuário
-  instalar).
+- **APK 1.2.5 (versionCode 10)**, 64 bits, assinatura de produção
+  (CN=Meu Bolso, CNPJ) conferida com apksigner; `intro.mp4` dentro do APK e
+  `LaunchTheme` v31/night-v31 com `intro_fundo`. Copiado para
+  `C:\Users\leona\Principal\Desktop\meubolso-release.apk`.
+- Celular: não testado em aparelho nesta sessão.

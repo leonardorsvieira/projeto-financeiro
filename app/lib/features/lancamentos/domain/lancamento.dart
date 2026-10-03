@@ -91,6 +91,20 @@ class Lancamento {
   bool get ehMovimentacaoInvestimento =>
       categoria == categoriaMovimentacaoInvestimento;
 
+  /// Crédito no cartão (estorno de compra, cashback): não é renda, abate as
+  /// despesas. O pagamento da fatura nunca é importado, então toda entrada
+  /// com forma "Cartão…" é isso.
+  bool get ehEstornoDeCartao =>
+      tipo == TipoLancamento.receita &&
+      RegExp(r'^cart[aã]o', caseSensitive: false)
+          .hasMatch(formaPagamento.trim());
+
+  /// Quanto conta como despesa: o valor na despesa, negativo no estorno de
+  /// cartão, zero na receita.
+  int get valorDespesaCents => tipo == TipoLancamento.despesa
+      ? valorCents
+      : (ehEstornoDeCartao ? -valorCents : 0);
+
   Lancamento copyWith({
     String? descricao,
     int? valorCents,

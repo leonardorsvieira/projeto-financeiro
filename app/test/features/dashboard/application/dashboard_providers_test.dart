@@ -264,6 +264,42 @@ void main() {
     });
   });
 
+  test('gastos por categoria: estorno de cartão abate a categoria', () async {
+    final agora = DateTime.now();
+    final mes = DateTime(agora.year, agora.month);
+    Lancamento cartao(String id, int cents, String cat, TipoLancamento tipo) {
+      final l = _lanc(
+        id: id,
+        valorCents: cents,
+        data: mes,
+        tipo: tipo,
+        categoria: cat,
+      );
+      return l.copyWith(formaPagamento: 'Cartão: Mercado Pago');
+    }
+
+    final repo = FakeLancamentosRepository([
+      cartao('compra', 50000, 'Compras', TipoLancamento.despesa),
+      cartao('estorno', 20000, 'Compras', TipoLancamento.receita),
+      cartao('mercado', 9000, 'Alimentação', TipoLancamento.despesa),
+      // Estorno de uma compra de outro mês: a categoria fica ≤ 0 e some.
+      cartao('estorno-antigo', 7000, 'Lazer', TipoLancamento.receita),
+    ]);
+    final container = ProviderContainer(
+      overrides: [lancamentosRepositoryProvider.overrideWithValue(repo)],
+    );
+    addTearDown(container.dispose);
+
+    await aguardarEmissao(container);
+    final gastos = container.read(gastosPorCategoriaMesProvider);
+
+    expect(
+      {for (final g in gastos) g.categoria: g.valorCents},
+      {'Compras': 30000, 'Alimentação': 9000},
+    );
+    expect(container.read(resumoMesProvider).entradasCents, 0);
+  });
+
   test('gastosPorCategoriaMesProvider ignora receitas no donut', () async {
     final agora = DateTime.now();
     final mes = DateTime(agora.year, agora.month);

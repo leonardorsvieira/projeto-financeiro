@@ -8,7 +8,6 @@ import '../../cartoes/application/cartoes_providers.dart';
 import '../../cartoes/domain/formas_pagamento.dart';
 import '../../cartoes/presentation/cartoes_screen.dart';
 import '../../lancamentos/application/lancamentos_providers.dart';
-import '../../lancamentos/domain/lancamento.dart';
 import '../../lancamentos/domain/lancamento_converter.dart';
 import '../../open_finance/application/open_finance_providers.dart';
 import '../../open_finance/domain/fatura_cartao.dart';
@@ -41,10 +40,10 @@ class RelatorioCartoesWidget extends ConsumerWidget {
       mes: mesAno,
       agora: DateTime.now(),
     );
-    // Só o mês selecionado no painel.
+    // Só o mês selecionado no painel; estorno de cartão abate o cartão.
     final despesas = lancamentos.where(
       (l) =>
-          l.tipo == TipoLancamento.despesa &&
+          l.valorDespesaCents != 0 &&
           l.data.year == mesAno.year &&
           l.data.month == mesAno.month,
     );

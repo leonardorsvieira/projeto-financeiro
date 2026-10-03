@@ -248,6 +248,34 @@ String nomeBancoDaConta(String nomeConexao, String? nomeConta) {
   return nomeConexao;
 }
 
+/// Descrição gravada de uma transação importada: até 200 caracteres (limite
+/// da coluna) e, em compra parcelada no cartão, o número da parcela
+/// ("MERCADOLIVRE (2/8)") — sem ele, a parcela parece uma compra nova na data
+/// em que o banco a lança. Não repete o número se o banco já o pôs na
+/// descrição ("PARC 02/08"). Mesma regra no `pluggy-webhook`.
+String descricaoComParcela(
+  String descricao,
+  Map<String, dynamic>? creditCardMetadata,
+) {
+  const limite = 200;
+  final numero = (creditCardMetadata?['installmentNumber'] as num?)?.toInt();
+  final total = (creditCardMetadata?['totalInstallments'] as num?)?.toInt();
+  final semNumero = numero == null ||
+      total == null ||
+      total < 2 ||
+      RegExp('\\b0*$numero\\s*/\\s*0*$total\\b').hasMatch(descricao);
+  if (semNumero) {
+    return descricao.length > limite
+        ? descricao.substring(0, limite)
+        : descricao;
+  }
+  final sufixo = ' ($numero/$total)';
+  final base = descricao.length > limite - sufixo.length
+      ? descricao.substring(0, limite - sufixo.length)
+      : descricao;
+  return '$base$sufixo';
+}
+
 /// "2026-10-12T00:00:00.000Z" → 12/10/2026 local (sem o fuso, que jogaria
 /// para o dia anterior no Brasil).
 DateTime? _dataDoDia(Object? valor) {
@@ -822,7 +850,11 @@ class PluggyOpenFinanceService {
               TransacaoBancariaImportada(
                 id: txId,
                 nomeBanco: nomeRealBanco,
-                descricao: desc,
+                descricao: descricaoComParcela(
+                  desc,
+                  tx['creditCardMetadata'] as Map<String, dynamic>?,
+                ),
+                descricaoDoBanco: descricaoComParcela(desc, null),
                 valorCents: valorCents,
                 isReceita: isReceita,
                 formaPagamento: formaPagamento,

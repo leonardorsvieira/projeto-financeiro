@@ -96,7 +96,8 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(height: 4),
           _DonutGastosCategoria(
             gastos: porCategoria,
-            totalCents: resumo.saidasCents,
+            // Soma do que aparece (estorno pode zerar uma categoria).
+            totalCents: porCategoria.fold(0, (s, g) => s + g.valorCents),
           ),
           const SizedBox(height: 16),
           _MetasSection(metas: ref.watch(metasComProgressoProvider)),

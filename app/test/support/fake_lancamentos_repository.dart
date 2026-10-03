@@ -27,11 +27,23 @@ class FakeLancamentosRepository implements LancamentosRepository {
   String _nextId() => 'id-${_items.length + 1}';
 
   @override
-  Future<Set<String>> obsImportadasPluggy() async => _items
-      .map((l) => l.obs)
-      .whereType<String>()
-      .where((o) => o.startsWith('pluggy_id:'))
-      .toSet();
+  Future<Map<String, String>> importadasPluggy() async => {
+        for (final l in _items)
+          if (l.obs?.startsWith('pluggy_id:') ?? false) l.obs!: l.descricao,
+      };
+
+  @override
+  Future<void> renomearImportada(
+    String obs, {
+    required String de,
+    required String para,
+  }) async {
+    final i = _items.indexWhere((l) => l.obs == obs && l.descricao == de);
+    if (i < 0) return;
+    updateCount++;
+    _items[i] = _items[i].copyWith(descricao: para);
+    _emit();
+  }
 
   @override
   Future<Lancamento> create({

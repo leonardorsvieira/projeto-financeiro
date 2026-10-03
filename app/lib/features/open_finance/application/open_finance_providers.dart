@@ -143,6 +143,17 @@ class ResultadoSincronizacaoPluggy {
   });
 }
 
+/// Importado antes de a descrição trazer o número da parcela: ainda com a
+/// descrição do banco ([atual], gravada pelo app ou, aparada, pelo webhook)
+/// e sem edição do usuário.
+bool precisaRenomearImportado(TransacaoBancariaImportada t, String atual) {
+  final doBanco = t.descricaoDoBanco;
+  return doBanco != null &&
+      t.descricao != doBanco &&
+      atual != t.descricao &&
+      (atual == doBanco || atual == doBanco.trim());
+}
+
 /// Sincroniza todas as contas e transações da Pluggy em um só clique.
 Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) =>
     _sincronizar(ref.read, ref.invalidate);
@@ -183,7 +194,7 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
   // banco. (Esperar o stream de lançamentos travava: sem tela ouvindo, o
   // Riverpod pausa o provider e o future nunca completa.)
   final lancamentoRepo = ler(lancamentosRepositoryProvider);
-  final idsExistentes = await lancamentoRepo.obsImportadasPluggy();
+  final importadas = await lancamentoRepo.importadasPluggy();
 
   // 3. Busca as transações: 30 dias na primeira vez; depois só a última
   // semana (o webhook e a sincronização periódica cobrem o resto) — cada
@@ -197,7 +208,7 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
   final transacoes = await service.buscarTodasTransacoes(
     contas: listaParaBuscarTransacoes,
     desde: DateTime.now().subtract(
-      Duration(days: dias ?? (idsExistentes.isEmpty ? 30 : 7)),
+      Duration(days: dias ?? (importadas.isEmpty ? 30 : 7)),
     ),
     nomesProprios: nomesProprios,
   );
@@ -205,7 +216,22 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
   var transacoesImportadas = 0;
   for (final t in transacoes) {
     final obsTag = 'pluggy_id:${t.id}';
-    if (idsExistentes.contains(obsTag)) continue;
+    final atual = importadas[obsTag];
+    if (atual != null) {
+      if (precisaRenomearImportado(t, atual)) {
+        try {
+          await lancamentoRepo.renomearImportada(
+            obsTag,
+            de: atual,
+            para: t.descricao,
+          );
+          importadas[obsTag] = t.descricao;
+        } on Object catch (e) {
+          debugPrint('Renomear importado falhou: $e');
+        }
+      }
+      continue;
+    }
 
     try {
       await lancamentoRepo.create(
@@ -225,7 +251,7 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
       // 23505: o webhook (ou outro aparelho) já importou esta transação.
       if (e.code != '23505') rethrow;
     }
-    idsExistentes.add(obsTag);
+    importadas[obsTag] = t.descricao;
   }
 
   // Atualiza os streams

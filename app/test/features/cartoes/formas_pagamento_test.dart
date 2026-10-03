@@ -99,6 +99,30 @@ void main() {
       expect(agruparPorFormaPagamento(const [], const []), isEmpty);
     });
 
+    test('estorno de cartão abate o cartão dele', () {
+      final estorno = Lancamento(
+        id: 'estorno',
+        descricao: 'MERCADOLIVRE',
+        valorCents: 30000,
+        categoria: 'Compras',
+        formaPagamento: 'Cartão: Mercado Pago',
+        data: _agora,
+        tipo: TipoLancamento.receita,
+        createdAt: _agora,
+        updatedAt: _agora,
+      );
+      final grupos = agruparPorFormaPagamento(
+        [
+          _despesa('Cartão: Mercado Pago', 50000),
+          estorno,
+          _despesa('Pix', 1000),
+        ],
+        const [],
+      );
+      expect(grupos.first.titulo, 'Cartão Mercado Pago');
+      expect(grupos.first.totalCents, 20000);
+    });
+
     test('cartão com fatura do Open Finance entra pelo valor da fatura', () {
       final fatura = FaturaDoMes(
         formasPagamento: const ['Cartão: gold', 'Cartão: Itaú'],

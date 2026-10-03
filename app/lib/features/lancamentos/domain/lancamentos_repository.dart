@@ -36,9 +36,17 @@ abstract class LancamentosRepository {
 
   Future<Lancamento?> findById(String id);
 
-  /// `obs` de todos os lançamentos importados da Pluggy
-  /// (`pluggy_id:<transação>`), para a sincronização não duplicar.
-  Future<Set<String>> obsImportadasPluggy();
+  /// Lançamentos importados da Pluggy: `obs` (`pluggy_id:<transação>`) →
+  /// descrição, para a sincronização não duplicar e atualizar descrições.
+  Future<Map<String, String>> importadasPluggy();
+
+  /// Troca a descrição do importado [obs] para [para] só se ela ainda for
+  /// [de] (não desfaz uma edição do usuário).
+  Future<void> renomearImportada(
+    String obs, {
+    required String de,
+    required String para,
+  });
 
   // Recorrência
   Future<Lancamento?> gerarProximaCopiaSeFixa(Lancamento lancamento);

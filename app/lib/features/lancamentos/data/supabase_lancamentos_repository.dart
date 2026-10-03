@@ -22,18 +22,34 @@ class SupabaseLancamentosRepository implements LancamentosRepository {
   }
 
   @override
-  Future<Set<String>> obsImportadasPluggy() async {
-    final obs = <String>{};
+  Future<Map<String, String>> importadasPluggy() async {
+    final importadas = <String, String>{};
     // Pagina de 1000 em 1000 (limite padrão de linhas do PostgREST).
     for (var inicio = 0;; inicio += 1000) {
       final rows = await _db
           .from(_table)
-          .select('obs')
+          .select('obs, descricao')
           .like('obs', 'pluggy_id:%')
+          .order('id')
           .range(inicio, inicio + 999);
-      obs.addAll(rows.map((r) => r['obs'] as String));
-      if (rows.length < 1000) return obs;
+      for (final r in rows) {
+        importadas[r['obs'] as String] = r['descricao'] as String;
+      }
+      if (rows.length < 1000) return importadas;
     }
+  }
+
+  @override
+  Future<void> renomearImportada(
+    String obs, {
+    required String de,
+    required String para,
+  }) async {
+    await _db
+        .from(_table)
+        .update({'descricao': para})
+        .eq('obs', obs)
+        .eq('descricao', de);
   }
 
   @override

@@ -37,7 +37,9 @@ class ExportarService {
       final dataStr = formatData.format(l.data);
       final vencStr =
           l.vencimento != null ? formatData.format(l.vencimento!) : '';
-      final tipoStr = l.tipo == TipoLancamento.receita ? 'Receita' : 'Despesa';
+      final tipoStr = l.ehEstornoDeCartao
+          ? 'Estorno'
+          : (l.tipo == TipoLancamento.receita ? 'Receita' : 'Despesa');
       final valorReais =
           (l.valorCents / 100).toStringAsFixed(2).replaceAll('.', ',');
 

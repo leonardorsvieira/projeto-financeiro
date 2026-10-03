@@ -72,10 +72,11 @@ ResumoMes resumoDoMes(List<Lancamento> lancamentos, DateTime mes) {
     if (l.ehMovimentacaoNeutra) continue;
 
     if (dataNoMes) {
-      if (receita) {
+      if (receita && !l.ehEstornoDeCartao) {
         entradas += l.valorCents;
       } else {
-        saidas += l.valorCents;
+        // Estorno de cartão abate as saídas.
+        saidas += l.valorDespesaCents;
       }
     }
 
@@ -142,22 +143,24 @@ class GastoCategoria {
 }
 
 /// Gastos do mês selecionado agrupados por categoria, ordenados do maior para o
-/// menor (lançamentos com `data` no mês).
+/// menor (lançamentos com `data` no mês). Estorno de cartão abate a categoria
+/// dele; categoria que fica sem gasto (≤ 0) sai da lista.
 final gastosPorCategoriaMesProvider = Provider<List<GastoCategoria>>((ref) {
   final todos = ref.watch(lancamentosContabeisProvider);
   final mesAno = ref.watch(mesSelecionadoProvider);
 
   final porCategoria = <String, int>{};
   for (final l in todos) {
-    if (l.tipo == TipoLancamento.receita) continue;
+    final valor = l.valorDespesaCents;
+    if (valor == 0) continue;
     final dataNoMes = l.data.year == mesAno.year && l.data.month == mesAno.month;
     if (dataNoMes) {
-      porCategoria.update(l.categoria, (v) => v + l.valorCents,
-          ifAbsent: () => l.valorCents);
+      porCategoria.update(l.categoria, (v) => v + valor, ifAbsent: () => valor);
     }
   }
 
   final list = porCategoria.entries
+      .where((e) => e.value > 0)
       .map((e) => GastoCategoria(categoria: e.key, valorCents: e.value))
       .toList()
     ..sort((a, b) => b.valorCents.compareTo(a.valorCents));

@@ -29,11 +29,16 @@ class TransacaoBancariaImportada {
     required this.origem,
     this.categoriaSugerida = 'Outros',
     this.estabelecimento,
+    this.descricaoDoBanco,
   });
 
   final String id;
   final String nomeBanco;
   final String descricao;
+
+  /// Descrição como era gravada antes de ganhar o número da parcela: um
+  /// importado que ainda a tem é renomeado para [descricao].
+  final String? descricaoDoBanco;
   final int valorCents;
   final bool isReceita;
   final String formaPagamento;

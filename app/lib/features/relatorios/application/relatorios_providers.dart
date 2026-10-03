@@ -187,10 +187,11 @@ final relatoriosComparativosProvider =
 
     for (final l in lancamentos) {
       if (l.data.year == mes.year && l.data.month == mes.month) {
-        if (l.tipo == TipoLancamento.receita) {
+        if (l.tipo == TipoLancamento.receita && !l.ehEstornoDeCartao) {
           entradasNoMes += l.valorCents;
         } else {
-          saidasNoMes += l.valorCents;
+          // Estorno de cartão abate as saídas.
+          saidasNoMes += l.valorDespesaCents;
         }
       }
     }

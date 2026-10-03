@@ -241,9 +241,12 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
     final termoBusca = _buscaController.text.trim().toLowerCase();
 
     final filtrados = widget.items.where((item) {
+      // Estorno de cartão abate despesas: fica no filtro de despesas.
+      final ehDespesa =
+          item.tipo != TipoLancamento.receita || item.ehEstornoDeCartao;
       final tipoMatch = _filtroTipo == 'todos' ||
-          (_filtroTipo == 'receita' && item.tipo == TipoLancamento.receita) ||
-          (_filtroTipo == 'despesa' && item.tipo != TipoLancamento.receita);
+          (_filtroTipo == 'receita' && !ehDespesa) ||
+          (_filtroTipo == 'despesa' && ehDespesa);
 
       final buscaMatch = termoBusca.isEmpty ||
           item.descricao.toLowerCase().contains(termoBusca) ||
@@ -367,7 +370,8 @@ class _ListaComFiltroState extends ConsumerState<_ListaComFiltro> {
                         ),
                       if (ehReceita)
                         _Badge(
-                          label: 'Receita',
+                          label:
+                              item.ehEstornoDeCartao ? 'Estorno' : 'Receita',
                           icon: Icones.entrada,
                           color: Caderneta.corReceita(context),
                         ),

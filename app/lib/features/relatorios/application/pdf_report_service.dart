@@ -215,7 +215,9 @@ class PdfReportService {
                   final valorStr = fmtBrl.format(l.valorCents / 100);
                   return [
                     fmtData.format(l.data),
-                    isReceita ? 'Receita' : 'Despesa',
+                    l.ehEstornoDeCartao
+                        ? 'Estorno'
+                        : (isReceita ? 'Receita' : 'Despesa'),
                     l.descricao,
                     l.categoria,
                     l.formaPagamento,

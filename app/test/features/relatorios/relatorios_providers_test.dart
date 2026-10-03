@@ -128,6 +128,9 @@ void main() {
             TipoLancamento.despesa),
         l('transf', 99999, categoriaTransferenciaEntreContas,
             TipoLancamento.receita),
+        // Estorno no cartão: abate as despesas, não é receita.
+        l('estorno', 30000, 'Compras', TipoLancamento.receita)
+            .copyWith(formaPagamento: 'Cartão: Mercado Pago'),
       ];
 
       final container = ProviderContainer(
@@ -147,14 +150,14 @@ void main() {
       final atual = dados.pontos.last;
 
       expect(dados.totalEntradasCents, 500000);
-      expect(dados.totalSaidasCents, 200000);
+      expect(dados.totalSaidasCents, 170000); // 2000 − 300 de estorno
       expect(dados.totalInvestimentosCents, 100000);
-      expect(dados.saldoTotalCents, 400000);
+      expect(dados.saldoTotalCents, 430000);
       expect(atual.investimentosCents, 100000);
-      expect(atual.saldoMesCents, 400000);
+      expect(atual.saldoMesCents, 430000);
       expect(dados.temMovimentoInvestimento, isTrue);
       // Saldo acumulado/patrimônio não conta aplicação nem resgate.
-      expect(atual.patrimonioAcumuladoCents, 300000);
+      expect(atual.patrimonioAcumuladoCents, 330000);
     });
   });
 

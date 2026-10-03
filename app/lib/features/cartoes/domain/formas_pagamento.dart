@@ -100,7 +100,8 @@ class GrupoFormaPagamento {
 /// Soma as [despesas] por forma de pagamento: Pix e débito em conta juntos,
 /// cada cartão cadastrado, cada cartão não cadastrado em linha própria e o
 /// resto em "Outras formas". Nunca atribui um gasto a um cartão que não é o
-/// dele. Ordenado do maior para o menor total; grupos zerados ficam de fora.
+/// dele. Estorno de cartão em [despesas] abate o grupo do cartão. Ordenado do
+/// maior para o menor total; grupos zerados ficam de fora.
 ///
 /// Cartão com fatura do Open Finance no mês ([faturas]) entra pelo valor da
 /// fatura, e as compras dele em [despesas] são ignoradas (já estão nela).
@@ -150,19 +151,19 @@ List<GrupoFormaPagamento> agruparPorFormaPagamento(
     final forma = d.formaPagamento;
     if (formasComFatura.contains(normalizarForma(forma))) continue;
     if (ehPagamentoEmConta(forma)) {
-      somar('conta', 'Pix e débito', TipoGrupoForma.conta, d.valorCents);
+      somar('conta', 'Pix e débito', TipoGrupoForma.conta, d.valorDespesaCents);
       continue;
     }
     final nome = nomeCartaoDaForma(forma);
     if (nome != null) {
-      somarCartao(forma, nome, d.valorCents);
+      somarCartao(forma, nome, d.valorDespesaCents);
       continue;
     }
     if (_normalizar(forma) == _normalizar(formaCartaoGenerico)) {
-      somar('generico', 'Cartão sem nome', TipoGrupoForma.cartao, d.valorCents);
+      somar('generico', 'Cartão sem nome', TipoGrupoForma.cartao, d.valorDespesaCents);
       continue;
     }
-    somar('outras', 'Outras formas', TipoGrupoForma.outras, d.valorCents);
+    somar('outras', 'Outras formas', TipoGrupoForma.outras, d.valorDespesaCents);
   }
 
   final grupos = [

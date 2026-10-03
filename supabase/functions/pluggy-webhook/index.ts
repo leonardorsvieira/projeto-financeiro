@@ -32,6 +32,7 @@ type Transacao = {
   date?: string;
   category?: string;
   paymentData?: { paymentMethod?: string; payer?: Parte; receiver?: Parte };
+  creditCardMetadata?: { installmentNumber?: number; totalInstallments?: number };
 };
 
 // Mesmas categorias neutras do app (lancamento.dart): não contam no saldo.
@@ -147,6 +148,27 @@ function ehPagamentoDeFatura(categoria: string | undefined, descricao: string): 
     .test(descricao.toLowerCase());
 }
 
+/**
+ * Mesma regra do app (descricaoComParcela): até 200 caracteres e, em compra
+ * parcelada, o número da parcela ("MERCADOLIVRE (2/8)"), salvo se o banco já
+ * o pôs na descrição ("PARC 02/08").
+ */
+function descricaoComParcela(
+  descricao: string,
+  meta?: { installmentNumber?: number; totalInstallments?: number },
+): string {
+  const numero = meta?.installmentNumber;
+  const total = meta?.totalInstallments;
+  if (
+    typeof numero !== "number" || typeof total !== "number" || total < 2 ||
+    new RegExp(`\\b0*${numero}\\s*/\\s*0*${total}\\b`).test(descricao)
+  ) {
+    return descricao.slice(0, 200);
+  }
+  const sufixo = ` (${numero}/${total})`;
+  return descricao.slice(0, 200 - sufixo.length) + sufixo;
+}
+
 async function contasDoItem(itemId: string, accountId?: string): Promise<Conta[]> {
   if (accountId) {
     const r = await pluggy("GET", `/accounts/${encodeURIComponent(accountId)}`);
@@ -233,19 +255,19 @@ async function importar(
     for (const tx of await transacoes(conta.id, desde)) {
       const valor = Math.round(Math.abs(tx.amount ?? 0) * 100);
       if (!tx.id || valor === 0) continue;
-      const descricao = (tx.description ?? tx.descriptionRaw ?? `Transação ${nomeBanco}`)
+      const descricaoBanco = (tx.description ?? tx.descriptionRaw ?? `Transação ${nomeBanco}`)
         .trim().slice(0, 200) || `Transação ${nomeBanco}`;
-      if (ehPagamentoDeFatura(tx.category, descricao)) continue;
+      if (ehPagamentoDeFatura(tx.category, descricaoBanco)) continue;
       const pix = (tx.paymentData?.paymentMethod ?? "").toUpperCase() === "PIX" ||
-        descricao.toLowerCase().includes("pix");
+        descricaoBanco.toLowerCase().includes("pix");
       // No cartão de crédito o sinal é invertido: positivo = compra (saída).
       const entrada = credito ? (tx.amount ?? 0) < 0 : (tx.amount ?? 0) > 0;
       const { error } = await admin.from("lancamentos").insert({
         user_id: userId,
-        descricao,
+        descricao: descricaoComParcela(descricaoBanco, tx.creditCardMetadata),
         valor_cents: valor,
-        categoria: categoriaNeutra(tx, descricao, entrada, conta, nomesProprios) ??
-          categoria(tx.category, descricao),
+        categoria: categoriaNeutra(tx, descricaoBanco, entrada, conta, nomesProprios) ??
+          categoria(tx.category, descricaoBanco),
         forma_pagamento: pix ? "Pix" : credito ? `Cartão: ${nomeBanco}` : `Conta: ${nomeBanco}`,
         data: dataLocal(tx.date),
         tipo: entrada ? "receita" : "despesa",

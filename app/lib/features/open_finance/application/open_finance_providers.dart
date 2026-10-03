@@ -158,17 +158,20 @@ bool precisaRenomearImportado(TransacaoBancariaImportada t, String atual) {
 Future<ResultadoSincronizacaoPluggy> sincronizarComPluggy(WidgetRef ref) =>
     _sincronizar(ref.read, ref.invalidate);
 
-/// Importa o histórico dos últimos 12 meses (uma vez; não duplica o que já
-/// foi importado).
+/// Importa as transações dos últimos 12 meses (não duplica o que já foi
+/// importado). Roda logo depois de [sincronizarComPluggy] no "Sincronizar
+/// agora", que já atualizou os investimentos: aqui eles não são refeitos.
 Future<ResultadoSincronizacaoPluggy> importarHistorico12Meses(WidgetRef ref) =>
-    _sincronizar(ref.read, ref.invalidate, dias: 365);
+    _sincronizar(ref.read, ref.invalidate, dias: 365, investimentos: false);
 
 /// Núcleo da sincronização, usado pelo botão (WidgetRef) e pela sincronização
-/// automática (Ref de um Notifier). [dias] força a janela de busca.
+/// automática (Ref de um Notifier). [dias] força a janela de busca;
+/// [investimentos] = false pula a atualização do Patrimônio.
 Future<ResultadoSincronizacaoPluggy> _sincronizar(
   T Function<T>(ProviderListenable<T> provider) ler,
   void Function(ProviderOrFamily provider) invalidar, {
   int? dias,
+  bool investimentos = true,
 }) async {
   final service = ler(pluggyOpenFinanceServiceProvider);
   final contasNotifier = ler(contasConectadasProvider.notifier);
@@ -260,16 +263,18 @@ Future<ResultadoSincronizacaoPluggy> _sincronizar(
   // 4. Posições de investimento → Patrimônio. Uma falha aqui não desfaz a
   // importação das transações.
   var investimentosAtualizados = 0;
-  try {
-    final posicoes =
-        await service.buscarInvestimentos(listaParaBuscarTransacoes);
-    investimentosAtualizados =
-        await ler(investimentosRepositoryProvider).sincronizarOpenFinance(
-      posicoes.investimentos,
-      removerAusentes: posicoes.completo,
-    );
-  } on Object catch (e) {
-    debugPrint('Importação de investimentos falhou: $e');
+  if (investimentos) {
+    try {
+      final posicoes =
+          await service.buscarInvestimentos(listaParaBuscarTransacoes);
+      investimentosAtualizados =
+          await ler(investimentosRepositoryProvider).sincronizarOpenFinance(
+        posicoes.investimentos,
+        removerAusentes: posicoes.completo,
+      );
+    } on Object catch (e) {
+      debugPrint('Importação de investimentos falhou: $e');
+    }
   }
 
   return ResultadoSincronizacaoPluggy(

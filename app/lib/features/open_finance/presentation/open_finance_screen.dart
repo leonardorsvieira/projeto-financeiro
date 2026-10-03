@@ -23,6 +23,9 @@ class OpenFinanceScreen extends ConsumerStatefulWidget {
 
 class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
   bool _sincronizando = false;
+
+  /// Segunda etapa do "Sincronizar agora": importando os últimos 12 meses.
+  bool _importandoHistorico = false;
   bool _abrindoMeuPluggy = false;
 
   Future<void> _abrirMeuPluggyConnect() async {
@@ -113,20 +116,41 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
     }
   }
 
-  Future<void> _executarSincronizacao({bool historico = false}) async {
-    setState(() => _sincronizando = true);
+  /// "Sincronizar agora": atualiza os bancos e, quando termina, importa o
+  /// histórico dos últimos 12 meses (o que já foi importado não duplica).
+  Future<void> _executarSincronizacao() async {
+    setState(() {
+      _sincronizando = true;
+      _importandoHistorico = false;
+    });
     try {
-      final res = historico
-          ? await importarHistorico12Meses(ref)
-          : await sincronizarComPluggy(ref);
+      final res = await sincronizarComPluggy(ref);
       if (!mounted) return;
+
+      var novas = res.transacoesNovas;
+      var historicoOk = true;
+      if (res.contasSincronizadas > 0) {
+        setState(() => _importandoHistorico = true);
+        try {
+          novas += (await importarHistorico12Meses(ref)).transacoesNovas;
+        } catch (e) {
+          // A sincronização já valeu; só o histórico fica para a próxima.
+          historicoOk = false;
+          debugPrint('Histórico de 12 meses falhou: $e');
+        }
+        if (!mounted) return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Sincronização concluída! ${res.contasSincronizadas} banco(s) e ${res.transacoesNovas} transação(ões) nova(s) importada(s).'
+            'Sincronização concluída! ${res.contasSincronizadas} banco(s) e $novas transação(ões) nova(s) importada(s)'
+            '${res.contasSincronizadas == 0 ? '.' : historicoOk ? ', com o histórico dos últimos 12 meses.' : '. O histórico dos últimos 12 meses não pôde ser importado agora: toque em Sincronizar agora de novo mais tarde.'}'
             '${res.investimentosAtualizados > 0 ? ' ${res.investimentosAtualizados} investimento(s) atualizado(s) no Patrimônio.' : ''}',
           ),
-          backgroundColor: Caderneta.corReceita(context),
+          backgroundColor: historicoOk
+              ? Caderneta.corReceita(context)
+              : Caderneta.ocre(context),
         ),
       );
     } catch (e) {
@@ -143,7 +167,12 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
         ),
       );
     } finally {
-      if (mounted) setState(() => _sincronizando = false);
+      if (mounted) {
+        setState(() {
+          _sincronizando = false;
+          _importandoHistorico = false;
+        });
+      }
     }
   }
 
@@ -291,17 +320,12 @@ class _OpenFinanceScreenState extends ConsumerState<OpenFinanceScreen> {
                                 )
                               : const PhosphorIcon(Icones.sincronizar, size: 18),
                           label: Text(
-                            _sincronizando
-                                ? 'Sincronizando…'
-                                : 'Sincronizar agora',
+                            !_sincronizando
+                                ? 'Sincronizar agora'
+                                : _importandoHistorico
+                                    ? 'Importando 12 meses…'
+                                    : 'Sincronizando…',
                           ),
-                        ),
-                        OutlinedButton.icon(
-                          onPressed: _sincronizando
-                              ? null
-                              : () => _executarSincronizacao(historico: true),
-                          icon: const PhosphorIcon(Icones.historico, size: 18),
-                          label: const Text('Importar últimos 12 meses'),
                         ),
                         OutlinedButton(
                           onPressed: () => mostrarDialogoStatusPluggy(context),

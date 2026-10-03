@@ -172,9 +172,9 @@ class GeminiPrompt {
     };
   }
 
+  /// [dadosDoMes]: só os números de [mesAnoLabel], já em reais.
   static Map<String, dynamic> payloadAnaliseMensal(
-    dynamic resumo,
-    dynamic gastos,
+    String dadosDoMes,
     String mesAnoLabel,
   ) {
     return {
@@ -182,10 +182,17 @@ class GeminiPrompt {
         'parts': [
           {
             'text':
-                'Você é um consultor financeiro pessoal amigável do app "Meu Bolso". '
-                    'Analise os dados financeiros do usuário do mês de $mesAnoLabel e forneça '
-                    'um diagnóstico curto em português (3 parágrafos pequenos), com tom positivo e direto, '
-                    'destacando o saldo do mês, as maiores categorias de gasto e 1 dica prática de economia.'
+                'Você é o assistente financeiro pessoal, amigável, do app '
+                '"Meu Bolso". Analise SOMENTE os números do mês de '
+                '$mesAnoLabel enviados pelo usuário: eles já são apenas '
+                'desse mês e estão em reais. Use exatamente esses valores — '
+                'não some, não estime e não comente outros meses, e não '
+                'invente números. Se o mês estiver em andamento, trate os '
+                'números como parciais. Escreva em português do Brasil um '
+                'diagnóstico curto (3 parágrafos pequenos), com tom positivo '
+                'e direto, destacando o saldo do mês, as maiores categorias '
+                'de gasto e 1 dica prática de economia. Texto corrido; pode '
+                'usar **negrito** para destacar valores.',
           },
         ],
       },
@@ -193,11 +200,7 @@ class GeminiPrompt {
         {
           'role': 'user',
           'parts': [
-            {
-              'text': 'Dados do mês ($mesAnoLabel):\n'
-                  'Resumo do Mês: $resumo\n'
-                  'Gastos por Categoria: $gastos'
-            },
+            {'text': 'Números do mês de $mesAnoLabel:\n$dadosDoMes'},
           ],
         },
       ],

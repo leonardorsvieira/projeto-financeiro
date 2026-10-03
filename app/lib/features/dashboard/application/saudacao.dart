@@ -39,3 +39,6 @@ String dataPorExtenso(DateTime data) {
   return '${_diasSemana[data.weekday - 1]}, ${data.day} de '
       '${_meses[data.month - 1]}';
 }
+
+/// Mês por extenso: "outubro de 2026" (sem depender de locale).
+String mesPorExtenso(DateTime mes) => '${_meses[mes.month - 1]} de ${mes.year}';

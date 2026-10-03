@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/edge_function.dart';
+import '../../../core/texto_ia.dart';
 import '../../../theme/icones.dart';
 import '../../acesso/presentation/aviso_vencimento_acesso.dart';
 import '../../auth/application/auth_controller.dart';
@@ -19,6 +20,7 @@ import '../../lancamentos/domain/lancamento_converter.dart';
 import '../../metas/application/metas_providers.dart';
 import '../../open_finance/application/open_finance_providers.dart';
 import '../../open_finance/domain/saldo_nas_contas.dart';
+import '../application/dados_analise_mes.dart';
 import '../application/dashboard_providers.dart';
 import '../application/home_widget_service.dart';
 import '../application/saudacao.dart';
@@ -85,7 +87,8 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           const RelatorioCartoesWidget(),
           const SizedBox(height: 16),
-          const _CardAnaliseIA(),
+          // Chave pelo mês: ao trocar de mês, a análise anterior some.
+          _CardAnaliseIA(key: ValueKey(ref.watch(mesSelecionadoProvider))),
           const SizedBox(height: 16),
           _PatrimonioSection(
             patrimonioCents: ref.watch(patrimonioTotalProvider),
@@ -752,8 +755,10 @@ class _SeletorMesHeader extends ConsumerWidget {
   }
 }
 
+/// Análise por IA do mês selecionado (só os números desse mês). O widget é
+/// recriado a cada mês (chave no [DashboardScreen]).
 class _CardAnaliseIA extends ConsumerStatefulWidget {
-  const _CardAnaliseIA();
+  const _CardAnaliseIA({super.key});
 
   @override
   ConsumerState<_CardAnaliseIA> createState() => _CardAnaliseIAState();
@@ -773,11 +778,16 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
     final resumo = ref.read(resumoMesProvider);
     final gastos = ref.read(gastosPorCategoriaMesProvider);
     final mesAno = ref.read(mesSelecionadoProvider);
-    final formatMes = DateFormat('MMMM yyyy', 'pt_BR').format(mesAno);
+    final dados = dadosAnaliseDoMes(
+      resumo: resumo,
+      gastos: gastos,
+      mes: mesAno,
+      hoje: DateTime.now(),
+    );
 
     try {
       final repo = ref.read(ditadoRepositoryProvider);
-      final texto = await repo.gerarAnaliseMensal(resumo, gastos, formatMes);
+      final texto = await repo.gerarAnaliseMensal(dados, mesPorExtenso(mesAno));
       if (mounted) {
         setState(() {
           _analiseTexto = texto;
@@ -799,6 +809,11 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final mesAno = ref.watch(mesSelecionadoProvider);
+    final semLancamentos = mesSemLancamentos(
+      ref.watch(resumoMesProvider),
+      ref.watch(gastosPorCategoriaMesProvider),
+    );
     return Card(
       color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.25),
       child: Padding(
@@ -811,24 +826,41 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
                 PhosphorIcon(Icones.ia, color: Caderneta.ocre(context)),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    'Análise do mês (IA)',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Análise do mês (IA)',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        mesPorExtenso(mesAno),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
                   ),
                 ),
-                if (_analiseTexto != null || _erro != null)
+                if ((_analiseTexto != null || _erro != null) && !semLancamentos)
                   IconButton(
+                    tooltip: 'Gerar de novo',
                     icon: const PhosphorIcon(Icones.atualizar, size: 20),
                     onPressed: _gerarAnalise,
                   ),
               ],
             ),
             const SizedBox(height: 8),
-            if (_analiseTexto == null && !_carregando && _erro == null) ...[
+            if (semLancamentos && !_carregando) ...[
               Text(
-                'Receba um diagnóstico completo dos seus gastos e dicas de economia geradas por Inteligência Artificial para este mês.',
+                'Não há lançamentos em ${mesPorExtenso(mesAno)} para analisar.',
+                style: theme.textTheme.bodyMedium,
+              ),
+            ] else if (_analiseTexto == null && !_carregando && _erro == null) ...[
+              Text(
+                'Receba um diagnóstico dos gastos de ${mesPorExtenso(mesAno)} '
+                'e dicas de economia geradas por Inteligência Artificial, '
+                'só com os números deste mês.',
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 12),
@@ -852,7 +884,7 @@ class _CardAnaliseIAState extends ConsumerState<_CardAnaliseIA> {
                 ],
               ),
             ] else if (_analiseTexto != null) ...[
-              Text(_analiseTexto!, style: theme.textTheme.bodyMedium),
+              TextoIA(_analiseTexto!),
             ] else if (_erro != null) ...[
               Text(
                 _erro!,

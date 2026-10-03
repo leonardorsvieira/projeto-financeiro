@@ -50,6 +50,7 @@ Future<void> _pump(
   FakeLancamentosRepository repo, {
   FakeMetasRepository? metasRepo,
   FakeInvestimentosRepository? investimentosRepo,
+  FakeDitadoRepository? ditadoRepo,
 }) async {
   await tester.pumpWidget(
     ProviderScopeContainer(
@@ -57,6 +58,7 @@ Future<void> _pump(
       metasRepo: metasRepo ?? FakeMetasRepository(),
       investimentosRepo:
           investimentosRepo ?? FakeInvestimentosRepository(),
+      ditadoRepo: ditadoRepo,
       child: MaterialApp(
         theme: AppTheme.light,
         home: const Scaffold(body: DashboardScreen()),
@@ -72,12 +74,14 @@ class ProviderScopeContainer extends StatelessWidget {
     required this.repo,
     required this.metasRepo,
     required this.investimentosRepo,
+    this.ditadoRepo,
     required this.child,
   });
 
   final FakeLancamentosRepository repo;
   final FakeMetasRepository metasRepo;
   final FakeInvestimentosRepository investimentosRepo;
+  final FakeDitadoRepository? ditadoRepo;
   final Widget child;
 
   @override
@@ -87,7 +91,8 @@ class ProviderScopeContainer extends StatelessWidget {
         lancamentosRepositoryProvider.overrideWithValue(repo),
         metasRepositoryProvider.overrideWithValue(metasRepo),
         investimentosRepositoryProvider.overrideWithValue(investimentosRepo),
-        ditadoRepositoryProvider.overrideWithValue(FakeDitadoRepository()),
+        ditadoRepositoryProvider
+            .overrideWithValue(ditadoRepo ?? FakeDitadoRepository()),
       ],
       child: child,
     );
@@ -346,5 +351,77 @@ void main() {
     expect(find.text('Patrimônio'), findsOneWidget);
     expect(find.text('Nenhum investimento cadastrado.'), findsOneWidget);
     expect(find.text('Gerenciar'), findsWidgets);
+  });
+
+  group('Análise do mês (IA)', () {
+    testWidgets('manda à IA só o mês selecionado, em reais, e zera ao trocar '
+        'de mês', (tester) async {
+      final agora = DateTime.now();
+      final repo = FakeLancamentosRepository([
+        _lanc(
+          id: 'deste-mes',
+          valorCents: 12345,
+          data: DateTime(agora.year, agora.month, 1),
+          categoria: 'Alimentação',
+        ),
+        _lanc(
+          id: 'mes-passado',
+          valorCents: 90000,
+          data: DateTime(agora.year, agora.month - 1, 10),
+          categoria: 'Lazer',
+        ),
+      ]);
+      final ia = FakeDitadoRepository();
+      await _pump(tester, repo, ditadoRepo: ia);
+
+      final gerar = find.text('Gerar análise por IA');
+      await tester.scrollUntilVisible(gerar, 100);
+      await tester.ensureVisible(gerar);
+      await tester.pumpAndSettle();
+      await tester.tap(gerar);
+      await tester.pumpAndSettle();
+
+      expect(ia.analiseCount, 1);
+      final dados = ia.ultimosDadosDoMes!;
+      expect(dados, contains('Alimentação'));
+      expect(dados, contains('123,45'));
+      expect(dados, isNot(contains('12345')));
+      expect(dados, isNot(contains('Lazer')));
+      expect(dados, isNot(contains('900,00')));
+      final analise = find.textContaining('Análise simulada');
+      await tester.scrollUntilVisible(analise, -100);
+      expect(analise, findsOneWidget);
+
+      final anterior = find.byTooltip('Mês anterior');
+      await tester.scrollUntilVisible(anterior, -100);
+      await tester.ensureVisible(anterior);
+      await tester.pumpAndSettle();
+      await tester.tap(anterior);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Análise simulada'), findsNothing);
+      await tester.scrollUntilVisible(gerar, 100);
+      await tester.ensureVisible(gerar);
+      await tester.pumpAndSettle();
+      await tester.tap(gerar);
+      await tester.pumpAndSettle();
+
+      expect(ia.analiseCount, 2);
+      expect(ia.ultimosDadosDoMes, contains('Lazer'));
+      expect(ia.ultimosDadosDoMes, contains('900,00'));
+      expect(ia.ultimosDadosDoMes, isNot(contains('Alimentação')));
+    });
+
+    testWidgets('mês sem lançamentos não chama a IA', (tester) async {
+      final ia = FakeDitadoRepository();
+      await _pump(tester, FakeLancamentosRepository(), ditadoRepo: ia);
+
+      await tester.scrollUntilVisible(
+        find.textContaining('para analisar'),
+        100,
+      );
+      expect(find.text('Gerar análise por IA'), findsNothing);
+      expect(ia.analiseCount, 0);
+    });
   });
 }

@@ -222,4 +222,26 @@ void main() {
       expect(GeminiPrompt.textoResposta({'candidates': []}), isNull);
     });
   });
+
+  group('payloadAnaliseMensal', () {
+    test('manda os números do mês como texto e pede para usar só esse mês',
+        () {
+      final payload = GeminiPrompt.payloadAnaliseMensal(
+        'Despesas do mês: R\$ 3.500,00',
+        'setembro de 2026',
+      );
+      final sistema = ((payload['system_instruction'] as Map)['parts'] as List)
+          .first['text']
+          .toString();
+      final usuario = (((payload['contents'] as List).first as Map)['parts']
+              as List)
+          .first['text']
+          .toString();
+
+      expect(sistema, contains('SOMENTE os números do mês de setembro de 2026'));
+      expect(sistema, contains('não comente outros meses'));
+      expect(usuario, contains('Despesas do mês: R\$ 3.500,00'));
+      expect(payload.containsKey('tools'), isFalse);
+    });
+  });
 }

@@ -28,9 +28,7 @@ abstract class DitadoRepository {
     RascunhoLancamento? rascunhoAtual,
   });
 
-  Future<String> gerarAnaliseMensal(
-    dynamic resumo,
-    dynamic gastos,
-    String mesAnoLabel,
-  );
+  /// Diagnóstico do mês. [dadosDoMes] são só os números desse mês, em reais
+  /// (ver `dadosAnaliseDoMes`).
+  Future<String> gerarAnaliseMensal(String dadosDoMes, String mesAnoLabel);
 }

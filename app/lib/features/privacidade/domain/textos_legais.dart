@@ -68,7 +68,10 @@ const DocumentoLegal politicaDePrivacidade = DocumentoLegal(
           'no guia. Descrições de lançamentos não são enviadas. Os dados de '
           'mercado do guia vêm de fontes públicas (Banco Central e IBGE), '
           'consultadas pelo servidor sem nenhum dado seu, e o Gemini pode '
-          'usar a Busca Google. O servidor do app não armazena a resposta.',
+          'usar a Busca Google. O app guarda na sua conta o perfil de '
+          'investidor que você informar e o último guia gerado, para não '
+          'perguntar de novo e mostrar o guia em qualquer aparelho; a análise '
+          'do mês não fica guardada.',
         ),
         ParagrafoLegal(
           'Open Finance, se você conectar um banco: por meio da Pluggy, o '

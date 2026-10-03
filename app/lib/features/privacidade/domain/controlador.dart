@@ -22,4 +22,4 @@ const emailPrivacidade = 'leonardorodriguesv99@gmail.com';
 
 /// Versão vigente da Política de Privacidade e dos Termos de Uso (data ISO).
 /// Mudar este valor pede novo aceite de todas as contas.
-const versaoDocumentos = '2026-10-03';
+const versaoDocumentos = '2026-10-04';

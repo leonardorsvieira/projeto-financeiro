@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meubolso/features/cartoes/domain/cartao_credito.dart';
 import 'package:meubolso/features/cartoes/domain/formas_pagamento.dart';
 import 'package:meubolso/features/lancamentos/domain/lancamento.dart';
+import 'package:meubolso/features/open_finance/domain/fatura_cartao.dart';
 
 final _agora = DateTime(2026, 10, 2);
 var _seq = 0;
@@ -96,6 +97,52 @@ void main() {
 
     test('sem despesas: nenhum grupo', () {
       expect(agruparPorFormaPagamento(const [], const []), isEmpty);
+    });
+
+    test('cartão com fatura do Open Finance entra pelo valor da fatura', () {
+      final fatura = FaturaDoMes(
+        formasPagamento: const ['Cartão: gold', 'Cartão: Itaú'],
+        valorCents: 250000,
+        vencimento: DateTime(2026, 10, 12),
+        aberta: false,
+      );
+      final grupos = agruparPorFormaPagamento(
+        [
+          // Compras do mês desse cartão (pelas duas grafias): já na fatura.
+          _despesa('Cartão: GOLD', 40000, importado: true),
+          _despesa('Cartão: Itaú', 1000, importado: true),
+          // Outro cartão sem fatura: soma as compras como antes.
+          _despesa('Cartão: Mercado Pago', 3000, importado: true),
+          _despesa('Pix', 5000),
+        ],
+        const [],
+        faturas: [fatura],
+      );
+
+      expect(grupos.map((g) => g.titulo),
+          ['Cartão gold', 'Pix e débito', 'Cartão Mercado Pago']);
+      expect(grupos.first.totalCents, 250000);
+      expect(grupos.first.fatura, same(fatura));
+      expect(grupos.first.nomeNaoCadastrado, 'gold');
+      expect(grupos[2].fatura, isNull);
+    });
+
+    test('fatura de cartão cadastrado usa o grupo (nome e cor) dele', () {
+      final grupos = agruparPorFormaPagamento(
+        const [],
+        [_cartao('nu', 'Nubank')],
+        faturas: [
+          FaturaDoMes(
+            formasPagamento: const ['Cartão: Nubank'],
+            valorCents: 9900,
+            vencimento: DateTime(2026, 10, 10),
+            aberta: true,
+          ),
+        ],
+      );
+      expect(grupos.single.titulo, 'Cartão Nubank');
+      expect(grupos.single.cartao?.id, 'nu');
+      expect(grupos.single.fatura?.aberta, isTrue);
     });
   });
 

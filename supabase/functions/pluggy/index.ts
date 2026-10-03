@@ -301,6 +301,22 @@ async function atender(req: Request): Promise<Response> {
     return repassar(req, r, texto);
   }
 
+  // Faturas fechadas de um cartão de crédito (paginado por page/pageSize).
+  if (metodo === "GET" && seg[0] === "bills" && seg.length === 1) {
+    const accountId = q.get("accountId");
+    const itemId = accountId ? await itemDaConta(accountId) : null;
+    if (!itemId || !(await ehDono(uid, itemId))) {
+      return resposta(req, 404, { erro: "conta_nao_encontrada" });
+    }
+    const params = new URLSearchParams({ accountId: accountId! });
+    for (const k of ["page", "pageSize"]) {
+      const v = q.get(k);
+      if (v && /^\d{1,4}$/.test(v)) params.set(k, v);
+    }
+    const r = await pluggy("GET", `/bills?${params}`);
+    return repassar(req, r, await r.text());
+  }
+
   // Transações: /v2/transactions (cursor). O /transactions antigo responde 410
   // para aplicações novas da Pluggy.
   if (

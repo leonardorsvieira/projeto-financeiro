@@ -115,6 +115,58 @@ void main() {
       expect(contas.first.mascaraCartao, equals('•••• 5678'));
     });
 
+    test('busca as faturas fechadas de cada cartão (Meu Pluggy)', () async {
+      final pedidosDeFatura = <String?>[];
+      final service = _service(_proxy((metodo, caminho, _) async {
+        if (caminho.path == '/items') {
+          return http.Response(
+            jsonEncode({
+              'results': [
+                {
+                  'id': 'item_mp',
+                  'connector': {'id': 200, 'name': 'MeuPluggy'},
+                  'status': 'UPDATED',
+                },
+              ],
+            }),
+            200,
+          );
+        }
+        if (caminho.path == '/accounts') {
+          return http.Response(
+            jsonEncode({
+              'results': [
+                {'id': 'acc_cc', 'type': 'BANK', 'name': 'Itaú', 'balance': 10},
+                {'id': 'acc_gold', 'type': 'CREDIT', 'name': 'gold'},
+              ],
+            }),
+            200,
+          );
+        }
+        if (caminho.path == '/bills') {
+          expect(metodo, 'GET');
+          pedidosDeFatura.add(caminho.queryParameters['accountId']);
+          return http.Response(
+            jsonEncode({
+              'results': [
+                {'dueDate': '2026-09-12T00:00:00.000Z', 'totalAmount': 1800},
+              ],
+            }),
+            200,
+          );
+        }
+        return http.Response('Not found', 404);
+      }));
+
+      final conta = (await service.buscarItensConectados()).single;
+
+      expect(pedidosDeFatura, ['acc_gold'], reason: 'só cartões');
+      final cartao = conta.cartoes.single;
+      expect(cartao.formasPagamento, ['Cartão: gold']);
+      expect(cartao.faturas.single.vencimento, DateTime(2026, 9, 12));
+      expect(cartao.faturas.single.valorCents, 180000);
+    });
+
     test('item de outro usuário (404 do servidor) mantém a conta local sem dados', () async {
       final service = _service(_proxy((_, caminho, _) async {
         if (caminho.path == '/items') {

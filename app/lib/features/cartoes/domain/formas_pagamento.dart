@@ -1,4 +1,5 @@
 import '../../lancamentos/domain/lancamento.dart';
+import '../../open_finance/domain/fatura_cartao.dart';
 import 'cartao_credito.dart';
 
 /// Regras de forma de pagamento que dependem dos cartões de cada usuário.
@@ -79,6 +80,7 @@ class GrupoFormaPagamento {
     required this.totalCents,
     this.cartao,
     this.nomeNaoCadastrado,
+    this.fatura,
   });
 
   final String titulo;
@@ -90,21 +92,29 @@ class GrupoFormaPagamento {
 
   /// Nome de "Cartão: X" que não corresponde a nenhum cartão cadastrado.
   final String? nomeNaoCadastrado;
+
+  /// Fatura do mês vinda do Open Finance (o total é o valor dela).
+  final FaturaDoMes? fatura;
 }
 
 /// Soma as [despesas] por forma de pagamento: Pix e débito em conta juntos,
 /// cada cartão cadastrado, cada cartão não cadastrado em linha própria e o
 /// resto em "Outras formas". Nunca atribui um gasto a um cartão que não é o
 /// dele. Ordenado do maior para o menor total; grupos zerados ficam de fora.
+///
+/// Cartão com fatura do Open Finance no mês ([faturas]) entra pelo valor da
+/// fatura, e as compras dele em [despesas] são ignoradas (já estão nela).
 List<GrupoFormaPagamento> agruparPorFormaPagamento(
   Iterable<Lancamento> despesas,
-  List<CartaoCredito> cartoes,
-) {
+  List<CartaoCredito> cartoes, {
+  List<FaturaDoMes> faturas = const [],
+}) {
   final totais = <String, int>{};
   final titulos = <String, String>{};
   final tipos = <String, TipoGrupoForma>{};
   final cartaoDoGrupo = <String, CartaoCredito>{};
   final nomeDoGrupo = <String, String>{};
+  final faturaDoGrupo = <String, FaturaDoMes>{};
 
   void somar(String chave, String titulo, TipoGrupoForma tipo, int cents) {
     totais[chave] = (totais[chave] ?? 0) + cents;
@@ -112,29 +122,40 @@ List<GrupoFormaPagamento> agruparPorFormaPagamento(
     tipos.putIfAbsent(chave, () => tipo);
   }
 
+  /// Soma no grupo do cartão de "Cartão: X" (cadastrado ou não); devolve a
+  /// chave do grupo.
+  String somarCartao(String forma, String nome, int cents) {
+    final cartao = cartaoDaForma(forma, cartoes);
+    if (cartao != null) {
+      final chave = 'cartao:${cartao.id}';
+      cartaoDoGrupo[chave] = cartao;
+      somar(chave, 'Cartão ${cartao.nome}', TipoGrupoForma.cartao, cents);
+      return chave;
+    }
+    final chave = 'nome:${_normalizar(nome)}';
+    nomeDoGrupo.putIfAbsent(chave, () => nome);
+    somar(chave, 'Cartão $nome', TipoGrupoForma.cartao, cents);
+    return chave;
+  }
+
+  final formasComFatura = <String>{};
+  for (final f in faturas) {
+    final forma = f.formasPagamento.first;
+    formasComFatura.addAll(f.formasPagamento.map(normalizarForma));
+    final nome = nomeCartaoDaForma(forma) ?? forma;
+    faturaDoGrupo[somarCartao(forma, nome, f.valorCents)] = f;
+  }
+
   for (final d in despesas) {
     final forma = d.formaPagamento;
+    if (formasComFatura.contains(normalizarForma(forma))) continue;
     if (ehPagamentoEmConta(forma)) {
       somar('conta', 'Pix e débito', TipoGrupoForma.conta, d.valorCents);
       continue;
     }
     final nome = nomeCartaoDaForma(forma);
     if (nome != null) {
-      final cartao = cartaoDaForma(forma, cartoes);
-      if (cartao != null) {
-        final chave = 'cartao:${cartao.id}';
-        cartaoDoGrupo[chave] = cartao;
-        somar(
-          chave,
-          'Cartão ${cartao.nome}',
-          TipoGrupoForma.cartao,
-          d.valorCents,
-        );
-      } else {
-        final chave = 'nome:${_normalizar(nome)}';
-        nomeDoGrupo.putIfAbsent(chave, () => nome);
-        somar(chave, 'Cartão $nome', TipoGrupoForma.cartao, d.valorCents);
-      }
+      somarCartao(forma, nome, d.valorCents);
       continue;
     }
     if (_normalizar(forma) == _normalizar(formaCartaoGenerico)) {
@@ -153,6 +174,7 @@ List<GrupoFormaPagamento> agruparPorFormaPagamento(
           totalCents: totais[chave]!,
           cartao: cartaoDoGrupo[chave],
           nomeNaoCadastrado: nomeDoGrupo[chave],
+          fatura: faturaDoGrupo[chave],
         ),
   ]..sort((a, b) => b.totalCents.compareTo(a.totalCents));
   return grupos;

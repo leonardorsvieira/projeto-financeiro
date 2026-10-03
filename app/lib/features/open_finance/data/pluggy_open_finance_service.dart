@@ -9,6 +9,7 @@ import '../../lancamentos/domain/lancamento.dart'
     show categoriaMovimentacaoInvestimento, categoriaTransferenciaEntreContas;
 import '../domain/conta_bancaria_conectada.dart';
 import '../domain/contas_proprias.dart';
+import '../domain/fatura_cartao.dart';
 import '../domain/transacao_bancaria_importada.dart';
 
 class BancoDisponivelOpenFinance {
@@ -232,6 +233,45 @@ Investimento? investimentoDaPluggy(Map<String, dynamic> inv) {
   return (saldo, fatura);
 }
 
+/// Nome do banco na forma de pagamento dos importados ("Cartão: X",
+/// "Conta: X"): nas conexões que juntam vários bancos (Meu Pluggy), o nome da
+/// conta; nas demais, o da conexão.
+String nomeBancoDaConta(String nomeConexao, String? nomeConta) {
+  final conta = nomeConta?.trim();
+  if (conta != null &&
+      conta.isNotEmpty &&
+      (nomeConexao.contains('Pluggy') ||
+          nomeConexao == 'Banco' ||
+          nomeConexao.contains(conta))) {
+    return conta;
+  }
+  return nomeConexao;
+}
+
+/// "2026-10-12T00:00:00.000Z" → 12/10/2026 local (sem o fuso, que jogaria
+/// para o dia anterior no Brasil).
+DateTime? _dataDoDia(Object? valor) {
+  if (valor is! String || valor.length < 10) return null;
+  return DateTime.tryParse(valor.substring(0, 10));
+}
+
+/// Faturas fechadas de `GET /bills` (as mais recentes primeiro, até 24).
+List<FaturaCartao> faturasDaPluggy(List<dynamic> bills) {
+  final faturas = <FaturaCartao>[];
+  for (final b in bills.whereType<Map<String, dynamic>>()) {
+    final vencimento = _dataDoDia(b['dueDate']);
+    final total = b['totalAmount'] as num?;
+    if (vencimento == null || total == null) continue;
+    faturas.add(FaturaCartao(
+      vencimento: vencimento,
+      fechamento: _dataDoDia(b['billClosingDate'] ?? b['closingDate']),
+      valorCents: (total.toDouble() * 100).round(),
+    ));
+  }
+  faturas.sort((a, b) => b.vencimento.compareTo(a.vencimento));
+  return faturas.take(24).toList();
+}
+
 /// Quanto foi aplicado: `amountOriginal`; sem ele, o valor bruto menos o
 /// lucro informado (`amount − amountProfit`). Null se o banco não informar.
 int? valorInvestidoDaPluggy(Map<String, dynamic> inv) {
@@ -451,7 +491,8 @@ class PluggyOpenFinanceService {
   }) async {
     final itemId = item['id'] as String;
     final connector = item['connector'] as Map<String, dynamic>? ?? {};
-    var nomeBanco = connector['name'] as String? ?? nomePadrao;
+    final nomeConector = connector['name'] as String? ?? nomePadrao;
+    var nomeBanco = nomeConector;
     // No Meu Pluggy o conector se chama "MeuPluggy"; o banco de verdade vem
     // no nome das contas.
     final ehAgregador =
@@ -482,6 +523,7 @@ class PluggyOpenFinanceService {
     String? mascara;
     int? saldoContas;
     int? faturaCartoes;
+    final cartoes = <CartaoOpenFinance>[];
 
     try {
       final accResp = await _chamar(
@@ -525,6 +567,22 @@ class PluggyOpenFinanceService {
                 ? '•••• ${numStr.substring(numStr.length - 4)}'
                 : '•••• $numStr';
           }
+
+          for (final a in accList) {
+            if ((a['type'] as String?)?.toUpperCase() != 'CREDIT') continue;
+            final accountId = a['id'] as String?;
+            if (accountId == null) continue;
+            final nomeConta = (a['name'] as String?)?.trim() ?? '';
+            cartoes.add(CartaoOpenFinance(
+              // Os rótulos com que as compras do cartão são importadas: o da
+              // sincronização do app e o do `pluggy-webhook`.
+              formasPagamento: {
+                'Cartão: ${nomeBancoDaConta(nomeBanco, nomeConta)}',
+                'Cartão: ${ehAgregador && nomeConta.isNotEmpty ? nomeConta : nomeConector}',
+              }.toList(),
+              faturas: await _faturasDoCartao(accountId),
+            ));
+          }
         }
       }
     } catch (_) {}
@@ -541,7 +599,24 @@ class PluggyOpenFinanceService {
       capturaAutomaticaAtiva: true,
       saldoContasCents: saldoContas,
       faturaCartoesCents: faturaCartoes,
+      cartoes: cartoes,
     );
+  }
+
+  /// Faturas fechadas de um cartão (`GET /bills`). Vazio se o banco não
+  /// informar: o painel volta a somar as compras do mês.
+  Future<List<FaturaCartao>> _faturasDoCartao(String accountId) async {
+    try {
+      final query = Uri(
+        queryParameters: {'accountId': accountId, 'pageSize': '100'},
+      ).query;
+      final resp = await _chamar('GET', '/bills?$query');
+      if (resp.statusCode != 200) return const [];
+      final data = jsonDecode(resp.body) as Map<String, dynamic>;
+      return faturasDaPluggy((data['results'] as List<dynamic>?) ?? const []);
+    } catch (_) {
+      return const [];
+    }
   }
 
   /// Busca os bancos conectados (Items) do usuário logado.
@@ -686,16 +761,11 @@ class PluggyOpenFinanceService {
           final accountId = acc['id'] as String;
           final accType = (acc['type'] as String? ?? 'BANK').toUpperCase();
           final isCreditCard = accType == 'CREDIT';
-          final accName = (acc['name'] as String?)?.trim();
           // Conexões Meu Pluggy juntam vários bancos: usa o nome da conta.
-          final nomeRealBanco =
-              (accName != null &&
-                  accName.isNotEmpty &&
-                  (item.nomeBanco.contains('Pluggy') ||
-                      item.nomeBanco == 'Banco' ||
-                      item.nomeBanco.contains(accName)))
-              ? accName
-              : item.nomeBanco;
+          final nomeRealBanco = nomeBancoDaConta(
+            item.nomeBanco,
+            acc['name'] as String?,
+          );
 
           final txList = await _transacoesDaConta(accountId, dataDesdeStr);
 

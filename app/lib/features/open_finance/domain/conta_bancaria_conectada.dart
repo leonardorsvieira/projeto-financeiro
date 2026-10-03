@@ -1,3 +1,5 @@
+import 'fatura_cartao.dart';
+
 /// Representa o status da conexão da conta no Open Finance.
 enum StatusConexaoBanco {
   conectado('conectado', 'Conectado'),
@@ -31,6 +33,7 @@ class ContaBancariaConectada {
     this.capturaAutomaticaAtiva = true,
     this.saldoContasCents,
     this.faturaCartoesCents,
+    this.cartoes = const [],
   });
 
   final String id;
@@ -48,7 +51,11 @@ class ContaBancariaConectada {
   final int? saldoContasCents;
 
   /// Soma das faturas em aberto dos cartões desta conexão (o que se deve).
+  /// Nas conexões Open Finance é o limite usado (inclui parcelas futuras).
   final int? faturaCartoesCents;
+
+  /// Cartões de crédito desta conexão com as faturas fechadas.
+  final List<CartaoOpenFinance> cartoes;
 
   Map<String, dynamic> toMap() {
     return {
@@ -63,6 +70,7 @@ class ContaBancariaConectada {
       'captura_automatica_ativa': capturaAutomaticaAtiva,
       'saldo_contas_cents': saldoContasCents,
       'fatura_cartoes_cents': faturaCartoesCents,
+      'cartoes': [for (final c in cartoes) c.toMap()],
     };
   }
 
@@ -81,6 +89,10 @@ class ContaBancariaConectada {
       capturaAutomaticaAtiva: (map['captura_automatica_ativa'] as bool?) ?? true,
       saldoContasCents: (map['saldo_contas_cents'] as num?)?.toInt(),
       faturaCartoesCents: (map['fatura_cartoes_cents'] as num?)?.toInt(),
+      cartoes: [
+        for (final c in (map['cartoes'] as List<dynamic>? ?? const []))
+          CartaoOpenFinance.fromMap(c as Map<String, dynamic>),
+      ],
     );
   }
 }

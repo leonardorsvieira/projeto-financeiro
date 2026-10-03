@@ -21,6 +21,7 @@
   var erro =
     busca.get("error_code") || fragmento.get("error_code") ||
     busca.get("error") || fragmento.get("error");
+  window.meuBolsoDesviando = true; // intro.js não toca a intro
   // Relativo ao <base href>: funciona em /projeto-financeiro/ e localmente.
   window.location.replace(
     "confirmado.html" + (erro ? "#error_code=" + encodeURIComponent(erro) : "")

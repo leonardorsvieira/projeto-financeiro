@@ -9,6 +9,7 @@ import 'core/env.dart';
 import 'features/auth/application/auth_controller.dart';
 import 'features/auth/application/aviso_login.dart';
 import 'features/auth/domain/auth_state.dart';
+import 'features/intro/presentation/intro_abertura.dart';
 import 'features/lancamentos/application/lembretes_controller.dart';
 import 'features/seguranca/application/limpeza_local.dart';
 import 'features/seguranca/presentation/biometric_lock_wrapper.dart';
@@ -32,7 +33,61 @@ Future<void> main() async {
   }
 
   _registrarLicencasDeFontes();
-  runApp(const _SessaoIsolada());
+  runApp(const _AberturaComIntro());
+}
+
+/// No celular, a intro em vídeo toca uma vez por abertura e o app só é montado
+/// quando ela termina (a biometria pede depois dela), com fade. Na web a intro
+/// toca no `index.html` enquanto o Flutter carrega, então aqui não aparece.
+bool get _temIntroNoFlutter =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
+
+class _AberturaComIntro extends StatefulWidget {
+  const _AberturaComIntro();
+
+  @override
+  State<_AberturaComIntro> createState() => _AberturaComIntroState();
+}
+
+class _AberturaComIntroState extends State<_AberturaComIntro> {
+  late bool _introNaTela = _temIntroNoFlutter;
+  late bool _appMontado = !_temIntroNoFlutter;
+  bool _saindo = false;
+
+  void _introTerminou() {
+    if (_saindo) return;
+    setState(() {
+      _appMontado = true;
+      _saindo = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // As chaves mantêm a sessão (e o vídeo) quando o Stack muda de filhos.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (_appMontado) const _SessaoIsolada(key: ValueKey('app')),
+          if (_introNaTela)
+            IgnorePointer(
+              key: const ValueKey('intro'),
+              ignoring: _saindo,
+              child: AnimatedOpacity(
+                opacity: _saindo ? 0 : 1,
+                duration: const Duration(milliseconds: 400),
+                onEnd: () => setState(() => _introNaTela = false),
+                child: IntroAbertura(aoTerminar: _introTerminou),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 ProviderContainer _novoContainer({String? avisoLogin}) {
@@ -56,7 +111,7 @@ ProviderContainer _novoContainer({String? avisoLogin}) {
 /// memória (streams, caches, router), para que nada do usuário anterior
 /// apareça para o próximo no mesmo aparelho/navegador.
 class _SessaoIsolada extends StatefulWidget {
-  const _SessaoIsolada();
+  const _SessaoIsolada({super.key});
 
   @override
   State<_SessaoIsolada> createState() => _SessaoIsoladaState();

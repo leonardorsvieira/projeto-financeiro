@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#F4ECD8</color>
+    <!-- Fundo do vídeo da intro: a abertura fica creme do início ao fim. -->
+    <color name="intro_fundo">#F1E8D7</color>
     <color name="widget_papel">#FBF6EA</color>
     <color name="widget_tinta">#1D2A47</color>
     <color name="widget_margem">#B3261E</color>
